@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  quality:
+    name: Format, lint, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Migrations are in sync with the schema
+        run: pnpm --filter @lingoup/database exec drizzle-kit check
+
+  integration:
+    name: Integration tests (PostgreSQL + Valkey)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.7-pg18-trixie
+        env:
+          POSTGRES_USER: lingoup
+          POSTGRES_PASSWORD: ci-password
+          POSTGRES_DB: lingoup
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U lingoup" --health-interval 5s --health-timeout 5s --health-retries 20
+      valkey:
+        image: valkey/valkey:9.0-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "valkey-cli ping" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://lingoup:ci-password@localhost:5432/lingoup
+      TEST_DATABASE_URL: postgres://lingoup:ci-password@localhost:5432/lingoup_test
+      VALKEY_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:integration
+
+  ai-service:
+    name: ai-service (ruff + pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build --target test apps/ai-service
+
+  e2e:
+    name: E2E smoke (Docker Compose)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [quality]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Create .env with throwaway secrets
+        run: |
+          cp .env.example .env
+          sed -i "s/change-me-postgres-password/$(openssl rand -hex 16)/g" .env
+          sed -i "s/change-me-valkey-password/$(openssl rand -hex 16)/g" .env
+          sed -i "s/change-me-ai-service-token-at-least-32-chars/$(openssl rand -hex 24)/g" .env
+      - name: Start the stack
+        run: docker compose --profile ai up -d --build --wait --wait-timeout 300
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @lingoup/web exec playwright install --with-deps chromium
+      - name: API smoke test (through the web proxy)
+        run: pnpm smoke:api
+        env:
+          API_URL: http://localhost:3000/api
+      - name: Browser E2E smoke tests
+        run: pnpm test:e2e
+        env:
+          E2E_BASE_URL: http://localhost:3000
+      - name: Logs on failure
+        if: failure()
+        run: docker compose --profile ai logs --no-color --tail 200
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+      - if: always()
+        run: docker compose --profile ai down -v

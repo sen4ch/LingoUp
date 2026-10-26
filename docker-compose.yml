@@ -1,0 +1,227 @@
+# Local development and single-host deployment.
+#
+#   cp .env.example .env              # then edit secrets
+#   docker compose up -d --build      # full stack: web, api, worker, postgres, valkey
+#   docker compose --profile ai up -d          # + apps/ai-service
+#   docker compose --profile ollama up -d      # + local Ollama (CPU works, GPU optional)
+#
+# Infrastructure only, apps via `pnpm dev`:
+#   docker compose up -d postgres valkey
+
+name: lingoup
+
+x-node-env: &node-env
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DATABASE_URL: postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+  VALKEY_URL: redis://:${VALKEY_PASSWORD:?}@valkey:6379/0
+
+services:
+  postgres:
+    # Official PostgreSQL 18 with the pgvector extension available (not enabled yet).
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: ${POSTGRES_DB:?}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    stop_grace_period: 30s
+
+  valkey:
+    image: valkey/valkey:9.0-alpine
+    restart: unless-stopped
+    command:
+      - valkey-server
+      - --requirepass
+      - ${VALKEY_PASSWORD:?}
+      - --appendonly
+      - 'yes'
+      # BullMQ requires that keys are never evicted.
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      - '127.0.0.1:${VALKEY_PORT:-6379}:6379'
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'valkey-cli -a "$$VALKEY_PASSWORD" --no-auth-warning ping | grep -q PONG']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD:?}
+
+  # One-shot: applies migrations and imports demo content, then exits.
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    command:
+      [
+        'sh',
+        '-c',
+        'node node_modules/@lingoup/database/dist/migrate.js && node dist/cli/import-content.js',
+      ]
+    environment:
+      <<: *node-env
+      CONTENT_DIR: /app/content
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      API_HOST: 0.0.0.0
+      API_PORT: 4000
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      # The API is reached only through the web container (private network).
+      TRUST_PROXY: uniquelocal
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?}
+      AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-20000}
+      AI_MAX_CONCURRENCY: ${AI_MAX_CONCURRENCY:-4}
+      AI_MAX_RETRIES: ${AI_MAX_RETRIES:-1}
+      AI_DAILY_QUOTA_PER_USER: ${AI_DAILY_QUOTA_PER_USER:-200}
+      AI_ALLOW_EXTERNAL: ${AI_ALLOW_EXTERNAL:-false}
+    ports:
+      - '127.0.0.1:${API_PORT:-4000}:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    stop_grace_period: 30s
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/worker.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      OUTBOX_POLL_INTERVAL_MS: ${OUTBOX_POLL_INTERVAL_MS:-1000}
+      OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-100}
+      OUTBOX_RETENTION_DAYS: ${OUTBOX_RETENTION_DAYS:-7}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-10}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    stop_grace_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://api:4000
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports:
+      - '127.0.0.1:${WEB_PORT:-3000}:3000'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  ai-service:
+    profiles: ['ai', 'ollama']
+    build:
+      context: apps/ai-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?}
+      AI_BACKEND: ${AI_BACKEND:-mock}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      OPENAI_COMPATIBLE_BASE_URL: ${OPENAI_COMPATIBLE_BASE_URL:-}
+      OPENAI_COMPATIBLE_API_KEY: ${OPENAI_COMPATIBLE_API_KEY:-}
+      OPENAI_COMPATIBLE_MODEL: ${OPENAI_COMPATIBLE_MODEL:-}
+      OPENAI_COMPATIBLE_DATA_LOCALITY: ${OPENAI_COMPATIBLE_DATA_LOCALITY:-external}
+    # Not published on the host: only the API talks to it.
+    expose:
+      - '8000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/live').status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    profiles: ['ollama']
+    image: ollama/ollama:0.40.11
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    # Not published on the host to avoid clashing with a locally installed Ollama.
+    expose:
+      - '11434'
+    # GPU: uncomment on hosts with the NVIDIA Container Toolkit.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  postgres-data:
+  valkey-data:
+  ollama-data:

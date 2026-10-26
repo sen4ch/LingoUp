@@ -1,0 +1,23 @@
+{
+  "name": "@lingoup/learning-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pure learning algorithms: FSRS scheduling and text tokenization. No I/O.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ts-fsrs": "5.4.2"
+  }
+}

@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Dependency install scripts are blocked by default (supply-chain hardening).
+# Only packages listed here may run them.
+allowBuilds:
+  esbuild: true
+  '@swc/core': true
+  # Install-time telemetry pulled in by swagger-ui-dist.
+  '@scarf/scarf': false
+  # Optional native speed-up for msgpackr (BullMQ); the pure-JS fallback is used instead.
+  msgpackr-extract: false
+  # Native binary ships via optionalDependencies; the fallback script is not needed.
+  unrs-resolver: false

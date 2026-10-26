@@ -1,0 +1,114 @@
+/*
+ * Design tokens. Components use semantic names only (bg-surface, text-muted, ...),
+ * so themes are changed here, not in components.
+ * Import after `@import "tailwindcss";` in the app stylesheet.
+ */
+
+:root {
+  color-scheme: light;
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --surface-muted: #f0eee8;
+  --border: #dedad0;
+  --text: #1d1b16;
+  --muted: #5f5a4f;
+  --primary: #2f5d50;
+  --primary-hover: #244a40;
+  --primary-fg: #ffffff;
+  --accent: #b5562e;
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --success: #1f7a4a;
+  --success-bg: #e7f5ec;
+  --warning: #8a5a00;
+  --warning-bg: #fdf3dc;
+  --info-bg: #e8f0f7;
+  --focus: #1d6fd1;
+  --highlight: #fde68a;
+  --level-a: #1f7a4a;
+  --level-b: #1d5fa6;
+  --level-c: #7a3fa0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #141413;
+    --surface: #1d1c1a;
+    --surface-muted: #262522;
+    --border: #3a3834;
+    --text: #ece9e2;
+    --muted: #a9a398;
+    --primary: #7fc4ad;
+    --primary-hover: #9dd5c2;
+    --primary-fg: #10201b;
+    --accent: #f0a27c;
+    --danger: #ff8a7a;
+    --danger-bg: #3b1d19;
+    --success: #6fd3a0;
+    --success-bg: #17301f;
+    --warning: #f3c56b;
+    --warning-bg: #352a12;
+    --info-bg: #1b2733;
+    --focus: #7ab4ff;
+    --highlight: #6b5a1a;
+    --level-a: #6fd3a0;
+    --level-b: #8ab9f0;
+    --level-c: #cfa3ec;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-info-bg: var(--info-bg);
+  --color-focus: var(--focus);
+  --color-highlight: var(--highlight);
+  --color-level-a: var(--level-a);
+  --color-level-b: var(--level-b);
+  --color-level-c: var(--level-c);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-reading: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background-color: var(--highlight);
+    color: var(--text);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

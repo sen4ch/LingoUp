@@ -1,0 +1,38 @@
+{
+  "name": "lingoup",
+  "private": true,
+  "description": "Open English Learning Platform — open-source, self-hosted platform for learning English",
+  "type": "module",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration --concurrency=1",
+    "test:e2e": "pnpm --filter @lingoup/web test:e2e",
+    "smoke:api": "node scripts/smoke-api.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @lingoup/database db:generate",
+    "db:migrate": "pnpm --filter @lingoup/database db:migrate",
+    "content:import": "pnpm --filter @lingoup/api content:import",
+    "openapi:export": "pnpm --filter @lingoup/api openapi:export"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "24.19.2",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  }
+}

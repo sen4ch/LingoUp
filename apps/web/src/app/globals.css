@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import '@lingoup/ui/styles.css';
+
+/* Scan the design-system sources for utility classes. */
+@source '../../../../packages/ui/src';
+
+@layer components {
+  /* Word under the keyboard reading cursor and the current lookup selection. */
+  .reader-word[data-active='true'] {
+    background-color: var(--highlight);
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px var(--highlight);
+  }
+}

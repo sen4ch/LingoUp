@@ -1,0 +1,62 @@
+{
+  "name": "@lingoup/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drizzle schema (one PostgreSQL schema per module), migrations and connection factory.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema/identity": {
+      "types": "./dist/schema/identity.d.ts",
+      "default": "./dist/schema/identity.js"
+    },
+    "./schema/content": {
+      "types": "./dist/schema/content.d.ts",
+      "default": "./dist/schema/content.js"
+    },
+    "./schema/vocabulary": {
+      "types": "./dist/schema/vocabulary.d.ts",
+      "default": "./dist/schema/vocabulary.js"
+    },
+    "./schema/learning": {
+      "types": "./dist/schema/learning.d.ts",
+      "default": "./dist/schema/learning.js"
+    },
+    "./schema/progress": {
+      "types": "./dist/schema/progress.d.ts",
+      "default": "./dist/schema/progress.js"
+    },
+    "./schema/platform": {
+      "types": "./dist/schema/platform.d.ts",
+      "default": "./dist/schema/platform.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    }
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "db:migrate": "node dist/migrate.js"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.4",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1",
+    "drizzle-kit": "0.31.11"
+  }
+}

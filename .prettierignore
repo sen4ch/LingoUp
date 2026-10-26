@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/migrations/meta
+apps/ai-service
+docs/api/openapi.json
+**/next-env.d.ts
