@@ -104,9 +104,9 @@ describe('SpeechGateway', () => {
 
 describe('AzureSpeechProvider', () => {
   it('escapes the text so it cannot inject SSML', () => {
-    expect(buildSsml(`rock & "roll" <break time='9s'/>`, 'en-US-AvaMultilingualNeural')).toBe(
+    expect(buildSsml(`rock & "roll" <break time='9s'/>`, 'en-US-DerekMultilingualNeural')).toBe(
       '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">' +
-        '<voice name="en-US-AvaMultilingualNeural">rock &amp; &quot;roll&quot; ' +
+        '<voice name="en-US-DerekMultilingualNeural">rock &amp; &quot;roll&quot; ' +
         '&lt;break time=&apos;9s&apos;/&gt;</voice></speak>',
     );
   });
@@ -114,7 +114,7 @@ describe('AzureSpeechProvider', () => {
   it('calls the regional endpoint with the key and asks for MP3', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(audio, { status: 200 }));
     const provider = new AzureSpeechProvider(
-      { key: 'k'.repeat(32), region: 'westeurope', voice: 'en-US-AvaMultilingualNeural' },
+      { key: 'k'.repeat(32), region: 'westeurope', voice: 'en-US-DerekMultilingualNeural' },
       fetchImpl,
     );
     await expect(provider.synthesize('for', AbortSignal.timeout(1000))).resolves.toEqual(audio);
@@ -127,7 +127,7 @@ describe('AzureSpeechProvider', () => {
   it('reports only the status when Azure fails', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response('secret details', { status: 401 }));
     const provider = new AzureSpeechProvider(
-      { key: 'k'.repeat(32), region: 'westeurope', voice: 'en-US-AvaMultilingualNeural' },
+      { key: 'k'.repeat(32), region: 'westeurope', voice: 'en-US-DerekMultilingualNeural' },
       fetchImpl,
     );
     await expect(provider.synthesize('for', AbortSignal.timeout(1000))).rejects.toThrow(

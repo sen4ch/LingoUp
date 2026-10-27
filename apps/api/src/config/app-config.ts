@@ -65,7 +65,7 @@ const EnvSchema = z.object({
   AZURE_SPEECH_VOICE: z
     .string()
     .regex(/^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$/, 'Azure neural voice name')
-    .default('en-US-AvaMultilingualNeural'),
+    .default('en-US-DerekMultilingualNeural'),
   SPEECH_CACHE_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 });
 

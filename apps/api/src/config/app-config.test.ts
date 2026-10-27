@@ -22,7 +22,7 @@ describe('speech configuration', () => {
     expect(config.speech).toMatchObject({
       provider: 'azure',
       azure: { region: 'westeurope' },
-      voice: 'en-US-AvaMultilingualNeural',
+      voice: 'en-US-DerekMultilingualNeural',
       cacheTtlSeconds: 30 * 24 * 60 * 60,
     });
   });

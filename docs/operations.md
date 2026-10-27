@@ -162,7 +162,7 @@ AI_ALLOW_EXTERNAL=true         # и каждый пользователь вкл
 SPEECH_PROVIDER=azure
 AZURE_SPEECH_KEY=...
 AZURE_SPEECH_REGION=westeurope
-AZURE_SPEECH_VOICE=en-US-AvaMultilingualNeural   # любой нейронный голос Azure
+AZURE_SPEECH_VOICE=en-US-DerekMultilingualNeural   # любой нейронный голос Azure
 ```
 
 4. Перезапустите API: `docker compose --profile ai up -d api`.
