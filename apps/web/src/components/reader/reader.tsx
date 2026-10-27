@@ -279,7 +279,7 @@ export function Reader({ text }: { text: TextDetail }) {
           />
         ) : (
           <div className="rounded-xl border border-dashed border-border p-5 text-sm text-muted">
-            {t.reader.instructions}
+            {t.reader.cardPlaceholder}
           </div>
         )}
       </aside>

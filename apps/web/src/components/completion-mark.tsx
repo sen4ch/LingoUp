@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { t } from '@/i18n';
 import { api } from '@/lib/api-client';
 import { useCurrentUser } from '@/lib/auth';
+import { useHydrated } from '@/lib/use-hydrated';
 
 export const COMPLETIONS_QUERY_KEY = ['reading', 'completions'] as const;
 
@@ -21,8 +22,9 @@ export function useCompletions() {
 
 /** "Read" badge for texts the signed-in user has completed. */
 export function CompletionMark({ slug }: { slug: string }) {
+  const hydrated = useHydrated();
   const { data } = useCompletions();
-  if (!data?.items.some((item) => item.textSlug === slug)) return null;
+  if (!hydrated || !data?.items.some((item) => item.textSlug === slug)) return null;
   return (
     <Badge tone="success" className="ml-auto">
       ✓ {t.library.completed}

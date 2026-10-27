@@ -229,7 +229,7 @@ function DataSection() {
               </div>
             </form>
           ) : (
-            <Button variant="secondary" className="text-danger" onClick={() => setConfirming(true)}>
+            <Button variant="danger-outline" onClick={() => setConfirming(true)}>
               {t.profile.deleteAccount}
             </Button>
           )}

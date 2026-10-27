@@ -129,7 +129,9 @@ export default function VocabularyPage() {
                     </p>
                   ) : null}
                   <p className="text-xs text-muted">
-                    {t.vocabulary.due(formatDateTime(word.card.due))}
+                    {Date.parse(word.card.due) <= words.dataUpdatedAt
+                      ? t.vocabulary.dueNow
+                      : t.vocabulary.due(formatDateTime(word.card.due))}
                     {word.sourceTextSlug ? (
                       <>
                         {' · '}
@@ -141,9 +143,9 @@ export default function VocabularyPage() {
                   </p>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="danger-ghost"
                   size="sm"
-                  className="self-end text-danger sm:self-start"
+                  className="self-end sm:self-start"
                   loading={remove.isPending && remove.variables.id === word.id}
                   onClick={() => {
                     if (window.confirm(t.vocabulary.confirmDelete(word.term))) remove.mutate(word);

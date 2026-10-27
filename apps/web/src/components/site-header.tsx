@@ -43,7 +43,7 @@ export function SiteHeader() {
           aria-label={t.nav.main}
           className="order-3 w-full overflow-x-auto sm:order-none sm:w-auto"
         >
-          <ul className="flex gap-1">
+          <ul className="flex justify-between gap-0.5 sm:justify-start sm:gap-1">
             {links.map((link) => {
               const active = pathname.startsWith(link.href);
               return (
@@ -52,7 +52,7 @@ export function SiteHeader() {
                     href={link.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm whitespace-nowrap',
+                      'inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-sm whitespace-nowrap sm:gap-1.5 sm:px-3',
                       active ? 'bg-surface-muted font-semibold' : 'text-muted hover:text-text',
                     )}
                   >
