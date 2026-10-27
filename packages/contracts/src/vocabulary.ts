@@ -204,3 +204,20 @@ export const CompletePracticeRequestSchema = z
   })
   .refine((value) => value.correct <= value.total, 'correct cannot exceed total');
 export type CompletePracticeRequest = z.infer<typeof CompletePracticeRequestSchema>;
+
+export const PRONUNCIATION_KINDS = ['term', 'sentence'] as const;
+
+/**
+ * Pronunciation audio (audio/mpeg). A term is a single dictionary entry; a sentence is the
+ * context it was read in and may come from the learner's private text.
+ */
+export const PronunciationQuerySchema = z
+  .object({
+    text: z.string().trim().min(1).max(600),
+    kind: z.enum(PRONUNCIATION_KINDS).default('term'),
+  })
+  .refine((value) => value.kind === 'sentence' || value.text.length <= 80, {
+    message: 'A term is at most 80 characters',
+    path: ['text'],
+  });
+export type PronunciationQuery = z.infer<typeof PronunciationQuerySchema>;

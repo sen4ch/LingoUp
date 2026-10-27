@@ -2286,6 +2286,92 @@
         ]
       }
     },
+    "/v1/vocabulary/pronunciation": {
+      "get": {
+        "operationId": "PronunciationController_audio",
+        "parameters": [
+          {
+            "name": "text",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 600
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "term",
+              "type": "string",
+              "enum": [
+                "term",
+                "sentence"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "503": {
+            "description": "Speech is disabled, needs consent, or failed; details.aiStatus says which",
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "RATE_LIMITED",
+                            "PAYLOAD_TOO_LARGE",
+                            "INVALID_CREDENTIALS",
+                            "EMAIL_ALREADY_REGISTERED",
+                            "WORD_ALREADY_SAVED",
+                            "NOT_ENOUGH_WORDS",
+                            "AI_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
     "/v1/learning/reading/completions": {
       "get": {
         "operationId": "ReadingController_completions",

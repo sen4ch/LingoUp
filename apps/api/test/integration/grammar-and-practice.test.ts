@@ -234,3 +234,28 @@ describe('vocabulary practice', () => {
     }
   });
 });
+
+describe('pronunciation', () => {
+  it('requires a session and validates the text', async () => {
+    const anonymous = new TestAgent(ctx.app);
+    expect((await anonymous.request('GET', '/v1/vocabulary/pronunciation?text=for')).status).toBe(
+      401,
+    );
+
+    const agent = new TestAgent(ctx.app);
+    await agent.register();
+    const longTerm = encodeURIComponent('word '.repeat(20));
+    const tooLong = await agent.request('GET', `/v1/vocabulary/pronunciation?text=${longTerm}`);
+    expect(tooLong.status).toBe(400);
+    const sentence = await agent.request(
+      'GET',
+      `/v1/vocabulary/pronunciation?kind=sentence&text=${longTerm}`,
+    );
+    // Valid sentence; the test environment has no speech provider configured.
+    expect(sentence.status).toBe(503);
+    expect(sentence.body.error).toMatchObject({
+      code: 'AI_UNAVAILABLE',
+      details: { aiStatus: 'disabled' },
+    });
+  });
+});

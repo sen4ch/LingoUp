@@ -5,6 +5,10 @@ const booleanString = z
   .enum(['true', 'false', '1', '0'])
   .transform((value) => value === 'true' || value === '1');
 
+/** Compose passes unset variables as empty strings; treat them as absent. */
+const optional = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === '' ? undefined : value), schema.optional());
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   // Loopback by default; containers set 0.0.0.0 explicitly.
@@ -52,6 +56,17 @@ const EnvSchema = z.object({
   AI_MAX_RETRIES: z.coerce.number().int().min(0).max(3).default(1),
   AI_DAILY_QUOTA_PER_USER: z.coerce.number().int().min(0).default(200),
   AI_ALLOW_EXTERNAL: booleanString.default(false),
+  // Pronunciation audio. Setting azure is the administrator's opt-in to this external service.
+  SPEECH_PROVIDER: z.enum(['none', 'azure']).default('none'),
+  AZURE_SPEECH_KEY: optional(z.string().min(16)),
+  AZURE_SPEECH_REGION: optional(
+    z.string().regex(/^[a-z0-9]+$/, 'Azure region name, e.g. westeurope'),
+  ),
+  AZURE_SPEECH_VOICE: z
+    .string()
+    .regex(/^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$/, 'Azure neural voice name')
+    .default('en-US-AvaMultilingualNeural'),
+  SPEECH_CACHE_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 });
 
 export type AppConfig = ReturnType<typeof loadAppConfig>;
@@ -61,13 +76,22 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
     EnvSchema.refine((value) => value.AI_PROVIDER !== 'ai-service' || value.AI_SERVICE_TOKEN, {
       message: 'AI_SERVICE_TOKEN is required when AI_PROVIDER=ai-service',
       path: ['AI_SERVICE_TOKEN'],
-    }),
+    }).refine(
+      (value) =>
+        value.SPEECH_PROVIDER !== 'azure' ||
+        (value.AZURE_SPEECH_KEY !== undefined && value.AZURE_SPEECH_REGION !== undefined),
+      {
+        message: 'AZURE_SPEECH_KEY and AZURE_SPEECH_REGION are required when SPEECH_PROVIDER=azure',
+        path: ['AZURE_SPEECH_KEY'],
+      },
+    ),
     source,
   );
   assertNoPlaceholderSecrets(env.NODE_ENV, {
     DATABASE_URL: env.DATABASE_URL,
     VALKEY_URL: env.VALKEY_URL,
     AI_SERVICE_TOKEN: env.AI_SERVICE_TOKEN,
+    AZURE_SPEECH_KEY: env.AZURE_SPEECH_KEY,
   });
   return {
     env: env.NODE_ENV,
@@ -97,6 +121,15 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
       maxRetries: env.AI_MAX_RETRIES,
       dailyQuotaPerUser: env.AI_DAILY_QUOTA_PER_USER,
       allowExternal: env.AI_ALLOW_EXTERNAL,
+    },
+    speech: {
+      provider: env.SPEECH_PROVIDER,
+      azure:
+        env.AZURE_SPEECH_KEY && env.AZURE_SPEECH_REGION
+          ? { key: env.AZURE_SPEECH_KEY, region: env.AZURE_SPEECH_REGION }
+          : null,
+      voice: env.AZURE_SPEECH_VOICE,
+      cacheTtlSeconds: env.SPEECH_CACHE_TTL_DAYS * 24 * 60 * 60,
     },
   };
 }

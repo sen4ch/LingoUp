@@ -12,6 +12,7 @@ import { api, ApiRequestError } from '@/lib/api-client';
 import { describeError } from '@/lib/errors';
 import { useCurrentUser } from '@/lib/auth';
 import { DUE_COUNT_QUERY_KEY } from '../site-header';
+import { SpeakButton } from './speak-button';
 import type { Lookup } from './selection';
 
 export function WordCard({
@@ -38,9 +39,12 @@ export function WordCard({
   return (
     <section aria-labelledby="word-card-term" className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
-        <h2 id="word-card-term" className="text-2xl font-bold break-words">
-          {lookup.term}
-        </h2>
+        <div className="flex min-w-0 items-center gap-1">
+          <h2 id="word-card-term" className="text-2xl font-bold break-words">
+            {lookup.term}
+          </h2>
+          <SpeakButton text={lookup.term} kind="term" label={t.speech.term(lookup.term)} />
+        </div>
         <Button variant="ghost" size="sm" onClick={onClose} aria-label={t.common.close}>
           ✕
         </Button>
@@ -50,7 +54,10 @@ export function WordCard({
           <p className="text-xs font-semibold tracking-wide text-muted uppercase">
             {t.card.context}
           </p>
-          <p className="mt-1 font-reading text-sm italic">{lookup.context}</p>
+          <div className="mt-1 flex items-start gap-1">
+            <p className="font-reading text-sm italic">{lookup.context}</p>
+            <SpeakButton text={lookup.context} kind="sentence" label={t.speech.sentence} />
+          </div>
         </div>
       ) : null}
       {userLoading ? (

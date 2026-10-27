@@ -27,6 +27,8 @@ export async function createTestContext(
     LOG_LEVEL: 'silent',
     SWAGGER_ENABLED: 'false',
     AI_PROVIDER: 'mock',
+    // Never call a paid external speech service from tests.
+    SPEECH_PROVIDER: 'none',
     ALLOWED_ORIGINS: WEB_ORIGIN,
     ...overrides,
   });
