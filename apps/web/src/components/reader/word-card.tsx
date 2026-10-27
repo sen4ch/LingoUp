@@ -12,7 +12,7 @@ import { api, ApiRequestError } from '@/lib/api-client';
 import { describeError } from '@/lib/errors';
 import { useCurrentUser } from '@/lib/auth';
 import { DUE_COUNT_QUERY_KEY } from '../site-header';
-import { SpeakButton } from './speak-button';
+import { SpeakButton } from '../speak-button';
 import type { Lookup } from './selection';
 
 export function WordCard({

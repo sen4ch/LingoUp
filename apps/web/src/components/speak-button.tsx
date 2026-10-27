@@ -2,20 +2,28 @@
 
 import type { PronunciationQuery } from '@lingoup/contracts';
 import { cn } from '@lingoup/ui';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { t } from '@/i18n';
 import { useCurrentUser } from '@/lib/auth';
 import { pronounce } from '@/lib/pronunciation';
 
 type State = 'idle' | 'playing' | 'failed';
 
-/** Speaker button: Azure voice through the API, or the browser's own voice as a fallback. */
-export function SpeakButton({ text, kind, label }: PronunciationQuery & { label: string }) {
+/**
+ * Speaker button: a Microsoft voice through the API, or the browser's own voice as a fallback.
+ * `shortcut` is a KeyboardEvent.code (e.g. KeyP), so it works with any keyboard layout.
+ */
+export function SpeakButton({
+  text,
+  kind,
+  label,
+  shortcut,
+}: PronunciationQuery & { label: string; shortcut?: string }) {
   const { data: user } = useCurrentUser();
   const [state, setState] = useState<State>('idle');
   const consent = user?.settings.aiDataSharing ?? false;
 
-  const onClick = async () => {
+  const play = useCallback(async () => {
     setState('playing');
     try {
       await pronounce(
@@ -29,12 +37,26 @@ export function SpeakButton({ text, kind, label }: PronunciationQuery & { label:
     } catch {
       setState('failed');
     }
-  };
+  }, [text, kind, user, consent]);
+
+  useEffect(() => {
+    if (!shortcut) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.code !== shortcut || event.repeat || event.altKey || event.ctrlKey || event.metaKey)
+        return;
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      event.preventDefault();
+      void play();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [shortcut, play]);
 
   return (
     <button
       type="button"
-      onClick={() => void onClick()}
+      onClick={() => void play()}
       aria-label={label}
       title={state === 'failed' ? t.speech.unavailable : label}
       aria-busy={state === 'playing' || undefined}

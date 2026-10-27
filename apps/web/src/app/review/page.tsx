@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DUE_COUNT_QUERY_KEY } from '@/components/site-header';
+import { SpeakButton } from '@/components/speak-button';
 import { t } from '@/i18n';
 import { api } from '@/lib/api-client';
 import { useRequireUser } from '@/lib/auth';
@@ -165,9 +166,26 @@ function ReviewSession({
       </p>
       <Card className="flex min-h-64 flex-col items-center justify-center gap-4 text-center">
         <p className="text-xs tracking-wide text-muted uppercase">{t.review.prompt}</p>
-        <p className="text-4xl font-bold break-words">{card.term}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-4xl font-bold break-words">{card.term}</p>
+          <SpeakButton
+            key={card.cardId}
+            text={card.term}
+            kind="term"
+            label={t.speech.term(card.term)}
+            shortcut="KeyP"
+          />
+        </div>
         {card.contextSentence ? (
-          <p className="font-reading text-muted italic">“{card.contextSentence}”</p>
+          <div className="flex items-start gap-1">
+            <p className="font-reading text-muted italic">“{card.contextSentence}”</p>
+            <SpeakButton
+              key={card.cardId}
+              text={card.contextSentence}
+              kind="sentence"
+              label={t.speech.sentence}
+            />
+          </div>
         ) : null}
         {revealed ? (
           <div className="flex flex-col gap-1 border-t border-border pt-4" aria-live="polite">
