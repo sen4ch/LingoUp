@@ -1,3 +1,4 @@
+import asyncio
 import hmac
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -18,10 +19,20 @@ def create_app(settings: Settings | None = None, provider: Provider | None = Non
     settings = settings or Settings()  # type: ignore[call-arg]  # values come from the environment
     active = provider or create_provider(settings)
 
+    async def warm_up() -> None:
+        try:
+            await active.warm_up()
+            logger.info("model %s is loaded", active.model)
+        except Exception as error:  # noqa: BLE001 - best effort, requests still work later
+            logger.warning("model warm-up failed: %s", type(error).__name__)
+
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         logger.info("ai-service started with backend=%s model=%s", active.name, active.model)
+        # Load the model in the background so the first learner request is not a cold start.
+        warm_up_task = asyncio.create_task(warm_up())
         yield
+        warm_up_task.cancel()
         await active.aclose()
 
     # No public docs: this service is internal and token-protected.

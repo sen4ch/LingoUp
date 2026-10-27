@@ -15,6 +15,11 @@ class Settings(BaseSettings):
 
     ollama_url: str = "http://ollama:11434"
     ollama_model: str = "qwen3:4b"
+    # Reasoning ("thinking") mode of models such as qwen3 or deepseek-r1. It makes answers
+    # several times slower; None keeps the model's default.
+    ollama_think: bool | None = None
+    # How long Ollama keeps the model loaded after a request (avoids slow cold starts).
+    ollama_keep_alive: str = "30m"
 
     openai_compatible_base_url: str = ""
     openai_compatible_api_key: SecretStr = SecretStr("")

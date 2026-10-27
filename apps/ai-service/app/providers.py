@@ -22,6 +22,8 @@ class Provider(Protocol):
 
     async def explain_word(self, task: WordExplanationInput) -> WordExplanationOutput: ...
 
+    async def warm_up(self) -> None: ...
+
     async def aclose(self) -> None: ...
 
 
@@ -48,6 +50,9 @@ class MockProvider:
             example=task.context.strip() or None,
         )
 
+    async def warm_up(self) -> None:
+        return None
+
     async def aclose(self) -> None:
         return None
 
@@ -60,9 +65,18 @@ class OllamaProvider:
 
     def __init__(self, settings: Settings) -> None:
         self.model = settings.ollama_model
+        self._think = settings.ollama_think
+        self._keep_alive = settings.ollama_keep_alive
         self._client = httpx.AsyncClient(
             base_url=settings.ollama_url, timeout=settings.request_timeout_seconds
         )
+
+    async def warm_up(self) -> None:
+        """Loads the model into memory; a request without a prompt only loads it."""
+        response = await self._client.post(
+            "/api/generate", json={"model": self.model, "keep_alive": self._keep_alive}
+        )
+        response.raise_for_status()
 
     async def explain_word(self, task: WordExplanationInput) -> WordExplanationOutput:
         try:
@@ -73,7 +87,9 @@ class OllamaProvider:
                     "messages": word_explanation_messages(task),
                     "format": OUTPUT_SCHEMA,
                     "stream": False,
+                    "keep_alive": self._keep_alive,
                     "options": {"temperature": 0.2},
+                    **({} if self._think is None else {"think": self._think}),
                 },
             )
             response.raise_for_status()
@@ -124,6 +140,9 @@ class OpenAICompatibleProvider:
                 f"OpenAI-compatible request failed: {type(error).__name__}"
             ) from error
         return parse_output(content)
+
+    async def warm_up(self) -> None:
+        return None
 
     async def aclose(self) -> None:
         await self._client.aclose()

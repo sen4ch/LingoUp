@@ -105,6 +105,24 @@ docker compose exec ollama ollama pull qwen3:4b
 
 CPU достаточно для небольших моделей; для GPU раскомментируйте блок `deploy` у сервиса `ollama`.
 
+**Ollama, уже установленный на компьютере** (удобно для разработки: модели и GPU уже настроены):
+
+```bash
+# .env
+AI_PROVIDER=ai-service
+AI_BACKEND=ollama
+OLLAMA_URL=http://host.docker.internal:11434   # Ollama на хосте, а не в контейнере
+OLLAMA_MODEL=qwen3:8b                          # любая модель из `ollama list`
+OLLAMA_THINK=false
+OLLAMA_KEEP_ALIVE=30m
+
+docker compose --profile ai up -d --wait        # профиль ollama не нужен
+```
+
+- `OLLAMA_THINK=false` выключает режим рассуждений у qwen3 и deepseek-r1. С ним ответ занимает десятки секунд и не укладывается в `AI_TIMEOUT_MS` (20 с), без него — около 2 с на GPU (замер: qwen3:8b, прогретая модель).
+- `OLLAMA_KEEP_ALIVE` держит модель в памяти; ai-service также загружает её при старте. Холодная загрузка 8B-модели может занять минуты, и первый запрос в это время вернёт «AI недоступен».
+- Модель работает на вашем компьютере, поэтому данные считаются локальными и согласие пользователя не требуется.
+
 **vLLM или другой OpenAI-совместимый сервер на вашей инфраструктуре:**
 
 ```bash

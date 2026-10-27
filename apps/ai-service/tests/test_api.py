@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 import respx
@@ -121,3 +123,31 @@ def test_bodies_without_length_are_rejected() -> None:
 def test_placeholder_token_is_rejected() -> None:
     with pytest.raises(ValidationError):
         Settings(ai_service_token="change-me-ai-service-token-at-least-32-chars")  # type: ignore[arg-type]  # noqa: S106
+
+
+CHAT_OK = httpx.Response(
+    200, json={"message": {"content": '{"definition": "to grow well", "translation": null}'}}
+)
+
+
+@respx.mock
+def test_ollama_disables_thinking_keeps_model_loaded_and_warms_up() -> None:
+    warm = respx.post("http://ollama:11434/api/generate").mock(return_value=httpx.Response(200))
+    chat = respx.post("http://ollama:11434/api/chat").mock(return_value=CHAT_OK)
+    with client(ai_backend="ollama", ollama_think=False, ollama_keep_alive="45m") as c:
+        assert c.post("/v1/tasks/word-explanation", json=TASK, headers=HEADERS).status_code == 200
+    sent = json.loads(chat.calls.last.request.read())
+    assert sent["think"] is False
+    assert sent["keep_alive"] == "45m"
+    assert warm.called
+    assert json.loads(warm.calls.last.request.read()) == {"model": "qwen3:4b", "keep_alive": "45m"}
+
+
+@respx.mock
+def test_ollama_keeps_model_default_thinking_when_not_configured() -> None:
+    respx.post("http://ollama:11434/api/generate").mock(return_value=httpx.Response(500))
+    chat = respx.post("http://ollama:11434/api/chat").mock(return_value=CHAT_OK)
+    # A failed warm-up must not break the service.
+    with client(ai_backend="ollama") as c:
+        assert c.post("/v1/tasks/word-explanation", json=TASK, headers=HEADERS).status_code == 200
+    assert "think" not in json.loads(chat.calls.last.request.read())

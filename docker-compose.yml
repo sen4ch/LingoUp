@@ -198,10 +198,16 @@ services:
       AI_BACKEND: ${AI_BACKEND:-mock}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      OLLAMA_THINK: ${OLLAMA_THINK:-false}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
       OPENAI_COMPATIBLE_BASE_URL: ${OPENAI_COMPATIBLE_BASE_URL:-}
       OPENAI_COMPATIBLE_API_KEY: ${OPENAI_COMPATIBLE_API_KEY:-}
       OPENAI_COMPATIBLE_MODEL: ${OPENAI_COMPATIBLE_MODEL:-}
       OPENAI_COMPATIBLE_DATA_LOCALITY: ${OPENAI_COMPATIBLE_DATA_LOCALITY:-external}
+    # Lets OLLAMA_URL=http://host.docker.internal:11434 reach an Ollama installed on the host
+    # (Docker Desktop resolves it anyway; Linux Docker Engine needs this mapping).
+    extra_hosts:
+      - host.docker.internal:host-gateway
     # Not published on the host: only the API talks to it.
     expose:
       - '8000'
