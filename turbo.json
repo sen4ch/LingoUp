@@ -11,6 +11,9 @@
     "typecheck": {
       "dependsOn": ["^build"]
     },
+    "@lingoup/web#typecheck": {
+      "dependsOn": ["^build", "@lingoup/web#build"]
+    },
     "lint": {
       "dependsOn": ["^build"]
     },
