@@ -2,7 +2,7 @@
 // Usage: pnpm content:import   (or `node dist/cli/import-content.js` with DATABASE_URL set)
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createDatabase } from '@lingoup/database';
+import { createDatabase, describeError } from '@lingoup/database';
 import { ContentImporter } from '../modules/content/index.js';
 
 const repositoryRoot = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -32,6 +32,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error('Content import failed:', error instanceof Error ? error.message : error);
+  console.error('Content import failed:', describeError(error));
   process.exit(1);
 });

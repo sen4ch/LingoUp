@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { createDatabase } from './client.js';
@@ -22,7 +23,10 @@ export async function runMigrations(connectionString: string): Promise<void> {
   }
 }
 
-const isEntrypoint = process.argv[1] === fileURLToPath(import.meta.url);
+// pnpm links workspace packages through symlinks, so compare real paths: a plain string
+// comparison silently skipped the migrations when run as node_modules/@lingoup/database/....
+const isEntrypoint =
+  process.argv[1] !== undefined && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isEntrypoint) {
   const url = process.env.DATABASE_URL;
   if (!url) {
@@ -34,7 +38,14 @@ if (isEntrypoint) {
       console.warn('Migrations applied');
     })
     .catch((error: unknown) => {
-      console.error('Migration failed:', error instanceof Error ? error.message : error);
+      console.error('Migration failed:', describeError(error));
       process.exit(1);
     });
+}
+
+/** Error text for CLI output: the root cause, without bound query parameters. */
+export function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const message = error.message.split('\nparams:')[0] ?? error.message;
+  return error.cause === undefined ? message : `${message} (cause: ${describeError(error.cause)})`;
 }

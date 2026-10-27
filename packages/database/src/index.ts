@@ -8,4 +8,4 @@ export {
   type DatabaseSchema,
   type DbExecutor,
 } from './client.js';
-export { MIGRATIONS_FOLDER, runMigrations } from './migrate.js';
+export { describeError, MIGRATIONS_FOLDER, runMigrations } from './migrate.js';
