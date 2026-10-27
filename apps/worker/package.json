@@ -2,6 +2,7 @@
   "name": "@lingoup/worker",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Background processes: transactional outbox relay and idempotent domain event handlers.",
   "type": "module",
   "scripts": {

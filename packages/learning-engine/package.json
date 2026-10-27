@@ -2,6 +2,7 @@
   "name": "@lingoup/learning-engine",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Pure learning algorithms: FSRS scheduling and text tokenization. No I/O.",
   "type": "module",
   "exports": {

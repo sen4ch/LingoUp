@@ -2,6 +2,7 @@
   "name": "@lingoup/ai-sdk",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "AI task contracts and the HTTP client for apps/ai-service.",
   "type": "module",
   "exports": {

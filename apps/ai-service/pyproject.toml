@@ -2,6 +2,7 @@
 name = "lingoup-ai-service"
 version = "0.1.0"
 description = "AI inference gateway for the Open English Learning Platform (mock, Ollama, OpenAI-compatible)."
+license = "AGPL-3.0-only"
 requires-python = ">=3.13"
 dependencies = [
   "fastapi==0.162.0",
@@ -19,7 +20,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

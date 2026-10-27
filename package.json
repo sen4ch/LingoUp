@@ -1,6 +1,7 @@
 {
   "name": "lingoup",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Open English Learning Platform — open-source, self-hosted platform for learning English",
   "type": "module",
   "packageManager": "pnpm@12.15.0",
@@ -21,7 +22,8 @@
     "db:generate": "pnpm --filter @lingoup/database db:generate",
     "db:migrate": "pnpm --filter @lingoup/database db:migrate",
     "content:import": "pnpm --filter @lingoup/api content:import",
-    "openapi:export": "pnpm --filter @lingoup/api openapi:export"
+    "openapi:export": "pnpm --filter @lingoup/api openapi:export",
+    "setup:env": "node scripts/init-env.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

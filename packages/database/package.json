@@ -2,6 +2,7 @@
   "name": "@lingoup/database",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Drizzle schema (one PostgreSQL schema per module), migrations and connection factory.",
   "type": "module",
   "exports": {

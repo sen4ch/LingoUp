@@ -15,6 +15,8 @@ COPY --from=pruner /repo/out/json/ ./
 RUN pnpm install --frozen-lockfile
 COPY --from=pruner /repo/out/full/ ./
 COPY tsconfig.base.json eslint.config.mjs ./
+# Link to the corresponding source code shown in the footer (AGPL-3.0 §13).
+ARG SOURCE_CODE_URL
 RUN pnpm turbo run build --filter=@lingoup/web
 
 # Next.js standalone output: a minimal server with only the traced dependencies.
