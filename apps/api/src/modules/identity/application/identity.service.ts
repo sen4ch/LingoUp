@@ -14,6 +14,7 @@ import {
   PersonalDataRegistry,
   type PersonalDataExporter,
 } from '../../../platform/index.js';
+import { LoginAttemptLimiter } from '../infrastructure/login-attempt-limiter.js';
 import { PasswordHasher } from '../infrastructure/password-hasher.js';
 import { IdentityRepository, toUserSettings } from '../infrastructure/identity.repository.js';
 
@@ -25,6 +26,7 @@ export class IdentityService implements PersonalDataExporter {
     @Inject(DATABASE) private readonly db: Database,
     private readonly repository: IdentityRepository,
     private readonly hasher: PasswordHasher,
+    private readonly loginAttempts: LoginAttemptLimiter,
     private readonly outbox: OutboxWriter,
     personalData: PersonalDataRegistry,
   ) {
@@ -59,13 +61,16 @@ export class IdentityService implements PersonalDataExporter {
   }
 
   async verifyCredentials(input: LoginRequest): Promise<{ userId: string }> {
+    await this.loginAttempts.assertAllowed(input.email);
     const user = await this.repository.findUserByEmail(input.email);
     const valid = user
       ? await this.hasher.verify(user.passwordHash, input.password)
       : await this.hasher.verifyAgainstDummy(input.password);
     if (!user || !valid) {
+      await this.loginAttempts.recordFailure(input.email);
       throw new DomainError('INVALID_CREDENTIALS', 'Invalid email or password');
     }
+    await this.loginAttempts.reset(input.email);
     return { userId: user.id };
   }
 

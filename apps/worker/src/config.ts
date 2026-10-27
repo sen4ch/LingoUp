@@ -1,4 +1,4 @@
-import { loadEnv } from '@lingoup/shared';
+import { assertNoPlaceholderSecrets, loadEnv } from '@lingoup/shared';
 import { z } from 'zod';
 
 const EnvSchema = z.object({
@@ -14,6 +14,13 @@ const EnvSchema = z.object({
 
 export type WorkerConfig = z.infer<typeof EnvSchema>;
 
-export const loadWorkerConfig = (
+export function loadWorkerConfig(
   source: Record<string, string | undefined> = process.env,
-): WorkerConfig => loadEnv(EnvSchema, source);
+): WorkerConfig {
+  const config = loadEnv(EnvSchema, source);
+  assertNoPlaceholderSecrets(source.NODE_ENV, {
+    DATABASE_URL: config.DATABASE_URL,
+    VALKEY_URL: config.VALKEY_URL,
+  });
+  return config;
+}

@@ -1,6 +1,8 @@
 import httpx
+import pytest
 import respx
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from app.config import Settings
 from app.main import create_app
@@ -104,3 +106,18 @@ def test_upstream_errors_become_502() -> None:
     ) as c:
         assert c.get("/health", headers=HEADERS).json()["dataLocality"] == "local"
         assert c.post("/v1/tasks/word-explanation", json=TASK, headers=HEADERS).status_code == 502
+
+
+def test_bodies_without_length_are_rejected() -> None:
+    with client() as c:
+        response = c.post(
+            "/v1/tasks/word-explanation",
+            content=iter([b'{"term": "x"}']),
+            headers={**HEADERS, "content-type": "application/json"},
+        )
+    assert response.status_code == 411
+
+
+def test_placeholder_token_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(ai_service_token="change-me-ai-service-token-at-least-32-chars")  # type: ignore[arg-type]  # noqa: S106

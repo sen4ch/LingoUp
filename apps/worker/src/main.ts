@@ -1,6 +1,6 @@
 import { DOMAIN_EVENTS_QUEUE } from '@lingoup/contracts/events';
 import { createDatabase } from '@lingoup/database';
-import { LOG_REDACT_PATHS } from '@lingoup/shared';
+import { LOG_REDACT_PATHS, toSafeError } from '@lingoup/shared';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { pino } from 'pino';
@@ -24,7 +24,10 @@ const database = createDatabase({
   max: config.DATABASE_POOL_MAX,
   applicationName: 'lingoup-worker',
   onIdleClientError: (error) => {
-    logger.warn({ err: error }, 'PostgreSQL idle connection error; reconnecting on demand');
+    logger.warn(
+      { err: toSafeError(error) },
+      'PostgreSQL idle connection error; reconnecting on demand',
+    );
   },
 });
 
@@ -54,7 +57,7 @@ const consumer = createEventConsumer({
 });
 consumer.on('failed', (job, error) => {
   logger.warn(
-    { jobId: job?.id, name: job?.name, attempts: job?.attemptsMade, err: error },
+    { jobId: job?.id, name: job?.name, attempts: job?.attemptsMade, err: toSafeError(error) },
     'Event job failed',
   );
 });
@@ -103,6 +106,6 @@ process.on('SIGTERM', () => void shutdown('SIGTERM'));
 process.on('SIGINT', () => void shutdown('SIGINT'));
 
 start().catch((error: unknown) => {
-  logger.fatal({ err: error }, 'Worker failed to start');
+  logger.fatal({ err: toSafeError(error) }, 'Worker failed to start');
   process.exit(1);
 });

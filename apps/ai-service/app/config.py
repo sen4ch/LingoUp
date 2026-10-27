@@ -1,11 +1,14 @@
 from typing import Literal
 
-from pydantic import Field, SecretStr
-from pydantic_settings import BaseSettings
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Configuration from environment variables. Secrets are never logged."""
+
+    # Validation errors must not echo values: they may contain secrets.
+    model_config = SettingsConfigDict(hide_input_in_errors=True)
 
     ai_service_token: SecretStr = Field(min_length=32)
     ai_backend: Literal["mock", "ollama", "openai-compatible"] = "mock"
@@ -21,3 +24,10 @@ class Settings(BaseSettings):
 
     request_timeout_seconds: float = 60.0
     max_body_bytes: int = 16 * 1024
+
+    @field_validator("ai_service_token")
+    @classmethod
+    def reject_placeholder(cls, value: SecretStr) -> SecretStr:
+        if "change-me" in value.get_secret_value().lower():
+            raise ValueError("replace the change-me placeholder from .env.example")
+        return value

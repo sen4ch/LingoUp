@@ -7,6 +7,7 @@ import {
   type OnApplicationShutdown,
 } from '@nestjs/common';
 import { createDatabase, type DatabaseConnection } from '@lingoup/database';
+import { toSafeError } from '@lingoup/shared';
 import { Redis } from 'ioredis';
 import type { AppConfig } from '../config/app-config.js';
 import { HealthController } from './health/health.controller.js';
@@ -40,7 +41,7 @@ export class PlatformModule implements OnApplicationShutdown {
               applicationName: 'lingoup-api',
               onIdleClientError: (error) => {
                 new Logger('Database').warn(
-                  { err: error },
+                  { err: toSafeError(error) },
                   'Idle connection error; reconnecting on demand',
                 );
               },

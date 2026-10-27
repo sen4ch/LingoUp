@@ -1,4 +1,4 @@
-import { loadEnv } from '@lingoup/shared';
+import { assertNoPlaceholderSecrets, loadEnv } from '@lingoup/shared';
 import { z } from 'zod';
 
 const booleanString = z
@@ -62,6 +62,11 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
     }),
     source,
   );
+  assertNoPlaceholderSecrets(env.NODE_ENV, {
+    DATABASE_URL: env.DATABASE_URL,
+    VALKEY_URL: env.VALKEY_URL,
+    AI_SERVICE_TOKEN: env.AI_SERVICE_TOKEN,
+  });
   return {
     env: env.NODE_ENV,
     http: {

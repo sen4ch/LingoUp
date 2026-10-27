@@ -7,6 +7,7 @@ import { AuthController } from './http/auth.controller.js';
 import { MeController } from './http/me.controller.js';
 import { SessionGuard } from './http/session.guard.js';
 import { IdentityRepository } from './infrastructure/identity.repository.js';
+import { LoginAttemptLimiter } from './infrastructure/login-attempt-limiter.js';
 import { PasswordHasher } from './infrastructure/password-hasher.js';
 
 @Module({
@@ -14,6 +15,7 @@ import { PasswordHasher } from './infrastructure/password-hasher.js';
   providers: [
     IdentityRepository,
     PasswordHasher,
+    LoginAttemptLimiter,
     IdentityService,
     SessionService,
     UserSettingsQuery,

@@ -13,3 +13,7 @@ allowBuilds:
   msgpackr-extract: false
   # Native binary ships via optionalDependencies; the fallback script is not needed.
   unrs-resolver: false
+
+overrides:
+  # GHSA-67mh-4wv8-2f99: drizzle-kit pulls esbuild <=0.24 via @esbuild-kit (dev tool only).
+  '@esbuild-kit/core-utils>esbuild': 0.25.12

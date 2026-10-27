@@ -1,6 +1,7 @@
 import { users, sessions } from '@lingoup/database/schema/identity';
 import { words } from '@lingoup/database/schema/vocabulary';
 import { outboxEvents } from '@lingoup/database/schema/platform';
+import { randomInt, randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestContext, TestAgent, type TestContext } from './harness.js';
@@ -100,20 +101,42 @@ describe('identity', () => {
     expect(response.status).toBe(403);
   });
 
-  it('rate-limits login attempts per client', async () => {
+  const failLogin = (agent: TestAgent, email = `nobody-${randomUUID()}@example.test`) =>
+    agent.request('POST', '/v1/auth/login', { email, password: 'wrong-password' });
+
+  it('rate-limits login attempts per client IP', async () => {
     const agent = new TestAgent(ctx.app);
     const statuses: number[] = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 12; i++) statuses.push((await failLogin(agent)).status);
+    expect(statuses.slice(0, 10).every((s) => s === 401)).toBe(true);
+    expect(statuses.at(-1)).toBe(429);
+  });
+
+  it('limits failed logins per account even when the attacker rotates IP addresses', async () => {
+    const owner = new TestAgent(ctx.app);
+    const user = await owner.register();
+    const statuses: number[] = [];
+    for (let i = 0; i < 11; i++)
+      statuses.push((await failLogin(new TestAgent(ctx.app), user.email)).status);
+    expect(statuses.slice(0, 10).every((s) => s === 401)).toBe(true);
+    expect(statuses.at(-1)).toBe(429);
+    // Even the right password is refused until the window expires (documented trade-off).
+    const locked = await new TestAgent(ctx.app).request('POST', '/v1/auth/login', {
+      email: user.email,
+      password: user.password,
+    });
+    expect(locked.status).toBe(429);
+  });
+
+  it('counts IPv6 clients per /64 network', async () => {
+    const prefix = `2001:db8:${randomInt(0xffff).toString(16)}:${randomInt(0xffff).toString(16)}`;
+    const statuses: number[] = [];
+    // A new address inside the same /64 for every attempt.
+    for (let i = 1; i <= 12; i++) {
       statuses.push(
-        (
-          await agent.request('POST', '/v1/auth/login', {
-            email: 'nobody@example.test',
-            password: 'wrong',
-          })
-        ).status,
+        (await failLogin(new TestAgent(ctx.app, `${prefix}::${i.toString(16)}`))).status,
       );
     }
-    expect(statuses.slice(0, 10).every((s) => s === 401)).toBe(true);
     expect(statuses.at(-1)).toBe(429);
   });
 

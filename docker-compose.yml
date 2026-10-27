@@ -10,6 +10,13 @@
 
 name: lingoup
 
+# Application containers run as non-root users and need no Linux capabilities.
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
 x-node-env: &node-env
   NODE_ENV: production
   LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -62,6 +69,7 @@ services:
 
   # One-shot: applies migrations and imports demo content, then exits.
   migrate:
+    <<: *hardening
     build:
       context: .
       dockerfile: infra/docker/api.Dockerfile
@@ -80,6 +88,7 @@ services:
     restart: 'no'
 
   api:
+    <<: *hardening
     build:
       context: .
       dockerfile: infra/docker/api.Dockerfile
@@ -126,6 +135,7 @@ services:
     stop_grace_period: 30s
 
   worker:
+    <<: *hardening
     build:
       context: .
       dockerfile: infra/docker/worker.Dockerfile
@@ -146,9 +156,12 @@ services:
     stop_grace_period: 30s
 
   web:
+    <<: *hardening
     build:
       context: .
       dockerfile: infra/docker/web.Dockerfile
+      args:
+        SOURCE_CODE_URL: ${SOURCE_CODE_URL:-}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -174,6 +187,7 @@ services:
       start_period: 10s
 
   ai-service:
+    <<: *hardening
     profiles: ['ai', 'ollama']
     build:
       context: apps/ai-service

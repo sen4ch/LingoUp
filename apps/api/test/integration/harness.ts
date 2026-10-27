@@ -53,9 +53,10 @@ export interface TestResponse<T = unknown> {
 /** A browser-like client: keeps the session cookie and its own IP (separate rate limits). */
 export class TestAgent {
   private cookie = '';
-  readonly ip = `10.${randomInt(256)}.${randomInt(256)}.${randomInt(1, 255)}`;
-
-  constructor(private readonly app: NestFastifyApplication) {}
+  constructor(
+    private readonly app: NestFastifyApplication,
+    readonly ip = `10.${randomInt(256)}.${randomInt(256)}.${randomInt(1, 255)}`,
+  ) {}
 
   async request<T = any>(
     method: 'GET' | 'POST' | 'PATCH' | 'DELETE',

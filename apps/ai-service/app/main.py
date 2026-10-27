@@ -38,7 +38,11 @@ def create_app(settings: Settings | None = None, provider: Provider | None = Non
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         length = request.headers.get("content-length")
-        if length is not None and (not length.isdigit() or int(length) > settings.max_body_bytes):
+        if length is None:
+            # Chunked bodies would bypass the size check; the API always sends a length.
+            if request.method in {"POST", "PUT", "PATCH"}:
+                return JSONResponse({"detail": "Content-Length required"}, status_code=411)
+        elif not length.isdigit() or int(length) > settings.max_body_bytes:
             return JSONResponse({"detail": "Request body too large"}, status_code=413)
         return await call_next(request)
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { EnvValidationError, loadEnv } from './env.js';
+import { assertNoPlaceholderSecrets, EnvValidationError, loadEnv } from './env.js';
 
 const schema = z.object({
   PORT: z.coerce.number().int().positive(),
@@ -26,5 +26,17 @@ describe('loadEnv', () => {
       expect(message).toContain('SECRET');
       expect(message).not.toContain('short');
     }
+  });
+});
+
+describe('assertNoPlaceholderSecrets', () => {
+  it('rejects placeholder secrets in production only', () => {
+    const values = { DATABASE_URL: 'postgres://u:change-me-postgres-password@db/x', TOKEN: 'real' };
+    expect(() => assertNoPlaceholderSecrets('production', values)).toThrow(/DATABASE_URL/);
+    expect(() => assertNoPlaceholderSecrets('production', values)).not.toThrow(/real/);
+    expect(() => assertNoPlaceholderSecrets('development', values)).not.toThrow();
+    expect(() =>
+      assertNoPlaceholderSecrets('production', { TOKEN: 'a-real-secret' }),
+    ).not.toThrow();
   });
 });

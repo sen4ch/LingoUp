@@ -23,3 +23,21 @@ export function loadEnv<TSchema extends z.ZodType>(
   }
   return result.data;
 }
+
+/** Marker used by every placeholder secret in .env.example. */
+const PLACEHOLDER_MARKER = 'change-me';
+
+/**
+ * Refuses to run in production with placeholder secrets copied from .env.example.
+ * Only variable names are reported, never values.
+ */
+export function assertNoPlaceholderSecrets(
+  nodeEnv: string | undefined,
+  values: Record<string, string | null | undefined>,
+): void {
+  if (nodeEnv !== 'production') return;
+  const offenders = Object.entries(values)
+    .filter(([, value]) => value?.toLowerCase().includes(PLACEHOLDER_MARKER))
+    .map(([name]) => `${name}: replace the "${PLACEHOLDER_MARKER}" placeholder from .env.example`);
+  if (offenders.length > 0) throw new EnvValidationError(offenders);
+}

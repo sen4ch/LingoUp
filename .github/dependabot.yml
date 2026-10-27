@@ -7,6 +7,16 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Major upgrades blocked by compatibility decisions recorded in docs/adr/0002-technology-stack.md.
+      - dependency-name: eslint
+        update-types: [version-update:semver-major] # eslint-config-next plugins support ESLint <= 9
+      - dependency-name: '@eslint/js'
+        update-types: [version-update:semver-major]
+      - dependency-name: typescript
+        update-types: [version-update:semver-major] # TS 7 unsupported by typescript-eslint, @nestjs/swagger
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major] # must match the Node.js LTS line (24)
   - package-ecosystem: pip
     directory: /apps/ai-service
     schedule:
@@ -15,6 +25,10 @@ updates:
     directories: [/infra/docker, /apps/ai-service]
     schedule:
       interval: weekly
+    ignore:
+      # Node.js stays on the active LTS line; move to the next LTS deliberately.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule:

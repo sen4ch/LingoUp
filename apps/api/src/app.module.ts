@@ -10,6 +10,7 @@ import { LearningModule } from './modules/learning/index.js';
 import { ProgressModule } from './modules/progress/index.js';
 import { VocabularyModule } from './modules/vocabulary/index.js';
 import { PlatformModule } from './platform/platform.module.js';
+import { clientRateLimitKey } from './platform/rate-limit/client-key.js';
 import { ValkeyThrottlerStorage } from './platform/rate-limit/valkey-throttler-storage.js';
 import { VALKEY } from './platform/tokens.js';
 
@@ -25,6 +26,9 @@ export class AppModule {
           useFactory: (valkey: Redis) => ({
             throttlers: [{ name: 'default', ttl: 60_000, limit: config.http.rateLimitPerMinute }],
             storage: new ValkeyThrottlerStorage(valkey),
+            // request.ip honours TRUST_PROXY; IPv6 clients are grouped by /64.
+            getTracker: (request: Record<string, unknown>) =>
+              Promise.resolve(clientRateLimitKey(String(request.ip))),
           }),
         }),
         IdentityModule,

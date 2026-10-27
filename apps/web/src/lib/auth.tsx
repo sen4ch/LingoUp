@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { api, isUnauthenticated } from './api-client';
+import { useHydrated } from './use-hydrated';
 
 export const ME_QUERY_KEY = ['me'] as const;
 
@@ -28,12 +29,14 @@ export function useCurrentUser() {
 /** Redirects anonymous visitors to the login page, returning here afterwards. */
 export function useRequireUser(): { user: CurrentUser | null | undefined; isLoading: boolean } {
   const { data: user, isLoading } = useCurrentUser();
+  // Render the same loading state as the server until hydration completes.
+  const hydrated = useHydrated();
   const router = useRouter();
   const pathname = usePathname();
   useEffect(() => {
     if (!isLoading && user === null) router.replace(`/login?next=${encodeURIComponent(pathname)}`);
   }, [isLoading, user, router, pathname]);
-  return { user, isLoading: isLoading || user === null };
+  return { user, isLoading: !hydrated || isLoading || user === null };
 }
 
 export function useSignOut() {
@@ -50,7 +53,4 @@ export function useSignOut() {
   };
 }
 
-/** Only allow same-site relative redirects after login (prevents open redirects). */
-export function safeNextPath(value: string | null): string {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/library';
-}
+export { safeNextPath } from './redirect';

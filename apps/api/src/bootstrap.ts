@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
 import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from '@nestjs/swagger';
@@ -36,6 +37,7 @@ export async function createApp(config: AppConfig): Promise<NestFastifyApplicati
     },
   );
   app.useLogger(new PinoLoggerService(app.getHttpAdapter().getInstance().log));
+  warnAboutInsecureProductionSettings(config);
 
   await app.register(fastifyCookie);
   await app.register(fastifyHelmet, {
@@ -72,4 +74,15 @@ export function buildOpenApiDocument(app: NestFastifyApplication): OpenAPIObject
     .addCookieAuth('lingoup_session')
     .build();
   return SwaggerModule.createDocument(app, config);
+}
+
+function warnAboutInsecureProductionSettings(config: AppConfig): void {
+  if (config.env !== 'production') return;
+  const logger = new Logger('Security');
+  if (!config.session.cookieSecure) {
+    logger.warn('COOKIE_SECURE=false in production: session cookies are sent over plain HTTP');
+  }
+  if (config.http.swaggerEnabled) {
+    logger.warn('SWAGGER_ENABLED=true in production: API documentation is publicly reachable');
+  }
 }

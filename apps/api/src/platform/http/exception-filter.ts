@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { ApiError, ErrorCode } from '@lingoup/contracts';
 import { ThrottlerException } from '@nestjs/throttler';
+import { toSafeError } from '@lingoup/shared';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { DomainError } from '../errors.js';
 
@@ -33,7 +34,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (status >= 500) {
       this.logger.error(
-        { err: exception, requestId: request.id, route: request.routeOptions.url },
+        { err: toSafeError(exception), requestId: request.id, route: request.routeOptions.url },
         'Unhandled error',
       );
     }
