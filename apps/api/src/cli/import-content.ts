@@ -4,16 +4,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDatabase, describeError } from '@lingoup/database';
 import { ContentImporter } from '../modules/content/index.js';
+import { GrammarImporter } from '../modules/grammar/index.js';
 
 const repositoryRoot = fileURLToPath(new URL('../../../../', import.meta.url));
 
 async function main(): Promise<void> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is not set');
-  const contentDir = path.resolve(
-    process.env.CONTENT_DIR ?? path.join(repositoryRoot, 'content'),
-    'reading',
-  );
+  const contentRoot = path.resolve(process.env.CONTENT_DIR ?? path.join(repositoryRoot, 'content'));
 
   const connection = createDatabase({
     connectionString: url,
@@ -21,11 +19,21 @@ async function main(): Promise<void> {
     applicationName: 'lingoup-content-import',
   });
   try {
-    const report = await new ContentImporter(connection.db).importDirectory(contentDir);
-    console.warn(
-      `Content import from ${contentDir}: ${report.created.length} created, ` +
-        `${report.updated.length} updated, ${report.unchanged.length} unchanged`,
+    const texts = await new ContentImporter(connection.db).importDirectory(
+      path.join(contentRoot, 'reading'),
     );
+    const grammar = await new GrammarImporter(connection.db).importDirectory(
+      path.join(contentRoot, 'grammar'),
+    );
+    for (const [kind, report] of [
+      ['texts', texts],
+      ['grammar topics', grammar],
+    ] as const) {
+      console.warn(
+        `Content import (${kind}) from ${contentRoot}: ${report.created.length} created, ` +
+          `${report.updated.length} updated, ${report.unchanged.length} unchanged`,
+      );
+    }
   } finally {
     await connection.close();
   }

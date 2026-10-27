@@ -27,7 +27,7 @@ export class ReadingService implements PersonalDataExporter {
 
   /** Marks a text as read. Idempotent: the event is emitted only the first time. */
   async complete(userId: string, slug: string): Promise<ReadingCompletion> {
-    const text = await this.content.findTextRef(slug);
+    const text = await this.content.findTextRef(slug, userId);
     if (!text) throw notFound('Text');
     return this.db.transaction(async (tx) => {
       const [inserted] = await tx

@@ -1,6 +1,6 @@
 import { tokenize } from '@lingoup/learning-engine';
 import { describe, expect, it } from 'vitest';
-import { snapToWords, toLookup, type TokenizedParagraph } from './selection';
+import { focusTokenIndices, snapToWords, toLookup, type TokenizedParagraph } from './selection';
 
 const paragraph = (text: string): TokenizedParagraph => {
   const tokens = tokenize(text);
@@ -44,5 +44,23 @@ describe('toLookup', () => {
   it('rejects phrases longer than the contract allows', () => {
     const long = paragraph('one two three four five six seven');
     expect(toLookup([long], { paragraph: 0, from: 0, to: 12 })).toEqual({ error: 'too_long' });
+  });
+});
+
+describe('focusTokenIndices', () => {
+  it('marks single words and phrases case-insensitively', () => {
+    const p = paragraph('I look Forward to the market. A bargain!');
+    const marked = focusTokenIndices(p, ['look forward to', 'bargain', 'missing']);
+    const markedText = [...marked]
+      .sort((a, b) => a - b)
+      .map((i) => p.tokens[i]!.text)
+      .join('');
+    expect(markedText).toBe('look Forward tobargain');
+  });
+
+  it('marks regular inflections', () => {
+    const p = paragraph('She improved a lot and found bargains.');
+    const marked = [...focusTokenIndices(p, ['improve', 'bargain'])].map((i) => p.tokens[i]!.text);
+    expect(marked).toEqual(['improved', 'bargains']);
   });
 });

@@ -24,11 +24,11 @@ export function SiteHeader() {
 
   const links = [
     { href: '/library', label: t.nav.library },
+    { href: '/grammar', label: t.nav.grammar },
     ...(user
       ? [
           { href: '/vocabulary', label: t.nav.vocabulary },
           { href: '/review', label: t.nav.review, count: due?.totalDue },
-          { href: '/profile', label: t.nav.profile },
         ]
       : []),
   ];
@@ -70,13 +70,26 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <button
-              type="button"
-              onClick={() => void signOut()}
-              className={buttonClasses('ghost', 'sm')}
-            >
-              {t.nav.logout}
-            </button>
+            <>
+              <Link
+                href="/profile"
+                aria-current={pathname.startsWith('/profile') ? 'page' : undefined}
+                className={buttonClasses(
+                  'ghost',
+                  'sm',
+                  pathname.startsWith('/profile') ? 'bg-surface-muted' : undefined,
+                )}
+              >
+                {t.nav.profile}
+              </Link>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className={buttonClasses('ghost', 'sm')}
+              >
+                {t.nav.logout}
+              </button>
+            </>
           ) : user === null ? (
             <>
               <Link

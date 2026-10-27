@@ -1,12 +1,25 @@
-import type { AiTaskInput, AiTaskResult, AiTaskType, ImplementedAiTaskType } from '@lingoup/ai-sdk';
+import {
+  GAP,
+  type AiTaskInput,
+  type AiTaskOutput,
+  type AiTaskResult,
+  type AiTaskType,
+  type ImplementedAiTaskType,
+} from '@lingoup/ai-sdk';
 import type { AIProvider, DataLocality } from '../application/ai-provider.js';
 
 export const MOCK_PROVIDER_NAME = 'mock';
 
+const SUPPORTED: readonly AiTaskType[] = [
+  'word-explanation',
+  'reading-text-generation',
+  'exercise-generation',
+];
+
 /**
  * Deterministic placeholder that lets the platform run without any model. Its output
- * is explicitly labelled as a placeholder (and flagged `isMock` in the API), it never
- * pretends to be a real explanation. Supports word-explanation only.
+ * is explicitly labelled as a placeholder (and flagged `isMock` in the API); it never
+ * pretends to be real model output.
  */
 export class MockAIProvider implements AIProvider {
   readonly name = MOCK_PROVIDER_NAME;
@@ -16,22 +29,55 @@ export class MockAIProvider implements AIProvider {
   }
 
   supports(task: AiTaskType): boolean {
-    return task === 'word-explanation';
+    return SUPPORTED.includes(task);
   }
 
   execute<T extends ImplementedAiTaskType>(
-    _task: T,
+    task: T,
     input: AiTaskInput<T>,
     signal: AbortSignal,
   ): Promise<AiTaskResult<T>> {
     signal.throwIfAborted();
-    const output = {
-      definition: `Placeholder for "${input.term}": no language model is configured. Set AI_PROVIDER=ai-service to get real explanations.`,
-      translation: null,
-      partOfSpeech: null,
-      example: input.context.trim() || null,
-      usageNote: null,
-    };
-    return Promise.resolve({ provider: this.name, model: 'mock-v1', output } as AiTaskResult<T>);
+    return Promise.resolve({
+      provider: this.name,
+      model: 'mock-v1',
+      output: this.output(task, input) as AiTaskOutput<T>,
+    });
+  }
+
+  private output(task: ImplementedAiTaskType, input: unknown): unknown {
+    switch (task) {
+      case 'word-explanation': {
+        const { term, context } = input as AiTaskInput<'word-explanation'>;
+        return {
+          definition: `Placeholder for "${term}": no language model is configured. Set AI_PROVIDER=ai-service to get real explanations.`,
+          translation: null,
+          partOfSpeech: null,
+          example: context.trim() || null,
+          usageNote: null,
+        };
+      }
+      case 'reading-text-generation': {
+        const { words } = input as AiTaskInput<'reading-text-generation'>;
+        return {
+          title: 'Placeholder practice text',
+          summary: 'Generated without a language model. Configure an AI provider for real texts.',
+          paragraphs: [
+            'This is a placeholder text. No language model is configured, so these sentences only show where your words would appear.',
+            ...words.map((word) => `Here is the word "${word}" in a placeholder sentence.`),
+          ],
+        };
+      }
+      case 'exercise-generation': {
+        const { words } = input as AiTaskInput<'exercise-generation'>;
+        return {
+          items: words.map(({ term, definition }) => ({
+            term,
+            sentence: `Placeholder sentence without a language model: ${GAP}.`,
+            hint: definition,
+          })),
+        };
+      }
+    }
   }
 }

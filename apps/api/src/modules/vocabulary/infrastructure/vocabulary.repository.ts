@@ -125,6 +125,30 @@ export class VocabularyRepository {
     return deleted.length > 0;
   }
 
+  /**
+   * Words worth practising now: overdue cards first (most overdue first), then cards in
+   * learning/relearning, then the newest words.
+   */
+  async pickPracticeWords(userId: string, now: Date, limit: number) {
+    return this.db
+      .select({
+        wordId: words.id,
+        term: words.term,
+        definition: words.definition,
+        translation: words.translation,
+        contextSentence: words.contextSentence,
+      })
+      .from(words)
+      .innerJoin(cards, eq(cards.wordId, words.id))
+      .where(eq(words.userId, userId))
+      .orderBy(
+        sql`CASE WHEN ${cards.due} <= ${now} THEN 0 WHEN ${cards.state} IN ('learning', 'relearning') THEN 1 ELSE 2 END`,
+        asc(cards.due),
+        desc(words.id),
+      )
+      .limit(limit);
+  }
+
   async dueCards(userId: string, now: Date, limit: number) {
     return this.db
       .select({ word: words, card: cards })

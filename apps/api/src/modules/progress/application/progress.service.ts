@@ -37,6 +37,7 @@ export class ProgressService implements PersonalDataExporter {
           wordsSaved: dailyActivity.wordsSaved,
           reviewsDone: dailyActivity.reviewsDone,
           textsCompleted: dailyActivity.textsCompleted,
+          exercisesDone: dailyActivity.exercisesDone,
         })
         .from(dailyActivity)
         .where(and(eq(dailyActivity.userId, userId), gte(dailyActivity.day, since)))
@@ -44,6 +45,7 @@ export class ProgressService implements PersonalDataExporter {
       this.db
         .select({
           textsCompleted: sum(dailyActivity.textsCompleted),
+          exercisesDone: sum(dailyActivity.exercisesDone),
           updatedAt: max(dailyActivity.updatedAt),
         })
         .from(dailyActivity)
@@ -55,6 +57,7 @@ export class ProgressService implements PersonalDataExporter {
       vocabulary,
       activity,
       textsCompleted: Number(totals?.textsCompleted ?? 0),
+      exercisesDone: Number(totals?.exercisesDone ?? 0),
       streakDays: currentStreak(activity),
       activityUpdatedAt: totals?.updatedAt ? totals.updatedAt.toISOString() : null,
     };

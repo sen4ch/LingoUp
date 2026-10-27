@@ -20,13 +20,14 @@ export const dailyActivity = progressSchema.table(
     wordsSaved: integer('words_saved').notNull().default(0),
     reviewsDone: integer('reviews_done').notNull().default(0),
     textsCompleted: integer('texts_completed').notNull().default(0),
+    exercisesDone: integer('exercises_done').notNull().default(0),
     updatedAt: updatedAt(),
   },
   (t) => [
     primaryKey({ name: 'daily_activity_pkey', columns: [t.userId, t.day] }),
     check(
       'daily_activity_non_negative',
-      sql`${t.wordsSaved} >= 0 AND ${t.reviewsDone} >= 0 AND ${t.textsCompleted} >= 0`,
+      sql`${t.wordsSaved} >= 0 AND ${t.reviewsDone} >= 0 AND ${t.textsCompleted} >= 0 AND ${t.exercisesDone} >= 0`,
     ),
   ],
 );

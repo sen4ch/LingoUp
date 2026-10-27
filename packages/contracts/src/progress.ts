@@ -6,6 +6,7 @@ export const DailyActivitySchema = z.object({
   wordsSaved: z.number().int().nonnegative(),
   reviewsDone: z.number().int().nonnegative(),
   textsCompleted: z.number().int().nonnegative(),
+  exercisesDone: z.number().int().nonnegative(),
 });
 export type DailyActivity = z.infer<typeof DailyActivitySchema>;
 
@@ -28,6 +29,7 @@ export const ProgressSummarySchema = z.object({
   /** Last 30 days (UTC), oldest first; days without activity are included with zeros. */
   activity: z.array(DailyActivitySchema),
   textsCompleted: z.number().int().nonnegative(),
+  exercisesDone: z.number().int().nonnegative(),
   streakDays: z.number().int().nonnegative(),
   /**
    * Activity is an eventually consistent projection built by the worker from domain

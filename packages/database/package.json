@@ -26,6 +26,10 @@
       "types": "./dist/schema/learning.d.ts",
       "default": "./dist/schema/learning.js"
     },
+    "./schema/grammar": {
+      "types": "./dist/schema/grammar.d.ts",
+      "default": "./dist/schema/grammar.js"
+    },
     "./schema/progress": {
       "types": "./dist/schema/progress.d.ts",
       "default": "./dist/schema/progress.js"

@@ -168,3 +168,39 @@ export const SubmitReviewResponseSchema = z.object({
   duplicate: z.boolean(),
 });
 export type SubmitReviewResponse = z.infer<typeof SubmitReviewResponseSchema>;
+
+/** Gap-fill practice built from the learner's own words. */
+export const PracticeItemSchema = z.object({
+  wordId: UuidSchema,
+  term: z.string(),
+  /** Sentence with the term replaced by ___. */
+  sentence: z.string(),
+  hint: z.string().nullable(),
+  options: z.array(z.string()),
+  /** Self-practice: the answer is included so the client can check instantly. */
+  answer: z.string(),
+});
+export type PracticeItem = z.infer<typeof PracticeItemSchema>;
+
+export const PRACTICE_SOURCES = ['ai', 'context'] as const;
+
+export const PracticeSetSchema = z.object({
+  setId: UuidSchema,
+  /** ai: sentences written by the model; context: the learner's saved context sentences. */
+  source: z.enum(PRACTICE_SOURCES),
+  provider: z.string().nullable(),
+  isMock: z.boolean(),
+  /** Why AI sentences were not used, when source is context. */
+  aiStatus: AiLookupStatusSchema,
+  items: z.array(PracticeItemSchema),
+});
+export type PracticeSet = z.infer<typeof PracticeSetSchema>;
+
+export const CompletePracticeRequestSchema = z
+  .object({
+    setId: UuidSchema,
+    total: z.number().int().min(1).max(20),
+    correct: z.number().int().min(0).max(20),
+  })
+  .refine((value) => value.correct <= value.total, 'correct cannot exceed total');
+export type CompletePracticeRequest = z.infer<typeof CompletePracticeRequestSchema>;

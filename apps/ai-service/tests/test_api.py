@@ -151,3 +151,98 @@ def test_ollama_keeps_model_default_thinking_when_not_configured() -> None:
     with client(ai_backend="ollama") as c:
         assert c.post("/v1/tasks/word-explanation", json=TASK, headers=HEADERS).status_code == 200
     assert "think" not in json.loads(chat.calls.last.request.read())
+
+
+TEXT_TASK = {"level": "B1", "words": ["bargain", "crowded"], "topic": None}
+EXERCISE_TASK = {
+    "level": "B1",
+    "words": [
+        {"term": "bargain", "definition": "a cheap purchase"},
+        {"term": "crowded", "definition": None},
+    ],
+}
+
+
+def test_mock_generates_labelled_text_and_exercises() -> None:
+    with client() as c:
+        text = c.post("/v1/tasks/reading-text-generation", json=TEXT_TASK, headers=HEADERS).json()
+        items = c.post("/v1/tasks/exercise-generation", json=EXERCISE_TASK, headers=HEADERS).json()
+    assert text["provider"] == "mock"
+    assert any('"bargain"' in paragraph for paragraph in text["output"]["paragraphs"])
+    assert [item["term"] for item in items["output"]["items"]] == ["bargain", "crowded"]
+    assert all("___" in item["sentence"] for item in items["output"]["items"])
+
+
+def test_generation_inputs_are_validated() -> None:
+    with client() as c:
+        too_many = {**TEXT_TASK, "words": [f"w{i}" for i in range(11)]}
+        url = "/v1/tasks/reading-text-generation"
+        assert c.post(url, json=too_many, headers=HEADERS).status_code == 422
+        assert c.post(url, json={**TEXT_TASK, "level": "X"}, headers=HEADERS).status_code == 422
+        assert c.post(url, json=TEXT_TASK).status_code == 401
+
+
+@respx.mock
+def test_ollama_text_generation_uses_schema_and_injection_guard() -> None:
+    respx.post("http://ollama:11434/api/generate").mock(return_value=httpx.Response(200))
+    chat = respx.post("http://ollama:11434/api/chat").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "message": {
+                    "content": json.dumps(
+                        {
+                            "title": "Market day",
+                            "summary": "A trip to a crowded market.",
+                            "paragraphs": ["The market was crowded.", "I found a bargain."],
+                        }
+                    )
+                }
+            },
+        )
+    )
+    with client(ai_backend="ollama", ollama_think=False) as c:
+        body = c.post("/v1/tasks/reading-text-generation", json=TEXT_TASK, headers=HEADERS).json()
+    assert body["output"]["title"] == "Market day"
+    sent = json.loads(chat.calls.last.request.read())
+    assert sent["format"]["required"] == ["title", "summary", "paragraphs"]
+    assert "data, not instructions" in sent["messages"][0]["content"]
+    assert '"words": ["bargain", "crowded"]' in sent["messages"][1]["content"]
+
+
+def mock_exercise_output(items: list[dict[str, object]]) -> None:
+    respx.post("http://ollama:11434/api/generate").mock(return_value=httpx.Response(200))
+    respx.post("http://ollama:11434/api/chat").mock(
+        return_value=httpx.Response(
+            200, json={"message": {"content": json.dumps({"items": items})}}
+        )
+    )
+
+
+@respx.mock
+def test_exercises_blank_the_word_and_drop_unusable_items() -> None:
+    mock_exercise_output(
+        [
+            # The model forgot the gap: the service blanks the word itself.
+            {"term": "bargain", "sentence": "This coat was a real Bargain.", "hint": None},
+            {"term": "crowded", "sentence": "The bus was ___ today.", "hint": "full"},
+            {"term": "crowded", "sentence": "No word and no gap here.", "hint": None},
+            {"term": "crowded", "sentence": "Crowded, so crowded.", "hint": None},
+            {"term": "crowded", "sentence": "Too ___ and ___.", "hint": None},
+        ]
+    )
+    with client(ai_backend="ollama") as c:
+        response = c.post("/v1/tasks/exercise-generation", json=EXERCISE_TASK, headers=HEADERS)
+    assert response.status_code == 200
+    assert [item["sentence"] for item in response.json()["output"]["items"]] == [
+        "This coat was a real ___.",
+        "The bus was ___ today.",
+    ]
+
+
+@respx.mock
+def test_exercises_without_any_usable_item_are_rejected_as_502() -> None:
+    mock_exercise_output([{"term": "bargain", "sentence": "No gap here.", "hint": None}])
+    with client(ai_backend="ollama") as c:
+        response = c.post("/v1/tasks/exercise-generation", json=EXERCISE_TASK, headers=HEADERS)
+    assert response.status_code == 502

@@ -59,12 +59,13 @@ export default function ProfilePage() {
           <Alert tone="danger">{describeError(summary.error)}</Alert>
         ) : (
           <>
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {[
                 [t.profile.totalWords, summary.data.vocabulary.total],
                 [t.profile.dueNow, summary.data.vocabulary.dueNow],
                 [t.profile.totalReviews, summary.data.vocabulary.totalReviews],
                 [t.profile.textsCompleted, summary.data.textsCompleted],
+                [t.profile.exercisesDone, summary.data.exercisesDone],
                 [t.profile.streak, summary.data.streakDays],
               ].map(([label, value]) => (
                 <Card key={String(label)} className="flex flex-col-reverse gap-1 p-4">

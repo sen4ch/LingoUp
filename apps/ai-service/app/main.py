@@ -10,7 +10,15 @@ from fastapi.responses import JSONResponse
 
 from .config import Settings
 from .providers import Provider, ProviderError, create_provider
-from .schemas import HealthResponse, TaskResponse, WordExplanationInput
+from .schemas import (
+    ExerciseGenerationInput,
+    ExerciseResponse,
+    HealthResponse,
+    ReadingTextGenerationInput,
+    ReadingTextResponse,
+    TaskResponse,
+    WordExplanationInput,
+)
 
 logger = logging.getLogger("ai-service")
 
@@ -81,6 +89,24 @@ def create_app(settings: Settings | None = None, provider: Provider | None = Non
             logger.warning("word-explanation failed: %s", error)
             raise HTTPException(status_code=502, detail="AI backend failed") from error
         return TaskResponse(provider=active.name, model=active.model, output=output)
+
+    @app.post("/v1/tasks/reading-text-generation", dependencies=[Depends(require_token)])
+    async def reading_text_generation(task: ReadingTextGenerationInput) -> ReadingTextResponse:
+        try:
+            output = await active.generate_text(task)
+        except ProviderError as error:
+            logger.warning("reading-text-generation failed: %s", error)
+            raise HTTPException(status_code=502, detail="AI backend failed") from error
+        return ReadingTextResponse(provider=active.name, model=active.model, output=output)
+
+    @app.post("/v1/tasks/exercise-generation", dependencies=[Depends(require_token)])
+    async def exercise_generation(task: ExerciseGenerationInput) -> ExerciseResponse:
+        try:
+            output = await active.generate_exercises(task)
+        except ProviderError as error:
+            logger.warning("exercise-generation failed: %s", error)
+            raise HTTPException(status_code=502, detail="AI backend failed") from error
+        return ExerciseResponse(provider=active.name, model=active.model, output=output)
 
     return app
 

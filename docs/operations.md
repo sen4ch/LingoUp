@@ -145,4 +145,6 @@ OPENAI_COMPATIBLE_DATA_LOCALITY=external
 AI_ALLOW_EXTERNAL=true         # и каждый пользователь включает согласие в профиле
 ```
 
-Лимиты: `AI_TIMEOUT_MS`, `AI_MAX_CONCURRENCY` (на экземпляр API), `AI_MAX_RETRIES` (только для идемпотентных задач), `AI_DAILY_QUOTA_PER_USER`.
+Лимиты: `AI_TIMEOUT_MS` (подсказка по слову), `AI_GENERATION_TIMEOUT_MS` (личный текст и упражнение по словам, по умолчанию 120 с; прокси web ждёт эти маршруты до 150 с, поэтому больше не ставьте), `AI_MAX_CONCURRENCY` (на экземпляр API), `AI_MAX_RETRIES` (только для идемпотентных задач — генерация не повторяется), `AI_DAILY_QUOTA_PER_USER`.
+
+Замер на qwen3:8b (`OLLAMA_THINK=false`, прогретая модель): личный текст — 4–6 с, упражнение по словам — около 4 с.

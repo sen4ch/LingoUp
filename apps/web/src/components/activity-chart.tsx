@@ -4,7 +4,9 @@ import { formatDate } from '@/lib/format';
 
 /** 30-day bar chart; the same data is available as a table for screen readers. */
 export function ActivityChart({ activity }: { activity: DailyActivity[] }) {
-  const totals = activity.map((day) => day.wordsSaved + day.reviewsDone + day.textsCompleted);
+  const totals = activity.map(
+    (day) => day.wordsSaved + day.reviewsDone + day.textsCompleted + day.exercisesDone,
+  );
   const max = Math.max(1, ...totals);
   return (
     <>
@@ -29,6 +31,7 @@ export function ActivityChart({ activity }: { activity: DailyActivity[] }) {
             <th scope="col">{t.profile.table.words}</th>
             <th scope="col">{t.profile.table.reviews}</th>
             <th scope="col">{t.profile.table.texts}</th>
+            <th scope="col">{t.profile.table.exercises}</th>
           </tr>
         </thead>
         <tbody>
@@ -40,6 +43,7 @@ export function ActivityChart({ activity }: { activity: DailyActivity[] }) {
                 <td>{day.wordsSaved}</td>
                 <td>{day.reviewsDone}</td>
                 <td>{day.textsCompleted}</td>
+                <td>{day.exercisesDone}</td>
               </tr>
             ))}
         </tbody>

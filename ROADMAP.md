@@ -26,10 +26,14 @@
 
 ## Этап 2 — Grammar + Exercises
 
-- [ ] Модуль Grammar: темы, правила (Markdown с санитизацией), связи с CEFR
-- [ ] Learning: учебные сессии, попытки, автоматическая проверка упражнений
-- [ ] События `LessonStarted`, `ExerciseCompleted`
-- [ ] AI: `GrammarExplanation`, `ExerciseGeneration` (с валидацией и модерацией вывода)
+- [x] Модуль Grammar: темы A1–C2, правила (структурированные блоки без HTML), упражнения с проверкой на сервере, прогресс по теме
+- [x] Событие `ExerciseCompleted` → проекция прогресса
+- [x] AI: `ExerciseGeneration` — упражнения с пропуском по словам пользователя (валидация вывода, запасной вариант без AI)
+- [x] AI: `ReadingTextGeneration` — личные тексты из слов, которые учит пользователь ([ADR-0008](docs/adr/0008-grammar-and-ai-practice.md))
+- [ ] Learning: учебные сессии, событие `LessonStarted`
+- [ ] Генерация в worker с прогрессом (для медленных моделей)
+- [ ] AI: `GrammarExplanation` — объяснение ошибки в упражнении
+- [ ] Модерация AI-вывода; редактор грамматических тем
 
 ## Этап 3 — Assessment
 

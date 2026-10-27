@@ -16,6 +16,7 @@ import {
 import { t } from '@/i18n';
 import { MarkAsRead } from './mark-as-read';
 import {
+  focusTokenIndices,
   snapToWords,
   toLookup,
   type Lookup,
@@ -42,11 +43,14 @@ const Paragraph = memo(function Paragraph({
   paragraph,
   activeFrom,
   activeTo,
+  focus,
 }: {
   index: number;
   paragraph: TokenizedParagraph;
   activeFrom: number;
   activeTo: number;
+  /** Token indices of the learner's vocabulary terms (generated texts). */
+  focus: ReadonlySet<number>;
 }) {
   return (
     <p className="mb-5 last:mb-0">
@@ -55,7 +59,13 @@ const Paragraph = memo(function Paragraph({
           key={tokenIndex}
           data-p={index}
           data-t={tokenIndex}
-          className={token.isWord ? 'reader-word' : undefined}
+          className={
+            token.isWord
+              ? focus.has(tokenIndex)
+                ? 'reader-word reader-focus'
+                : 'reader-word'
+              : undefined
+          }
           data-active={
             token.isWord && tokenIndex >= activeFrom && tokenIndex <= activeTo ? 'true' : undefined
           }
@@ -81,6 +91,10 @@ export function Reader({ text }: { text: TextDetail }) {
         };
       }),
     [text.paragraphs],
+  );
+  const focusByParagraph = useMemo(
+    () => paragraphs.map((paragraph) => focusTokenIndices(paragraph, text.focusTerms)),
+    [paragraphs, text.focusTerms],
   );
 
   const [range, setRange] = useState<WordRange | null>(null);
@@ -253,6 +267,7 @@ export function Reader({ text }: { text: TextDetail }) {
               paragraph={paragraph}
               activeFrom={range?.paragraph === index ? range.from : -1}
               activeTo={range?.paragraph === index ? range.to : -2}
+              focus={focusByParagraph[index]!}
             />
           ))}
         </div>

@@ -1,5 +1,10 @@
 import { MAX_TERM_WORDS } from '@lingoup/contracts';
-import { sentenceAt, type Token } from '@lingoup/learning-engine';
+import {
+  findTermOccurrences,
+  normalizeTerm,
+  sentenceAt,
+  type Token,
+} from '@lingoup/learning-engine';
 
 /** Selected run of word tokens inside one paragraph (token indices, inclusive). */
 export interface WordRange {
@@ -44,4 +49,25 @@ export function snapToWords(
   const words = paragraph.words.filter((index) => index >= start.token && index <= endToken);
   if (words.length === 0) return null;
   return { paragraph: start.paragraph, from: words[0]!, to: words.at(-1)! };
+}
+
+/**
+ * Token indices covered by any focus term (single words or phrases), compared on
+ * normalized word sequences, e.g. "look forward to" in "I look Forward to it".
+ */
+export function focusTokenIndices(
+  paragraph: TokenizedParagraph,
+  terms: readonly string[],
+): Set<number> {
+  const marked = new Set<number>();
+  const words = paragraph.words.map((index) => normalizeTerm(paragraph.tokens[index]!.text));
+  for (const term of terms) {
+    const length = normalizeTerm(term).split(' ').filter(Boolean).length;
+    for (const start of findTermOccurrences(words, term)) {
+      const first = paragraph.words[start]!;
+      const last = paragraph.words[start + length - 1]!;
+      for (let index = first; index <= last; index++) marked.add(index);
+    }
+  }
+  return marked;
 }

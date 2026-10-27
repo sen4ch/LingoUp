@@ -21,6 +21,9 @@ const HOP_BY_HOP = new Set([
   'content-length',
 ]);
 const TIMEOUT_MS = 30_000;
+/** AI generation runs synchronously and may take minutes on a local model (AI_GENERATION_TIMEOUT_MS). */
+const LONG_RUNNING_PATHS = new Set(['v1/learning/generated-texts', 'v1/vocabulary/practice']);
+const LONG_TIMEOUT_MS = 150_000;
 
 async function proxy(
   request: NextRequest,
@@ -44,7 +47,9 @@ async function proxy(
       body: hasBody ? await request.arrayBuffer() : null,
       redirect: 'manual',
       cache: 'no-store',
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(
+        LONG_RUNNING_PATHS.has(path.join('/')) ? LONG_TIMEOUT_MS : TIMEOUT_MS,
+      ),
     });
   } catch {
     return Response.json(

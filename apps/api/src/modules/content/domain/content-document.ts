@@ -1,5 +1,10 @@
 import { createHash } from 'node:crypto';
-import { CefrLevelSchema, SlugSchema } from '@lingoup/contracts';
+import {
+  AI_GENERATED_CONTENT_LICENSE,
+  CefrLevelSchema,
+  CONTENT_PROVENANCES,
+  SlugSchema,
+} from '@lingoup/contracts';
 import { countWords, normalizeTerm } from '@lingoup/learning-engine';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
@@ -15,12 +20,8 @@ const GlossaryItemSchema = z.object({
   example: z.string().trim().max(300).nullable().default(null),
 });
 
-/**
- * Who created a text. AI-generated material has no human author, so no exclusive copyright
- * can be claimed for it: it must be released as CC0-1.0 and credited honestly.
- */
-export const CONTENT_PROVENANCES = ['human', 'ai-assisted', 'ai-generated', 'third-party'] as const;
-const AI_GENERATED_LICENSE = 'CC0-1.0';
+/** Bumped when stored fields change, so the importer refreshes existing rows once. */
+const FORMAT_VERSION = 'v2';
 
 const FrontmatterSchema = z
   .object({
@@ -36,10 +37,13 @@ const FrontmatterSchema = z
     license: z.string().trim().min(1).max(60),
     glossary: z.array(GlossaryItemSchema).max(200).default([]),
   })
-  .refine((meta) => meta.provenance !== 'ai-generated' || meta.license === AI_GENERATED_LICENSE, {
-    message: `AI-generated content cannot carry exclusive rights; use license ${AI_GENERATED_LICENSE}`,
-    path: ['license'],
-  });
+  .refine(
+    (meta) => meta.provenance !== 'ai-generated' || meta.license === AI_GENERATED_CONTENT_LICENSE,
+    {
+      message: `AI-generated content cannot carry exclusive rights; use license ${AI_GENERATED_CONTENT_LICENSE}`,
+      path: ['license'],
+    },
+  );
 
 export type ContentDocument = Omit<z.infer<typeof FrontmatterSchema>, 'glossary'> & {
   paragraphs: string[];
@@ -95,6 +99,6 @@ export function parseContentDocument(raw: string, source: string): ContentDocume
     glossary,
     paragraphs,
     wordCount: paragraphs.reduce((sum, paragraph) => sum + countWords(paragraph), 0),
-    contentHash: createHash('sha256').update(raw).digest('hex'),
+    contentHash: createHash('sha256').update(FORMAT_VERSION).update(raw).digest('hex'),
   };
 }

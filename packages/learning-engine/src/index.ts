@@ -11,6 +11,8 @@ export {
 export {
   countWords,
   estimateReadingMinutes,
+  findTermOccurrences,
+  isWordForm,
   normalizeTerm,
   sentenceAt,
   tokenize,

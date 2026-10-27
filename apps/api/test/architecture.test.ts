@@ -16,6 +16,7 @@ const OWNED_SCHEMA: Record<string, string | null> = {
   content: 'content',
   vocabulary: 'vocabulary',
   learning: 'learning',
+  grammar: 'grammar',
   progress: 'progress',
   'ai-gateway': null,
 };

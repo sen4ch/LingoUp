@@ -65,6 +65,7 @@ flowchart TB
         content[Content]
         vocabulary[Vocabulary]
         learning[Learning]
+        grammar[Grammar]
         progress[Progress]
         aigw[AI Gateway]
         platformm[Platform:<br/>DB, Outbox, Valkey, Health]
@@ -72,25 +73,28 @@ flowchart TB
     vocabulary -->|ContentGlossaryQuery| content
     vocabulary -->|AiGateway| aigw
     vocabulary -->|AiConsentQuery| identity
-    learning -->|ContentCatalogQuery| content
+    learning -->|ContentCatalogQuery,<br/>PrivateTextsService| content
+    learning -->|PracticeService| vocabulary
+    learning -->|UserSettingsQuery| identity
+    learning -->|AiGateway| aigw
     progress -->|VocabularyStatsQuery| vocabulary
-    identity & vocabulary & learning -->|OutboxWriter| platformm
+    identity & vocabulary & learning & grammar -->|OutboxWriter| platformm
 ```
 
 Стрелка означает: «вызывает публичный API модуля». Обратных зависимостей и циклов нет.
 
-| Модуль         | Статус           | Ответственность                                                                                                                                                  | Схема БД            |
-| -------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| **Identity**   | ✅ MVP           | Регистрация, вход, сессии, профиль, настройки (включая согласие на внешний AI)                                                                                   | `identity`          |
-| **Content**    | ✅ MVP (тексты)  | Библиотека текстов, CEFR-метаданные, глоссарий; импорт из `content/`                                                                                             | `content`           |
-| **Vocabulary** | ✅ MVP           | Персональный словарь, контекст слова, FSRS-карточки, история повторений, lookup                                                                                  | `vocabulary`        |
-| **Learning**   | 🟡 Частично      | Отметка о прочтении текста (`LessonCompleted`). Учебные сессии и попытки выполнения упражнений — позже                                                           | `learning`          |
-| **Progress**   | 🟡 Частично      | Проекция ежедневной активности (из событий), сводка профиля. Анализ слабых сторон — позже                                                                        | `progress`          |
-| **AI Gateway** | 🟡 Частично      | Абстракция `AIProvider`, маршрутизация, таймауты, лимит параллельных запросов, retry, валидация вывода, квоты, приватность. Реализована задача `WordExplanation` | — (Valkey)          |
-| **Assessment** | ⏳ Не реализован | Тестирование навыков, оценка уверенности в уровне                                                                                                                | `assessment` (план) |
-| **Grammar**    | ⏳ Не реализован | Темы, правила, практика                                                                                                                                          | `grammar` (план)    |
-| **Planner**    | ⏳ Не реализован | Цели, доступное время, адаптивный план                                                                                                                           | `planner` (план)    |
-| **Media**      | ⏳ Не реализован | Видео, аудио, субтитры                                                                                                                                           | `media` (план)      |
+| Модуль         | Статус           | Ответственность                                                                                                                                                                                                               | Схема БД            |
+| -------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **Identity**   | ✅ MVP           | Регистрация, вход, сессии, профиль, настройки (включая согласие на внешний AI)                                                                                                                                                | `identity`          |
+| **Content**    | ✅ MVP           | Библиотека текстов, CEFR-метаданные, глоссарий, импорт из `content/`; личные AI-тексты пользователя (видны только владельцу)                                                                                                  | `content`           |
+| **Vocabulary** | ✅ MVP           | Персональный словарь, контекст слова, FSRS-карточки, история повторений, lookup, упражнения с пропуском (AI или сохранённые примеры)                                                                                          | `vocabulary`        |
+| **Learning**   | 🟡 Частично      | Отметка о прочтении (`LessonCompleted`), генерация личных текстов из слов пользователя. Учебные сессии — позже                                                                                                                | `learning`          |
+| **Grammar**    | ✅ MVP           | Темы по уровням: правило, примеры, упражнения (выбор и ввод) с проверкой на сервере и прогрессом. Импорт из `content/grammar/`                                                                                                | `grammar`           |
+| **Progress**   | 🟡 Частично      | Проекция ежедневной активности (из событий), сводка профиля. Анализ слабых сторон — позже                                                                                                                                     | `progress`          |
+| **AI Gateway** | 🟡 Частично      | Абстракция `AIProvider`, маршрутизация, таймауты (интерактивный и для генерации), лимит параллельности, retry, валидация вывода, квоты, приватность. Задачи: `WordExplanation`, `ReadingTextGeneration`, `ExerciseGeneration` | — (Valkey)          |
+| **Assessment** | ⏳ Не реализован | Тестирование навыков, оценка уверенности в уровне                                                                                                                                                                             | `assessment` (план) |
+| **Planner**    | ⏳ Не реализован | Цели, доступное время, адаптивный план                                                                                                                                                                                        | `planner` (план)    |
+| **Media**      | ⏳ Не реализован | Видео, аудио, субтитры                                                                                                                                                                                                        | `media` (план)      |
 
 ### 4.1. Внутреннее устройство модуля
 
@@ -127,19 +131,24 @@ erDiagram
     vocabulary_cards ||--o{ vocabulary_review_logs : "history"
     content_texts ||--o{ content_glossary_entries : has
     identity_users ||--o{ learning_text_completions : completes
+    identity_users ||--o{ content_texts : "owns private"
+    grammar_topics ||--o{ grammar_exercises : has
+    grammar_exercises ||--o{ grammar_attempts : "answered in"
+    identity_users ||--o{ grammar_attempts : makes
     identity_users ||--o{ progress_daily_activity : "projected"
     platform_outbox_events
     platform_processed_events
 ```
 
-| Схема        | Владелец                                | Таблицы                              |
-| ------------ | --------------------------------------- | ------------------------------------ |
-| `identity`   | Identity                                | `users`, `sessions`, `user_settings` |
-| `content`    | Content                                 | `texts`, `glossary_entries`          |
-| `vocabulary` | Vocabulary                              | `words`, `cards`, `review_logs`      |
-| `learning`   | Learning                                | `text_completions`                   |
-| `progress`   | Progress (запись — обработчик в worker) | `daily_activity`                     |
-| `platform`   | Platform (инфраструктура)               | `outbox_events`, `processed_events`  |
+| Схема        | Владелец                                | Таблицы                                          |
+| ------------ | --------------------------------------- | ------------------------------------------------ |
+| `identity`   | Identity                                | `users`, `sessions`, `user_settings`             |
+| `content`    | Content                                 | `texts` (публичные и личные), `glossary_entries` |
+| `grammar`    | Grammar                                 | `topics`, `exercises`, `attempts`                |
+| `vocabulary` | Vocabulary                              | `words`, `cards`, `review_logs`                  |
+| `learning`   | Learning                                | `text_completions`                               |
+| `progress`   | Progress (запись — обработчик в worker) | `daily_activity`                                 |
+| `platform`   | Platform (инфраструктура)               | `outbox_events`, `processed_events`              |
 
 Межсхемные внешние ключи разрешены **только на `identity.users(id)`** с `ON DELETE CASCADE`: это даёт целостное удаление персональных данных. Ссылки на контент (`source_text_id`) хранятся без FK: модуль контента может переехать, а снимок контекста (предложение, slug) сохраняется в словаре.
 
@@ -151,17 +160,17 @@ erDiagram
 { id: uuid, type: "WordSaved", version: 1, occurredAt: ISO-8601, userId?: uuid, payload: {...} }
 ```
 
-| Событие                     | Версия | Производитель | Потребители | Статус                      |
-| --------------------------- | ------ | ------------- | ----------- | --------------------------- |
-| `UserRegistered`            | 1      | Identity      | — (резерв)  | ✅ публикуется              |
-| `WordSaved`                 | 1      | Vocabulary    | Progress    | ✅                          |
-| `VocabularyReviewCompleted` | 1      | Vocabulary    | Progress    | ✅                          |
-| `LessonCompleted`           | 1      | Learning      | Progress    | ✅ (чтение текста)          |
-| `LessonStarted`             | 1      | Learning      | —           | 📄 контракт, не публикуется |
-| `ExerciseCompleted`         | 1      | Learning      | —           | 📄 контракт, не публикуется |
-| `AssessmentCompleted`       | 1      | Assessment    | —           | 📄 контракт, не публикуется |
-| `SkillLevelUpdated`         | 1      | Progress      | —           | 📄 контракт, не публикуется |
-| `LearningPlanUpdated`       | 1      | Planner       | —           | 📄 контракт, не публикуется |
+| Событие                     | Версия | Производитель       | Потребители | Статус                                |
+| --------------------------- | ------ | ------------------- | ----------- | ------------------------------------- |
+| `UserRegistered`            | 1      | Identity            | — (резерв)  | ✅ публикуется                        |
+| `WordSaved`                 | 1      | Vocabulary          | Progress    | ✅                                    |
+| `VocabularyReviewCompleted` | 1      | Vocabulary          | Progress    | ✅                                    |
+| `LessonCompleted`           | 1      | Learning            | Progress    | ✅ (чтение текста)                    |
+| `LessonStarted`             | 1      | Learning            | —           | 📄 контракт, не публикуется           |
+| `ExerciseCompleted`         | 1      | Grammar, Vocabulary | Progress    | ✅ (грамматика, упражнение по словам) |
+| `AssessmentCompleted`       | 1      | Assessment          | —           | 📄 контракт, не публикуется           |
+| `SkillLevelUpdated`         | 1      | Progress            | —           | 📄 контракт, не публикуется           |
+| `LearningPlanUpdated`       | 1      | Planner             | —           | 📄 контракт, не публикуется           |
 
 ### Transactional Outbox
 
@@ -204,7 +213,8 @@ flowchart LR
     fast --> oa[OpenAI-compatible<br/>vLLM / свой API]
 ```
 
-- Контракты задач (`WordExplanation`, `GrammarExplanation`, `WritingAssessment`, `SpeechRecognition`, `SpeechSynthesis`, `ExerciseGeneration`, `LearningRecommendation`) описаны в `packages/ai-sdk`. **Реализована только `WordExplanation`**; остальные — объявленные типы задач без исполнителя. Gateway честно отвечает `AI_TASK_NOT_SUPPORTED`.
+- Контракты задач описаны в `packages/ai-sdk`. **Реализованы `WordExplanation`, `ReadingTextGeneration` (личный текст из слов пользователя) и `ExerciseGeneration` (предложения с пропуском)**. `GrammarExplanation`, `WritingAssessment`, `SpeechRecognition`, `SpeechSynthesis`, `LearningRecommendation` — объявленные типы без исполнителя; Gateway честно отвечает `AI_TASK_NOT_SUPPORTED`.
+- Генерация выполняется синхронно в HTTP-запросе с отдельным таймаутом `AI_GENERATION_TIMEOUT_MS` и не повторяется при ошибке; если AI недоступен, упражнение по словам строится из сохранённых примеров. См. [ADR-0008](docs/adr/0008-grammar-and-ai-practice.md).
 - `AiGateway` не знает о моделях: он выбирает провайдера по `AI_PROVIDER`, применяет таймаут (`AbortSignal.timeout`), семафор параллельности, retry только для идемпотентных задач, валидирует ответ Zod-схемой и считает дневную квоту пользователя в Valkey.
 - **Приватность:** провайдер объявляет `dataLocality: "local" | "external"`. Пользовательский текст отправляется во внешний провайдер, только если администратор это разрешил (`AI_ALLOW_EXTERNAL=true`) **и** пользователь дал согласие (`user_settings.ai_data_sharing`). Иначе используется только глоссарий текста, без AI.
 - AI-эндпоинты не публичны: требуется сессия, работает rate limit. ai-service принимает только запросы с `AI_SERVICE_TOKEN`.

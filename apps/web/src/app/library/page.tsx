@@ -1,8 +1,10 @@
-import { CEFR_LEVELS, CefrLevelSchema, ListTextsResponseSchema } from '@lingoup/contracts';
-import { Badge, Card, cn, EmptyState, LevelBadge } from '@lingoup/ui';
+import { CefrLevelSchema, ListTextsResponseSchema } from '@lingoup/contracts';
+import { Badge, Card, EmptyState, LevelBadge } from '@lingoup/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CompletionMark } from '@/components/completion-mark';
+import { LevelFilter } from '@/components/level-filter';
+import { MyTextsTeaser } from '@/components/my-texts-teaser';
 import { t } from '@/i18n';
 import { serverApi } from '@/lib/server-api';
 
@@ -21,11 +23,6 @@ export default async function LibraryPage({
     ListTextsResponseSchema,
   );
 
-  const filters = [
-    { value: undefined, label: t.levels.all },
-    ...CEFR_LEVELS.map((value) => ({ value, label: value })),
-  ];
-
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
@@ -33,30 +30,8 @@ export default async function LibraryPage({
         <p className="max-w-2xl text-muted">{t.library.intro}</p>
       </header>
 
-      <nav aria-label={t.levels.filterLabel}>
-        <ul className="flex flex-wrap gap-2">
-          {filters.map((filter) => {
-            const active = filter.value === level;
-            return (
-              <li key={filter.label}>
-                <Link
-                  href={filter.value ? `/library?level=${filter.value}` : '/library'}
-                  aria-current={active ? 'page' : undefined}
-                  title={filter.value ? t.levels.names[filter.value] : undefined}
-                  className={cn(
-                    'inline-flex h-9 items-center rounded-full border px-4 text-sm font-medium',
-                    active
-                      ? 'border-primary bg-primary text-primary-fg'
-                      : 'border-border bg-surface hover:bg-surface-muted',
-                  )}
-                >
-                  {filter.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <MyTextsTeaser />
+      <LevelFilter basePath="/library" active={level} />
 
       {items.length === 0 ? (
         <EmptyState title={t.library.empty} />

@@ -1,8 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { check, index, integer, pgSchema, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { CEFR_LEVEL_CHECK, createdAt, primaryId, timestamptz, updatedAt } from './_columns.js';
+import { users } from './identity.js';
 
-/** Owned by the Content module. Holds no personal data. */
+/**
+ * Owned by the Content module. Library texts hold no personal data; private texts
+ * (owner_user_id set, e.g. AI-generated from a learner's vocabulary) belong to one user.
+ */
 export const contentSchema = pgSchema('content');
 
 export const texts = contentSchema.table(
@@ -23,6 +27,15 @@ export const texts = contentSchema.table(
     author: text('author').notNull(),
     /** SPDX identifier of the content licence, e.g. CC-BY-4.0 or CC0-1.0. */
     license: text('license').notNull(),
+    /** human | ai-assisted | ai-generated | third-party (see content/README.md). */
+    provenance: text('provenance').notNull().default('human'),
+    /** Null for the public library; set for a private text visible only to its owner. */
+    ownerUserId: uuid('owner_user_id').references(() => users.id, { onDelete: 'cascade' }),
+    /** Vocabulary terms the text was built around; highlighted by the reader. */
+    focusTerms: text('focus_terms')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /** SHA-256 of the source file; lets the importer skip unchanged texts. */
     contentHash: text('content_hash').notNull(),
     publishedAt: timestamptz('published_at'),
@@ -32,7 +45,12 @@ export const texts = contentSchema.table(
   (t) => [
     check('texts_level', sql`${t.level} ${CEFR_LEVEL_CHECK}`),
     check('texts_word_count', sql`${t.wordCount} >= 0`),
+    check(
+      'texts_provenance',
+      sql`${t.provenance} IN ('human', 'ai-assisted', 'ai-generated', 'third-party')`,
+    ),
     index('texts_level_published_idx').on(t.level, t.publishedAt),
+    index('texts_owner_user_id_idx').on(t.ownerUserId),
   ],
 );
 

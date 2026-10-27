@@ -5,12 +5,13 @@ import { dailyActivity } from '@lingoup/database/schema/progress';
 import { sql } from 'drizzle-orm';
 import type { EventHandler } from './event-handler.js';
 
-type Counter = 'wordsSaved' | 'reviewsDone' | 'textsCompleted';
+type Counter = 'wordsSaved' | 'reviewsDone' | 'textsCompleted' | 'exercisesDone';
 
 const COUNTER_BY_EVENT: Partial<Record<DomainEvent['type'], Counter>> = {
   WordSaved: 'wordsSaved',
   VocabularyReviewCompleted: 'reviewsDone',
   LessonCompleted: 'textsCompleted',
+  ExerciseCompleted: 'exercisesDone',
 };
 
 /**

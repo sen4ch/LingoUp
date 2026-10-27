@@ -65,6 +65,31 @@ describe('ProgressProjector', () => {
     expect(row).toMatchObject({ day: '2026-10-26', wordsSaved: 2, reviewsDone: 0 });
   });
 
+  it('counts completed exercises', async () => {
+    const userId = await createUser();
+    const projector = new ProgressProjector(connection.db);
+    for (const correct of [true, false]) {
+      await projector.handle({
+        id: randomUUID(),
+        type: 'ExerciseCompleted',
+        version: 1,
+        occurredAt: '2026-10-27T10:00:00.000Z',
+        userId,
+        payload: {
+          exerciseId: randomUUID(),
+          attemptId: randomUUID(),
+          correct,
+          score: correct ? 1 : 0,
+        },
+      });
+    }
+    const [row] = await connection.db
+      .select()
+      .from(dailyActivity)
+      .where(eq(dailyActivity.userId, userId));
+    expect(row).toMatchObject({ day: '2026-10-27', exercisesDone: 2, wordsSaved: 0 });
+  });
+
   it('skips events of deleted accounts instead of failing forever', async () => {
     const userId = await createUser();
     await connection.db.delete(users).where(eq(users.id, userId));

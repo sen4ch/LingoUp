@@ -59,3 +59,41 @@ export function sentenceAt(paragraph: string, offset: number): string {
 export function estimateReadingMinutes(wordCount: number): number {
   return Math.max(1, Math.ceil(wordCount / 180));
 }
+
+/** Shorter words are matched exactly, so "to" does not match "toes". */
+const MIN_INFLECTED_LENGTH = 3;
+const SUFFIXES = ['s', 'es', 'd', 'ed', 'ing', 'er', 'est'];
+
+/**
+ * True when `word` is `base` or a regular English inflection of it: improve → improved,
+ * improving; bargain → bargains; study → studied; stop → stopped. Both are normalized
+ * single words. Irregular forms (buy → bought) are not recognized.
+ */
+export function isWordForm(word: string, base: string): boolean {
+  if (word === base) return true;
+  if (base.length < MIN_INFLECTED_LENGTH) return false;
+  return SUFFIXES.some((suffix) => {
+    if (!word.endsWith(suffix)) return false;
+    const stem = word.slice(0, -suffix.length);
+    return (
+      stem === base ||
+      `${stem}e` === base ||
+      (stem.endsWith('i') && `${stem.slice(0, -1)}y` === base) ||
+      (stem.length > 2 && stem.at(-1) === stem.at(-2) && stem.slice(0, -1) === base)
+    );
+  });
+}
+
+/**
+ * Start indices in `words` (normalized words of a text) where `term` occurs, allowing a
+ * regular inflection of every word of a phrase: "looked forward to" matches "look forward to".
+ */
+export function findTermOccurrences(words: readonly string[], term: string): number[] {
+  const parts = normalizeTerm(term).split(' ').filter(Boolean);
+  const starts: number[] = [];
+  if (parts.length === 0) return starts;
+  for (let start = 0; start + parts.length <= words.length; start++) {
+    if (parts.every((part, offset) => isWordForm(words[start + offset]!, part))) starts.push(start);
+  }
+  return starts;
+}

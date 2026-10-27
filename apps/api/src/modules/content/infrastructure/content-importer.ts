@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Database } from '@lingoup/database';
 import { glossaryEntries, texts } from '@lingoup/database/schema/content';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { parseContentDocument, type ContentDocument } from '../domain/content-document.js';
 
 export interface ImportReport {
@@ -47,7 +47,8 @@ export class ContentImporter {
     return this.db.transaction(async (tx) => {
       const existing = await tx.query.texts.findFirst({
         columns: { id: true, contentHash: true },
-        where: eq(texts.slug, document.slug),
+        // Library texts only: a private text must never be overwritten by an import.
+        where: and(eq(texts.slug, document.slug), isNull(texts.ownerUserId)),
       });
       if (existing?.contentHash === document.contentHash) return 'unchanged';
 
@@ -61,6 +62,7 @@ export class ContentImporter {
         wordCount: document.wordCount,
         author: document.author,
         license: document.license,
+        provenance: document.provenance,
         contentHash: document.contentHash,
       };
       let textId: string;

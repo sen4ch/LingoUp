@@ -14,12 +14,15 @@ export function fillActivityWindow(
   const result: DailyActivity[] = [];
   for (let offset = days - 1; offset >= 0; offset--) {
     const day = isoDay(new Date(today.getTime() - offset * DAY_MS));
-    result.push(byDay.get(day) ?? { day, wordsSaved: 0, reviewsDone: 0, textsCompleted: 0 });
+    result.push(
+      byDay.get(day) ?? { day, wordsSaved: 0, reviewsDone: 0, textsCompleted: 0, exercisesDone: 0 },
+    );
   }
   return result;
 }
 
-const isActive = (row: DailyActivity) => row.wordsSaved + row.reviewsDone + row.textsCompleted > 0;
+const isActive = (row: DailyActivity) =>
+  row.wordsSaved + row.reviewsDone + row.textsCompleted + row.exercisesDone > 0;
 
 /**
  * Consecutive active days ending today. If today has no activity yet, the streak that

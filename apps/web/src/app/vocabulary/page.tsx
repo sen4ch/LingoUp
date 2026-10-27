@@ -61,9 +61,14 @@ export default function VocabularyPage() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">{t.vocabulary.title}</h1>
-        <Link href="/review" className={buttonClasses('primary')}>
-          {t.nav.review}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/vocabulary/practice" className={buttonClasses('secondary')}>
+            {t.practice.vocabularyLink}
+          </Link>
+          <Link href="/review" className={buttonClasses('primary')}>
+            {t.nav.review}
+          </Link>
+        </div>
       </header>
       <div className="max-w-md">
         <TextField

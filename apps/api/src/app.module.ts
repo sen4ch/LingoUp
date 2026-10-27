@@ -5,6 +5,7 @@ import type { Redis } from 'ioredis';
 import type { AppConfig } from './config/app-config.js';
 import { AiGatewayModule } from './modules/ai-gateway/index.js';
 import { ContentModule } from './modules/content/index.js';
+import { GrammarModule } from './modules/grammar/index.js';
 import { IdentityModule } from './modules/identity/index.js';
 import { LearningModule } from './modules/learning/index.js';
 import { ProgressModule } from './modules/progress/index.js';
@@ -36,6 +37,7 @@ export class AppModule {
         AiGatewayModule,
         VocabularyModule,
         LearningModule,
+        GrammarModule,
         ProgressModule,
       ],
       providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

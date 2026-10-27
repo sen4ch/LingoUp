@@ -164,7 +164,9 @@ describe('identity', () => {
     expect(exported.status).toBe(200);
     expect(Object.keys(exported.body.sections).sort()).toEqual([
       'account',
+      'grammar',
       'learning',
+      'privateTexts',
       'progress',
       'vocabulary',
     ]);

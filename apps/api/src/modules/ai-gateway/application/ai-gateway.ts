@@ -4,6 +4,7 @@ import {
   AI_TASKS,
   AiServiceError,
   isIdempotentTask,
+  taskDuration,
   type AiTaskInput,
   type AiTaskResult,
   type ImplementedAiTaskType,
@@ -64,7 +65,11 @@ export class AiGateway {
     }
 
     // One deadline covers waiting for a slot, every attempt and backoff.
-    const deadline = AbortSignal.timeout(this.config.ai.timeoutMs);
+    const deadline = AbortSignal.timeout(
+      taskDuration(task) === 'generation'
+        ? this.config.ai.generationTimeoutMs
+        : this.config.ai.timeoutMs,
+    );
     const startedAt = performance.now();
     try {
       const locality = await provider.dataLocality(deadline);

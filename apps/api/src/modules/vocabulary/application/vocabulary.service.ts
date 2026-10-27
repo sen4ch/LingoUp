@@ -90,7 +90,7 @@ export class VocabularyService implements PersonalDataExporter {
   async saveWord(userId: string, request: SaveWordRequest): Promise<Word> {
     const normalizedTerm = normalizeOrFail(request.term);
     const sourceText = request.sourceTextSlug
-      ? await this.content.findTextRef(request.sourceTextSlug)
+      ? await this.content.findTextRef(request.sourceTextSlug, userId)
       : null;
     const now = new Date();
     try {

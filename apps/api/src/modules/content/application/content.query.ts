@@ -12,15 +12,25 @@ export class ContentQuery {
     return this.repository.listPublished(level);
   }
 
-  async getText(slug: string): Promise<TextDetail> {
-    const text = await this.repository.findPublishedBySlug(slug);
+  listMyTexts(userId: string): Promise<TextSummary[]> {
+    return this.repository.listOwned(userId);
+  }
+
+  async getText(slug: string, viewerUserId: string | null): Promise<TextDetail> {
+    const text = await this.repository.findReadableBySlug(slug, viewerUserId);
     if (!text) throw notFound('Text');
     return text;
   }
 
-  /** Lightweight reference used by other modules to store a snapshot of the text. */
-  async findTextRef(slug: string): Promise<{ id: string; slug: string; level: CefrLevel } | null> {
-    const text = await this.repository.findPublishedBySlug(slug);
+  /**
+   * Lightweight reference used by other modules to store a snapshot of the text.
+   * Respects privacy: another user's private text is not found.
+   */
+  async findTextRef(
+    slug: string,
+    viewerUserId: string | null,
+  ): Promise<{ id: string; slug: string; level: CefrLevel } | null> {
+    const text = await this.repository.findReadableBySlug(slug, viewerUserId);
     return text ? { id: text.id, slug: text.slug, level: text.level } : null;
   }
 

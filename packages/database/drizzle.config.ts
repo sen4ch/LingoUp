@@ -5,7 +5,15 @@ export default defineConfig({
   schema: './src/schema/*.ts',
   out: './migrations',
   casing: 'snake_case',
-  schemaFilter: ['identity', 'content', 'vocabulary', 'learning', 'progress', 'platform'],
+  schemaFilter: [
+    'identity',
+    'content',
+    'vocabulary',
+    'learning',
+    'grammar',
+    'progress',
+    'platform',
+  ],
   strict: true,
   verbose: true,
 });

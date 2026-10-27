@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { currentStreak, fillActivityWindow } from './activity.js';
 
 const today = new Date('2026-10-26T12:00:00.000Z');
-const active = (day: string) => ({ day, wordsSaved: 1, reviewsDone: 0, textsCompleted: 0 });
+const active = (day: string) => ({
+  day,
+  wordsSaved: 1,
+  reviewsDone: 0,
+  textsCompleted: 0,
+  exercisesDone: 0,
+});
 
 describe('fillActivityWindow', () => {
   it('returns a continuous window, oldest first, with zeros for missing days', () => {
@@ -13,6 +19,7 @@ describe('fillActivityWindow', () => {
       wordsSaved: 0,
       reviewsDone: 0,
       textsCompleted: 0,
+      exercisesDone: 0,
     });
     expect(window[1]!.wordsSaved).toBe(1);
   });

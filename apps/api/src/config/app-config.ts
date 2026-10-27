@@ -46,6 +46,8 @@ const EnvSchema = z.object({
   AI_SERVICE_URL: z.url().default('http://localhost:8000'),
   AI_SERVICE_TOKEN: z.string().min(32, 'must be at least 32 characters').optional(),
   AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(20_000),
+  // Text and exercise generation write much more output than a word explanation.
+  AI_GENERATION_TIMEOUT_MS: z.coerce.number().int().min(1000).max(600_000).default(120_000),
   AI_MAX_CONCURRENCY: z.coerce.number().int().min(1).max(256).default(4),
   AI_MAX_RETRIES: z.coerce.number().int().min(0).max(3).default(1),
   AI_DAILY_QUOTA_PER_USER: z.coerce.number().int().min(0).default(200),
@@ -90,6 +92,7 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
       serviceUrl: env.AI_SERVICE_URL,
       serviceToken: env.AI_SERVICE_TOKEN ?? null,
       timeoutMs: env.AI_TIMEOUT_MS,
+      generationTimeoutMs: env.AI_GENERATION_TIMEOUT_MS,
       maxConcurrency: env.AI_MAX_CONCURRENCY,
       maxRetries: env.AI_MAX_RETRIES,
       dailyQuotaPerUser: env.AI_DAILY_QUOTA_PER_USER,

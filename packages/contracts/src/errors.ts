@@ -11,6 +11,10 @@ export const ERROR_CODES = [
   'INVALID_CREDENTIALS',
   'EMAIL_ALREADY_REGISTERED',
   'WORD_ALREADY_SAVED',
+  /** The learner needs more saved words for a practice text or exercise. */
+  'NOT_ENOUGH_WORDS',
+  /** A feature that requires a language model could not get an answer from it. */
+  'AI_UNAVAILABLE',
   'INTERNAL_ERROR',
 ] as const;
 export const ErrorCodeSchema = z.enum(ERROR_CODES);
