@@ -4,9 +4,12 @@ import {
   CEFR_LEVELS,
   GenerateTextResponseSchema,
   MyTextsResponseSchema,
+  WordPageSchema,
   type CefrLevel,
   type GenerateTextResponse,
   type TextSummary,
+  type Word,
+  type WordPage,
 } from '@lingoup/contracts';
 import {
   Alert,
@@ -47,11 +50,43 @@ function GenerateForm({ defaultLevel }: { defaultLevel: CefrLevel }) {
   const queryClient = useQueryClient();
   const [level, setLevel] = useState<CefrLevel>(defaultLevel);
   const [topic, setTopic] = useState('');
+  const [wordMode, setWordMode] = useState('all');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+  const vocabulary = useQuery({
+    queryKey: ['generation-vocabulary'],
+    queryFn: async ({ signal }) => {
+      const words: Word[] = [];
+      let cursor: string | null = null;
+      do {
+        const params: URLSearchParams = new URLSearchParams({
+          limit: '100',
+          ...(cursor ? { cursor } : {}),
+        });
+        const page: WordPage = await api(`/v1/vocabulary/words?${params}`, {
+          schema: WordPageSchema,
+          signal,
+        });
+        words.push(...page.items);
+        cursor = page.nextCursor;
+      } while (cursor);
+      return words;
+    },
+  });
+  const words = vocabulary.data ?? [];
+  const chosenCount = wordMode === 'all' ? words.length : selected.length;
+  const filtered = words.filter((word) =>
+    `${word.term} ${word.translation ?? ''}`.toLowerCase().includes(search.trim().toLowerCase()),
+  );
   const generate = useMutation({
     mutationFn: () =>
       api('/v1/learning/generated-texts', {
         method: 'POST',
-        body: { level, ...(topic.trim() ? { topic: topic.trim() } : {}) },
+        body: {
+          level,
+          ...(topic.trim() ? { topic: topic.trim() } : {}),
+          ...(wordMode === 'selected' ? { wordIds: selected } : {}),
+        },
         schema: GenerateTextResponseSchema,
       }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: MY_TEXTS_QUERY_KEY }),
@@ -64,25 +99,124 @@ function GenerateForm({ defaultLevel }: { defaultLevel: CefrLevel }) {
 
   return (
     <Card className="flex flex-col gap-4">
-      <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
-        <SelectField
-          label={t.myTexts.level}
-          value={level}
-          disabled={generate.isPending}
-          onChange={(event) => setLevel(event.target.value as CefrLevel)}
-          options={CEFR_LEVELS.map((value) => ({ value, label: value }))}
-        />
-        <TextField
-          label={t.myTexts.topic}
-          placeholder={t.myTexts.topicPlaceholder}
-          value={topic}
-          maxLength={80}
-          disabled={generate.isPending}
-          onChange={(event) => setTopic(event.target.value)}
-        />
-        <Button type="submit" loading={generate.isPending}>
-          {t.myTexts.generate}
-        </Button>
+      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <fieldset disabled={generate.isPending} className="flex flex-col gap-3">
+          <legend className="mb-2 font-semibold">{t.myTexts.words}</legend>
+          <div className="flex flex-wrap gap-4">
+            {(['all', 'selected'] as const).map((mode) => (
+              <label key={mode} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="word-mode"
+                  value={mode}
+                  checked={wordMode === mode}
+                  onChange={() => setWordMode(mode)}
+                  className="accent-primary"
+                />
+                {mode === 'all' ? t.myTexts.allWords : t.myTexts.selectWords}
+              </label>
+            ))}
+          </div>
+          {vocabulary.isPending ? (
+            <Skeleton className="h-10" />
+          ) : vocabulary.isError ? (
+            <Alert
+              tone="danger"
+              action={
+                <Button type="button" variant="secondary" onClick={() => void vocabulary.refetch()}>
+                  {t.common.retry}
+                </Button>
+              }
+            >
+              {describeError(vocabulary.error)}
+            </Alert>
+          ) : (
+            <>
+              {wordMode === 'selected' ? (
+                <>
+                  <TextField
+                    label={t.myTexts.wordSearch}
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSelected(words.map((word) => word.id))}
+                    >
+                      {t.myTexts.selectAll}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setSelected([])}>
+                      {t.myTexts.clearSelection}
+                    </Button>
+                  </div>
+                  <div className="grid max-h-64 gap-2 overflow-y-auto rounded-lg border border-border p-3 sm:grid-cols-2">
+                    {filtered.map((word) => (
+                      <label
+                        key={word.id}
+                        className="flex cursor-pointer items-start gap-2 rounded p-2 hover:bg-surface-muted"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(word.id)}
+                          className="mt-1 accent-primary"
+                          onChange={(event) =>
+                            setSelected((ids) =>
+                              event.target.checked
+                                ? [...ids, word.id]
+                                : ids.filter((id) => id !== word.id),
+                            )
+                          }
+                        />
+                        <span>
+                          <span className="font-semibold">{word.term}</span>
+                          {word.translation ? (
+                            <span className="ml-2 text-sm text-muted">{word.translation}</span>
+                          ) : null}
+                        </span>
+                      </label>
+                    ))}
+                    {filtered.length === 0 ? (
+                      <p className="text-sm text-muted">{t.myTexts.noMatchingWords}</p>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+              <p className="text-sm text-muted" aria-live="polite">
+                {t.myTexts.wordCount(chosenCount)}
+              </p>
+              {chosenCount < 3 ? (
+                <p className="text-sm text-muted">{t.myTexts.minimumWords}</p>
+              ) : null}
+            </>
+          )}
+        </fieldset>
+        <div className="grid gap-4 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
+          <SelectField
+            label={t.myTexts.level}
+            value={level}
+            disabled={generate.isPending}
+            onChange={(event) => setLevel(event.target.value as CefrLevel)}
+            options={CEFR_LEVELS.map((value) => ({ value, label: value }))}
+          />
+          <TextField
+            label={t.myTexts.topic}
+            placeholder={t.myTexts.topicPlaceholder}
+            value={topic}
+            maxLength={80}
+            disabled={generate.isPending}
+            onChange={(event) => setTopic(event.target.value)}
+          />
+          <Button
+            type="submit"
+            loading={generate.isPending}
+            disabled={!vocabulary.isSuccess || chosenCount < 3}
+          >
+            {t.myTexts.generate}
+          </Button>
+        </div>
       </form>
       {generate.isPending ? (
         <p className="flex items-center gap-2 text-sm text-muted" role="status">

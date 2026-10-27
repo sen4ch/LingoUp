@@ -175,9 +175,13 @@ def test_mock_generates_labelled_text_and_exercises() -> None:
 
 def test_generation_inputs_are_validated() -> None:
     with client() as c:
-        too_many = {**TEXT_TASK, "words": [f"w{i}" for i in range(11)]}
+        all_words = {**TEXT_TASK, "words": [f"w{i}" for i in range(11)]}
         url = "/v1/tasks/reading-text-generation"
-        assert c.post(url, json=too_many, headers=HEADERS).status_code == 422
+        response = c.post(url, json=all_words, headers=HEADERS)
+        assert response.status_code == 200
+        paragraphs = " ".join(response.json()["output"]["paragraphs"])
+        assert all(word in paragraphs for word in all_words["words"])
+        assert c.post(url, json={**TEXT_TASK, "words": []}, headers=HEADERS).status_code == 422
         assert c.post(url, json={**TEXT_TASK, "level": "X"}, headers=HEADERS).status_code == 422
         assert c.post(url, json=TEXT_TASK).status_code == 401
 

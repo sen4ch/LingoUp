@@ -47,7 +47,7 @@ const VocabularyTerm = z.string().min(1).max(80);
 export const ReadingTextGenerationInputSchema = z.object({
   level: CefrLevel,
   /** Words or phrases that must appear in the text. */
-  words: z.array(VocabularyTerm).min(1).max(10),
+  words: z.array(VocabularyTerm).min(1),
   /** Optional theme suggested by the learner. */
   topic: z.string().max(80).nullable(),
 });

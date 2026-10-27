@@ -8,7 +8,7 @@ import type {
 } from '@lingoup/contracts';
 import type { Database } from '@lingoup/database';
 import { normalizeTerm } from '@lingoup/learning-engine';
-import { DATABASE, DomainError, OutboxWriter } from '../../../platform/index.js';
+import { DATABASE, DomainError, notFound, OutboxWriter } from '../../../platform/index.js';
 import { AiGateway, MOCK_PROVIDER_NAME } from '../../ai-gateway/index.js';
 import { UserSettingsQuery } from '../../identity/index.js';
 import {
@@ -35,6 +35,13 @@ export class PracticeService {
   /** Public API for other modules: the words worth practising now. */
   async pickWords(userId: string, limit: number, now = new Date()): Promise<PracticeWord[]> {
     return this.repository.pickPracticeWords(userId, now, limit);
+  }
+
+  /** All vocabulary, or exactly the requested words; never substitute someone else's words. */
+  async wordsForText(userId: string, wordIds?: string[]): Promise<PracticeWord[]> {
+    const words = await this.repository.pickPracticeWords(userId, new Date(), undefined, wordIds);
+    if (wordIds && words.length !== wordIds.length) throw notFound('Word');
+    return words;
   }
 
   /**

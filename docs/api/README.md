@@ -21,24 +21,24 @@
 
 ## Маршруты
 
-| Метод и путь                                                                                 | Доступ   | Назначение                                                                                             |
-| -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
-| `GET /health/live`, `GET /health/ready`                                                      | публично | Health checks                                                                                          |
-| `POST /v1/auth/register`, `POST /v1/auth/login`                                              | публично | Регистрация и вход, устанавливают cookie                                                               |
-| `POST /v1/auth/logout`                                                                       | сессия   | Выход, отзыв сессии                                                                                    |
-| `GET /v1/me`, `PATCH /v1/me/settings`                                                        | сессия   | Профиль и настройки                                                                                    |
-| `GET /v1/me/export`, `DELETE /v1/me`                                                         | сессия   | Экспорт и удаление персональных данных                                                                 |
-| `GET /v1/texts?level=B1`, `GET /v1/texts/:slug`                                              | публично | Библиотека текстов (личный текст по slug — только владельцу)                                           |
-| `GET /v1/texts/mine`, `DELETE /v1/texts/mine/:slug`                                          | сессия   | Личные AI-тексты                                                                                       |
-| `GET /v1/grammar/topics?level=A1`, `GET /v1/grammar/topics/:slug`                            | публично | Грамматика; с сессией — прогресс по теме                                                               |
-| `POST /v1/grammar/exercises/:id/attempts`                                                    | сессия   | Проверка ответа на упражнение                                                                          |
-| `POST /v1/vocabulary/lookup`                                                                 | сессия   | Карточка слова: глоссарий и AI                                                                         |
-| `GET/POST /v1/vocabulary/words`, `GET/PATCH/DELETE /v1/vocabulary/words/:id`                 | сессия   | Персональный словарь                                                                                   |
-| `GET /v1/vocabulary/reviews/due`, `POST /v1/vocabulary/reviews`                              | сессия   | FSRS-повторения                                                                                        |
-| `POST /v1/vocabulary/practice`, `POST /v1/vocabulary/practice/complete`                      | сессия   | Упражнение с пропуском по своим словам (AI или сохранённые примеры)                                    |
-| `GET /v1/vocabulary/images/search?q=…&page=1`, `GET /v1/vocabulary/images/:imageId/thumb`    | сессия   | Поиск свободных картинок (миниатюры проксируются API)                                                  |
-| `GET/PUT/DELETE /v1/vocabulary/words/:id/image`, `PUT /v1/vocabulary/words/:id/image/upload` | сессия   | Картинка слова: выбрать из поиска (`{ imageId }`) или загрузить (`Content-Type: image/*`, до 5 МБ)     |
-| `GET /v1/vocabulary/pronunciation?text=…&kind=term\|sentence`                                | сессия   | Аудио произношения (`audio/mpeg`); 503 с `details.aiStatus`, если озвучка выключена или нужно согласие |
-| `POST /v1/learning/generated-texts`                                                          | сессия   | Личный текст из своих слов (синхронно, до `AI_GENERATION_TIMEOUT_MS`)                                  |
-| `GET /v1/learning/reading/completions`, `POST /v1/learning/reading/:slug/complete`           | сессия   | Прочитанные тексты                                                                                     |
-| `GET /v1/progress/summary`                                                                   | сессия   | Сводка прогресса                                                                                       |
+| Метод и путь                                                                                 | Доступ   | Назначение                                                                                              |
+| -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `GET /health/live`, `GET /health/ready`                                                      | публично | Health checks                                                                                           |
+| `POST /v1/auth/register`, `POST /v1/auth/login`                                              | публично | Регистрация и вход, устанавливают cookie                                                                |
+| `POST /v1/auth/logout`                                                                       | сессия   | Выход, отзыв сессии                                                                                     |
+| `GET /v1/me`, `PATCH /v1/me/settings`                                                        | сессия   | Профиль и настройки                                                                                     |
+| `GET /v1/me/export`, `DELETE /v1/me`                                                         | сессия   | Экспорт и удаление персональных данных                                                                  |
+| `GET /v1/texts?level=B1`, `GET /v1/texts/:slug`                                              | публично | Библиотека текстов (личный текст по slug — только владельцу)                                            |
+| `GET /v1/texts/mine`, `DELETE /v1/texts/mine/:slug`                                          | сессия   | Личные AI-тексты                                                                                        |
+| `GET /v1/grammar/topics?level=A1`, `GET /v1/grammar/topics/:slug`                            | публично | Грамматика; с сессией — прогресс по теме                                                                |
+| `POST /v1/grammar/exercises/:id/attempts`                                                    | сессия   | Проверка ответа на упражнение                                                                           |
+| `POST /v1/vocabulary/lookup`                                                                 | сессия   | Карточка слова: глоссарий и AI                                                                          |
+| `GET/POST /v1/vocabulary/words`, `GET/PATCH/DELETE /v1/vocabulary/words/:id`                 | сессия   | Персональный словарь                                                                                    |
+| `GET /v1/vocabulary/reviews/due`, `POST /v1/vocabulary/reviews`                              | сессия   | FSRS-повторения                                                                                         |
+| `POST /v1/vocabulary/practice`, `POST /v1/vocabulary/practice/complete`                      | сессия   | Упражнение с пропуском по своим словам (AI или сохранённые примеры)                                     |
+| `GET /v1/vocabulary/images/search?q=…&page=1`, `GET /v1/vocabulary/images/:imageId/thumb`    | сессия   | Поиск свободных картинок (миниатюры проксируются API)                                                   |
+| `GET/PUT/DELETE /v1/vocabulary/words/:id/image`, `PUT /v1/vocabulary/words/:id/image/upload` | сессия   | Картинка слова: выбрать из поиска (`{ imageId }`) или загрузить (`Content-Type: image/*`, до 5 МБ)      |
+| `GET /v1/vocabulary/pronunciation?text=…&kind=term\|sentence`                                | сессия   | Аудио произношения (`audio/mpeg`); 503 с `details.aiStatus`, если озвучка выключена или нужно согласие  |
+| `POST /v1/learning/generated-texts`                                                          | сессия   | Личный текст из всех слов или выбранных `wordIds` (минимум 3; синхронно, до `AI_GENERATION_TIMEOUT_MS`) |
+| `GET /v1/learning/reading/completions`, `POST /v1/learning/reading/:slug/complete`           | сессия   | Прочитанные тексты                                                                                      |
+| `GET /v1/progress/summary`                                                                   | сессия   | Сводка прогресса                                                                                        |

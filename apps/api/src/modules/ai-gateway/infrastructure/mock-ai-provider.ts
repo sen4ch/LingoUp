@@ -64,7 +64,12 @@ export class MockAIProvider implements AIProvider {
           summary: 'Generated without a language model. Configure an AI provider for real texts.',
           paragraphs: [
             'This is a placeholder text. No language model is configured, so these sentences only show where your words would appear.',
-            ...words.map((word) => `Here is the word "${word}" in a placeholder sentence.`),
+            ...Array.from({ length: Math.ceil(words.length / 10) }, (_, index) =>
+              words
+                .slice(index * 10, (index + 1) * 10)
+                .map((word) => `Here is the word "${word}" in a placeholder sentence.`)
+                .join(' '),
+            ),
           ],
         };
       }

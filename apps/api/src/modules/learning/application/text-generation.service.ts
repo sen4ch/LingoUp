@@ -7,8 +7,6 @@ import { PrivateTextsService } from '../../content/index.js';
 import { UserSettingsQuery } from '../../identity/index.js';
 import { MIN_PRACTICE_WORDS, PracticeService } from '../../vocabulary/index.js';
 
-const WORDS_PER_TEXT = 6;
-
 const AI_ERROR_MESSAGES: Record<string, string> = {
   disabled: 'AI is not configured on this server',
   consent_required: 'The AI provider is external; allow AI data sharing in your settings first',
@@ -29,7 +27,7 @@ export function findMissingTerms(
 
 /**
  * Builds a private reading text around the words the learner is studying. Words are chosen
- * automatically (due for review first). Runs synchronously through the AI gateway with the
+ * from the entire vocabulary or explicitly selected by the learner. Runs through the AI gateway with the
  * long "generation" timeout; see ADR-0008.
  */
 @Injectable()
@@ -42,7 +40,7 @@ export class TextGenerationService {
   ) {}
 
   async generate(userId: string, request: GenerateTextRequest): Promise<GenerateTextResponse> {
-    const words = await this.practice.pickWords(userId, WORDS_PER_TEXT);
+    const words = await this.practice.wordsForText(userId, request.wordIds);
     if (words.length < MIN_PRACTICE_WORDS) {
       throw new DomainError('NOT_ENOUGH_WORDS', `Save at least ${MIN_PRACTICE_WORDS} words first`, {
         required: MIN_PRACTICE_WORDS,

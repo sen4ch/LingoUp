@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CefrLevelSchema, IsoDateTimeSchema } from './common.js';
+import { CefrLevelSchema, IsoDateTimeSchema, UuidSchema } from './common.js';
 import { SlugSchema, TextSummarySchema } from './content.js';
 
 export const ReadingCompletionSchema = z.object({
@@ -18,6 +18,12 @@ export const GenerateTextRequestSchema = z.object({
   /** Defaults to the learner's target level. */
   level: CefrLevelSchema.optional(),
   topic: z.string().trim().min(1).max(80).optional(),
+  /** Omit to use the entire vocabulary; otherwise use exactly these owned words. */
+  wordIds: z
+    .array(UuidSchema)
+    .min(3)
+    .refine((ids) => new Set(ids).size === ids.length, 'Duplicate word ids')
+    .optional(),
 });
 export type GenerateTextRequest = z.infer<typeof GenerateTextRequestSchema>;
 

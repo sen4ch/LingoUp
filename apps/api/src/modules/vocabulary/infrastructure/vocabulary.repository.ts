@@ -3,7 +3,7 @@ import type { CardState, UpdateWordRequest, Word, WordImage } from '@lingoup/con
 import type { Database, DbExecutor } from '@lingoup/database';
 import { cards, reviewLogs, wordImages, words } from '@lingoup/database/schema/vocabulary';
 import type { CardSchedule } from '@lingoup/learning-engine';
-import { and, asc, count, desc, eq, ilike, lt, lte, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, lt, lte, sql } from 'drizzle-orm';
 import { DATABASE } from '../../../platform/index.js';
 
 type WordRow = typeof words.$inferSelect;
@@ -160,8 +160,8 @@ export class VocabularyRepository {
    * Words worth practising now: overdue cards first (most overdue first), then cards in
    * learning/relearning, then the newest words.
    */
-  async pickPracticeWords(userId: string, now: Date, limit: number) {
-    return this.db
+  async pickPracticeWords(userId: string, now: Date, limit?: number, wordIds?: string[]) {
+    const query = this.db
       .select({
         wordId: words.id,
         term: words.term,
@@ -171,13 +171,13 @@ export class VocabularyRepository {
       })
       .from(words)
       .innerJoin(cards, eq(cards.wordId, words.id))
-      .where(eq(words.userId, userId))
+      .where(and(eq(words.userId, userId), wordIds ? inArray(words.id, wordIds) : undefined))
       .orderBy(
         sql`CASE WHEN ${cards.due} <= ${now} THEN 0 WHEN ${cards.state} IN ('learning', 'relearning') THEN 1 ELSE 2 END`,
         asc(cards.due),
         desc(words.id),
-      )
-      .limit(limit);
+      );
+    return limit === undefined ? query : query.limit(limit);
   }
 
   async dueCards(userId: string, now: Date, limit: number) {

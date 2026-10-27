@@ -89,6 +89,65 @@ describe('grammar', () => {
 });
 
 describe('AI texts from the learner vocabulary', () => {
+  it('uses all words beyond the previous limit and only the selected owned words', async () => {
+    const owner = new TestAgent(ctx.app);
+    await owner.register();
+    const terms = [
+      'apple',
+      'book',
+      'chair',
+      'door',
+      'egg',
+      'flower',
+      'garden',
+      'house',
+      'island',
+      'juice',
+      'kite',
+    ];
+    await saveWords(
+      owner,
+      terms.map((term) => [term, null]),
+    );
+    const listed = await owner.request('GET', '/v1/vocabulary/words');
+    const ids = listed.body.items.map((word: { id: string }) => word.id) as string[];
+    const all = await owner.request('POST', '/v1/learning/generated-texts', {});
+    expect(all.status).toBe(201);
+    expect(all.body.focusTerms.sort()).toEqual([...terms].sort());
+    const wordIds = ids.slice(0, 3);
+    const selected = await owner.request('POST', '/v1/learning/generated-texts', { wordIds });
+    expect(selected.status).toBe(201);
+    expect(selected.body.focusTerms.sort()).toEqual(
+      listed.body.items
+        .slice(0, 3)
+        .map((word: { term: string }) => word.term)
+        .sort(),
+    );
+    const stranger = new TestAgent(ctx.app);
+    await stranger.register();
+    expect(
+      (await stranger.request('POST', '/v1/learning/generated-texts', { wordIds })).status,
+    ).toBe(404);
+    expect(
+      (
+        await owner.request('POST', '/v1/learning/generated-texts', {
+          wordIds: [...wordIds.slice(0, 2), randomUUID()],
+        })
+      ).status,
+    ).toBe(404);
+    expect(
+      (await owner.request('POST', '/v1/learning/generated-texts', { wordIds: ids.slice(0, 2) }))
+        .status,
+    ).toBe(400);
+    expect(
+      (
+        await owner.request('POST', '/v1/learning/generated-texts', {
+          wordIds: [ids[0], ids[0], ids[1]],
+        })
+      ).status,
+    ).toBe(400);
+  });
+
   it('needs at least three saved words', async () => {
     const agent = new TestAgent(ctx.app);
     await agent.register();

@@ -79,3 +79,44 @@ test('AI text from my words and a vocabulary exercise', async ({ page, request }
   }
   await expect(page.getByText(/Результат: \d из 3/)).toBeVisible();
 });
+
+test('texts use the selected words or the entire vocabulary', async ({ page }) => {
+  await register(page);
+  const terms = ['apple', 'book', 'chair', 'door'];
+  for (const term of terms) {
+    const saved = await page.request.post('/api/v1/vocabulary/words', {
+      headers: { origin: new URL(page.url()).origin },
+      data: { term },
+    });
+    expect(saved.ok()).toBe(true);
+  }
+  await page.goto('/my-texts');
+  await expect(page.getByText('Слов для текста: 4', { exact: true })).toBeVisible();
+  await page.getByRole('radio', { name: 'Выбрать слова', exact: true }).check();
+  const generate = page.getByRole('button', { name: 'Создать текст из моих слов' });
+  await expect(generate).toBeDisabled();
+  await page.getByRole('button', { name: 'Выбрать все', exact: true }).click();
+  await expect(page.getByRole('checkbox', { checked: true })).toHaveCount(4);
+  await page.getByRole('button', { name: 'Снять выбор' }).click();
+  for (const term of terms.slice(0, 3))
+    await page.getByRole('checkbox', { name: term, exact: true }).check();
+  await page.getByRole('textbox', { name: 'Найти слово' }).fill('door');
+  await expect(page.getByRole('checkbox')).toHaveCount(1);
+  await expect(page.getByText('Слов для текста: 3', { exact: true })).toBeVisible();
+  const selectedResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/learning/generated-texts') &&
+      response.request().method() === 'POST',
+  );
+  await generate.click();
+  expect((await (await selectedResponse).json()).focusTerms.sort()).toEqual(terms.slice(0, 3));
+  await expect(page.getByRole('status').filter({ hasText: 'готов' })).toBeVisible();
+  await page.getByRole('radio', { name: 'Использовать все слова' }).check();
+  const allResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/learning/generated-texts') &&
+      response.request().method() === 'POST',
+  );
+  await generate.click();
+  expect((await (await allResponse).json()).focusTerms.sort()).toEqual(terms);
+});
