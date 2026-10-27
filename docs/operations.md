@@ -34,6 +34,8 @@ learn.example.org {
 | `AI_SERVICE_TOKEN`          | api ↔ ai-service               | `openssl rand -hex 32` (не короче 32 символов) |
 | `OPENAI_COMPATIBLE_API_KEY` | ai-service                     | ключ провайдера, если он нужен                 |
 
+`node scripts/init-env.mjs` (или `pnpm setup:env`) создаёт `.env` со случайными секретами. В production (`NODE_ENV=production`) API, worker и ai-service отказываются стартовать, если в секретах остался плейсхолдер `change-me`.
+
 Секреты передаются только через переменные окружения. Файл `.env` в `.gitignore`; Compose отказывается стартовать без обязательных переменных (`${VAR:?}`).
 
 ## Масштабирование

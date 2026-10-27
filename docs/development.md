@@ -2,12 +2,12 @@
 
 ## Окружение
 
-| Инструмент | Версия                                 | Примечание                                           |
-| ---------- | -------------------------------------- | ---------------------------------------------------- |
-| Node.js    | 24 LTS (`.nvmrc`)                      | `engine-strict` включён                              |
-| pnpm       | 12 (`packageManager` в `package.json`) | `npm i -g pnpm@12`                                   |
-| Docker     | с Compose v2                           | PostgreSQL, Valkey, сборка образов, тесты ai-service |
-| Python     | 3.13+ (опционально)                    | только для разработки ai-service вне Docker          |
+| Инструмент | Версия                                      | Примечание                                           |
+| ---------- | ------------------------------------------- | ---------------------------------------------------- |
+| Node.js    | 24 LTS (`.nvmrc`)                           | `engine-strict` включён                              |
+| pnpm       | 12.15.0 (`packageManager` в `package.json`) | `npm i -g pnpm@12.15.0` или `corepack enable`        |
+| Docker     | с Compose v2                                | PostgreSQL, Valkey, сборка образов, тесты ai-service |
+| Python     | 3.13+ (опционально)                         | только для разработки ai-service вне Docker          |
 
 pnpm в этом проекте:
 
@@ -17,7 +17,7 @@ pnpm в этом проекте:
 ## Первый запуск
 
 ```bash
-cp .env.example .env          # замените change-me
+pnpm setup:env                # .env со случайными секретами (не перезаписывает существующий)
 docker compose up -d postgres valkey
 pnpm install
 pnpm build
