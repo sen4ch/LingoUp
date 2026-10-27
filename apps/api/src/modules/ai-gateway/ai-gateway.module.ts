@@ -7,6 +7,7 @@ import { AiGateway } from './application/ai-gateway.js';
 import { AiQuota } from './application/ai-quota.js';
 import { SpeechGateway } from './application/speech-gateway.js';
 import { SPEECH_PROVIDER, type SpeechProvider } from './application/speech-provider.js';
+import { AiServiceSpeechProvider } from './infrastructure/ai-service-speech-provider.js';
 import { AzureSpeechProvider } from './infrastructure/azure-speech-provider.js';
 import { AiServiceProvider } from './infrastructure/ai-service-provider.js';
 import { MockAIProvider } from './infrastructure/mock-ai-provider.js';
@@ -30,6 +31,14 @@ function createSpeechProvider(config: AppConfig): SpeechProvider | null {
   switch (config.speech.provider) {
     case 'none':
       return null;
+    case 'edge':
+      if (!config.ai.serviceToken)
+        throw new Error('AI_SERVICE_TOKEN is required for SPEECH_PROVIDER=edge');
+      return new AiServiceSpeechProvider({
+        baseUrl: config.ai.serviceUrl,
+        token: config.ai.serviceToken,
+        voice: config.speech.voice,
+      });
     case 'azure':
       if (!config.speech.azure)
         throw new Error(

@@ -57,7 +57,8 @@ const EnvSchema = z.object({
   AI_DAILY_QUOTA_PER_USER: z.coerce.number().int().min(0).default(200),
   AI_ALLOW_EXTERNAL: booleanString.default(false),
   // Pronunciation audio. Setting azure is the administrator's opt-in to this external service.
-  SPEECH_PROVIDER: z.enum(['none', 'azure']).default('none'),
+  // edge: Microsoft Edge read-aloud voices through ai-service (edge-tts), free and keyless.
+  SPEECH_PROVIDER: z.enum(['none', 'edge', 'azure']).default('none'),
   AZURE_SPEECH_KEY: optional(z.string().min(16)),
   AZURE_SPEECH_REGION: optional(
     z.string().regex(/^[a-z0-9]+$/, 'Azure region name, e.g. westeurope'),
@@ -66,6 +67,10 @@ const EnvSchema = z.object({
     .string()
     .regex(/^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$/, 'Azure neural voice name')
     .default('en-US-DerekMultilingualNeural'),
+  EDGE_SPEECH_VOICE: z
+    .string()
+    .regex(/^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$/, 'Edge neural voice name')
+    .default('en-US-AndrewMultilingualNeural'),
   SPEECH_CACHE_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 });
 
@@ -76,15 +81,22 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
     EnvSchema.refine((value) => value.AI_PROVIDER !== 'ai-service' || value.AI_SERVICE_TOKEN, {
       message: 'AI_SERVICE_TOKEN is required when AI_PROVIDER=ai-service',
       path: ['AI_SERVICE_TOKEN'],
-    }).refine(
-      (value) =>
-        value.SPEECH_PROVIDER !== 'azure' ||
-        (value.AZURE_SPEECH_KEY !== undefined && value.AZURE_SPEECH_REGION !== undefined),
-      {
-        message: 'AZURE_SPEECH_KEY and AZURE_SPEECH_REGION are required when SPEECH_PROVIDER=azure',
-        path: ['AZURE_SPEECH_KEY'],
-      },
-    ),
+    })
+      .refine(
+        (value) =>
+          value.SPEECH_PROVIDER !== 'azure' ||
+          (value.AZURE_SPEECH_KEY !== undefined && value.AZURE_SPEECH_REGION !== undefined),
+        {
+          message:
+            'AZURE_SPEECH_KEY and AZURE_SPEECH_REGION are required when SPEECH_PROVIDER=azure',
+          path: ['AZURE_SPEECH_KEY'],
+        },
+      )
+      .refine((value) => value.SPEECH_PROVIDER !== 'edge' || value.AI_SERVICE_TOKEN, {
+        message:
+          'AI_SERVICE_TOKEN is required when SPEECH_PROVIDER=edge (speech runs in ai-service)',
+        path: ['AI_SERVICE_TOKEN'],
+      }),
     source,
   );
   assertNoPlaceholderSecrets(env.NODE_ENV, {
@@ -128,7 +140,7 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
         env.AZURE_SPEECH_KEY && env.AZURE_SPEECH_REGION
           ? { key: env.AZURE_SPEECH_KEY, region: env.AZURE_SPEECH_REGION }
           : null,
-      voice: env.AZURE_SPEECH_VOICE,
+      voice: env.SPEECH_PROVIDER === 'edge' ? env.EDGE_SPEECH_VOICE : env.AZURE_SPEECH_VOICE,
       cacheTtlSeconds: env.SPEECH_CACHE_TTL_DAYS * 24 * 60 * 60,
     },
   };

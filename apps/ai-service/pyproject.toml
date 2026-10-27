@@ -1,7 +1,7 @@
 [project]
 name = "lingoup-ai-service"
 version = "0.1.0"
-description = "AI inference gateway for the Open English Learning Platform (mock, Ollama, OpenAI-compatible)."
+description = "AI inference gateway for the Open English Learning Platform (mock, Ollama, OpenAI-compatible) and pronunciation audio."
 license = "AGPL-3.0-only"
 requires-python = ">=3.13"
 dependencies = [
@@ -10,6 +10,8 @@ dependencies = [
   "httpx==0.28.1",
   "pydantic==2.14.1",
   "pydantic-settings==2.16.1",
+  # LGPL-3.0; Microsoft Edge read-aloud voices without a key (see ADR-0009).
+  "edge-tts==7.3.1",
 ]
 
 [project.optional-dependencies]

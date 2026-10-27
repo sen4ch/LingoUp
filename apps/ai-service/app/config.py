@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     openai_compatible_data_locality: Literal["local", "external"] = "external"
 
     request_timeout_seconds: float = 60.0
+    # Pronunciation through edge-tts; a word takes about a second.
+    speech_timeout_seconds: float = 15.0
     max_body_bytes: int = 16 * 1024
 
     @field_validator("ai_service_token")

@@ -19,11 +19,22 @@ from .schemas import (
     TaskResponse,
     WordExplanationInput,
 )
+from .speech import (
+    SpeechError,
+    SpeechInput,
+    Synthesizer,
+    edge_synthesize,
+    synthesize_with_timeout,
+)
 
 logger = logging.getLogger("ai-service")
 
 
-def create_app(settings: Settings | None = None, provider: Provider | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    provider: Provider | None = None,
+    synthesize: Synthesizer = edge_synthesize,
+) -> FastAPI:
     settings = settings or Settings()  # type: ignore[call-arg]  # values come from the environment
     active = provider or create_provider(settings)
 
@@ -107,6 +118,15 @@ def create_app(settings: Settings | None = None, provider: Provider | None = Non
             logger.warning("exercise-generation failed: %s", error)
             raise HTTPException(status_code=502, detail="AI backend failed") from error
         return ExerciseResponse(provider=active.name, model=active.model, output=output)
+
+    @app.post("/v1/tasks/speech-synthesis", dependencies=[Depends(require_token)])
+    async def speech_synthesis(task: SpeechInput) -> Response:
+        try:
+            audio = await synthesize_with_timeout(synthesize, task, settings.speech_timeout_seconds)
+        except SpeechError as error:
+            logger.warning("speech-synthesis failed: %s", error)
+            raise HTTPException(status_code=502, detail="Speech backend failed") from error
+        return Response(content=audio, media_type="audio/mpeg")
 
     return app
 

@@ -1,6 +1,7 @@
 import type { Redis } from 'ioredis';
 import { describe, expect, it, vi } from 'vitest';
 import type { AppConfig } from '../../../config/app-config.js';
+import { AiServiceSpeechProvider } from '../infrastructure/ai-service-speech-provider.js';
 import { AzureSpeechProvider, buildSsml } from '../infrastructure/azure-speech-provider.js';
 import type { AiQuota } from './ai-quota.js';
 import { SpeechGateway, type SpeechRequest } from './speech-gateway.js';
@@ -133,5 +134,45 @@ describe('AzureSpeechProvider', () => {
     await expect(provider.synthesize('for', AbortSignal.timeout(1000))).rejects.toThrow(
       'Azure Speech responded with 401',
     );
+  });
+});
+
+describe('AiServiceSpeechProvider (edge-tts)', () => {
+  const options = {
+    baseUrl: 'http://ai-service:8000',
+    token: 't'.repeat(32),
+    voice: 'en-US-AndrewMultilingualNeural',
+  };
+
+  it('posts the text and voice with the service token and returns the MP3', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(audio, { status: 200, headers: { 'content-type': 'audio/mpeg' } }),
+      );
+    const provider = new AiServiceSpeechProvider(options, fetchImpl);
+    expect(provider.dataLocality).toBe('external');
+    await expect(provider.synthesize('for', AbortSignal.timeout(1000))).resolves.toEqual(audio);
+    const [url, init] = fetchImpl.mock.calls[0]!;
+    expect(String(url)).toBe('http://ai-service:8000/v1/tasks/speech-synthesis');
+    expect(init.headers['x-ai-service-token']).toBe('t'.repeat(32));
+    expect(JSON.parse(init.body)).toEqual({ text: 'for', voice: 'en-US-AndrewMultilingualNeural' });
+  });
+
+  it('rejects errors and non-audio responses', async () => {
+    const failing = new AiServiceSpeechProvider(
+      options,
+      vi.fn().mockResolvedValue(new Response('', { status: 502 })),
+    );
+    await expect(failing.synthesize('for', AbortSignal.timeout(1000))).rejects.toThrow('502');
+    const html = new AiServiceSpeechProvider(
+      options,
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response('<html>', { status: 200, headers: { 'content-type': 'text/html' } }),
+        ),
+    );
+    await expect(html.synthesize('for', AbortSignal.timeout(1000))).rejects.toThrow('MP3');
   });
 });

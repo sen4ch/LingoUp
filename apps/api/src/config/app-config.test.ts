@@ -38,3 +38,18 @@ describe('speech configuration', () => {
     ).toThrow(/AZURE_SPEECH_REGION/);
   });
 });
+
+describe('edge speech configuration', () => {
+  it('uses Andrew Multilingual through ai-service and needs its token', () => {
+    expect(() => loadAppConfig({ ...base, SPEECH_PROVIDER: 'edge' })).toThrow(/AI_SERVICE_TOKEN/);
+    const config = loadAppConfig({
+      ...base,
+      SPEECH_PROVIDER: 'edge',
+      AI_SERVICE_TOKEN: 't'.repeat(32),
+    });
+    expect(config.speech).toMatchObject({
+      provider: 'edge',
+      voice: 'en-US-AndrewMultilingualNeural',
+    });
+  });
+});
