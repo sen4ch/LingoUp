@@ -14,7 +14,8 @@ export class ApiRequestError extends Error {
 }
 
 interface RequestOptions<T> {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  /** JSON-serialized, except a Blob/File, which is sent as-is with its own type (uploads). */
   body?: unknown;
   /** Response schema; responses are validated so contract drift fails loudly. */
   schema?: z.ZodType<T>;
@@ -31,8 +32,18 @@ export async function api<T = void>(path: string, options: RequestOptions<T> = {
     response = await fetch(`/api${path}`, {
       method: options.method ?? 'GET',
       credentials: 'same-origin',
-      headers: options.body === undefined ? {} : { 'content-type': 'application/json' },
-      body: options.body === undefined ? null : JSON.stringify(options.body),
+      headers:
+        options.body === undefined
+          ? {}
+          : {
+              'content-type': options.body instanceof Blob ? options.body.type : 'application/json',
+            },
+      body:
+        options.body === undefined
+          ? null
+          : options.body instanceof Blob
+            ? options.body
+            : JSON.stringify(options.body),
       ...(options.signal ? { signal: options.signal } : {}),
     });
   } catch (error) {

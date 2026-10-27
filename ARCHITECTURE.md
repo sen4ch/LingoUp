@@ -87,7 +87,7 @@ flowchart TB
 | -------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | **Identity**   | ✅ MVP           | Регистрация, вход, сессии, профиль, настройки (включая согласие на внешний AI)                                                                                                                                                | `identity`          |
 | **Content**    | ✅ MVP           | Библиотека текстов, CEFR-метаданные, глоссарий, импорт из `content/`; личные AI-тексты пользователя (видны только владельцу)                                                                                                  | `content`           |
-| **Vocabulary** | ✅ MVP           | Персональный словарь, контекст слова, FSRS-карточки, история повторений, lookup, упражнения с пропуском (AI или сохранённые примеры)                                                                                          | `vocabulary`        |
+| **Vocabulary** | ✅ MVP           | Персональный словарь, контекст слова, FSRS-карточки, история повторений, lookup, упражнения с пропуском (AI или сохранённые примеры), картинки к словам                                                                       | `vocabulary`        |
 | **Learning**   | 🟡 Частично      | Отметка о прочтении (`LessonCompleted`), генерация личных текстов из слов пользователя. Учебные сессии — позже                                                                                                                | `learning`          |
 | **Grammar**    | ✅ MVP           | Темы по уровням: правило, примеры, упражнения (выбор и ввод) с проверкой на сервере и прогрессом. Импорт из `content/grammar/`                                                                                                | `grammar`           |
 | **Progress**   | 🟡 Частично      | Проекция ежедневной активности (из событий), сводка профиля. Анализ слабых сторон — позже                                                                                                                                     | `progress`          |
@@ -145,7 +145,7 @@ erDiagram
 | `identity`   | Identity                                | `users`, `sessions`, `user_settings`             |
 | `content`    | Content                                 | `texts` (публичные и личные), `glossary_entries` |
 | `grammar`    | Grammar                                 | `topics`, `exercises`, `attempts`                |
-| `vocabulary` | Vocabulary                              | `words`, `cards`, `review_logs`                  |
+| `vocabulary` | Vocabulary                              | `words`, `cards`, `review_logs`, `word_images`   |
 | `learning`   | Learning                                | `text_completions`                               |
 | `progress`   | Progress (запись — обработчик в worker) | `daily_activity`                                 |
 | `platform`   | Platform (инфраструктура)               | `outbox_events`, `processed_events`              |

@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   check,
+  customType,
   doublePrecision,
   index,
   integer,
@@ -109,5 +110,42 @@ export const reviewLogs = vocabularySchema.table(
     check('review_logs_previous_state', sql`${t.previousState} ${CARD_STATE_CHECK}`),
     check('review_logs_next_state', sql`${t.nextState} ${CARD_STATE_CHECK}`),
     check('review_logs_duration', sql`${t.durationMs} IS NULL OR ${t.durationMs} >= 0`),
+  ],
+);
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' });
+
+/**
+ * One picture per word, chosen by the learner: a free-licensed image found by image
+ * search (Wikimedia Commons or Openverse) or their own upload. Stored re-encoded (WebP, metadata stripped), so reviews
+ * do not depend on third-party hosts. Attribution fields are required by CC licenses.
+ */
+export const wordImages = vocabularySchema.table(
+  'word_images',
+  {
+    wordId: uuid('word_id')
+      .primaryKey()
+      .references(() => words.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    data: bytea('data').notNull(),
+    mimeType: text('mime_type').notNull(),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    source: text('source').notNull(),
+    /** Image id at the search provider (Wikimedia page id, Openverse UUID). */
+    sourceId: text('source_id'),
+    title: text('title'),
+    creator: text('creator'),
+    license: text('license'),
+    licenseUrl: text('license_url'),
+    landingUrl: text('landing_url'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index('word_images_user_id_idx').on(t.userId),
+    check('word_images_source', sql`${t.source} IN ('wikimedia', 'openverse', 'upload')`),
   ],
 );

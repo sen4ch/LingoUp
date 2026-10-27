@@ -173,6 +173,8 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },
@@ -343,6 +345,8 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },
@@ -1253,6 +1257,55 @@
                             "nullable": true,
                             "type": "string"
                           },
+                          "image": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "source": {
+                                "type": "string",
+                                "enum": [
+                                  "wikimedia",
+                                  "openverse",
+                                  "upload"
+                                ]
+                              },
+                              "title": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "creator": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "license": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "licenseUrl": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "landingUrl": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              }
+                            },
+                            "required": [
+                              "source",
+                              "title",
+                              "creator",
+                              "license",
+                              "licenseUrl",
+                              "landingUrl",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -1310,6 +1363,7 @@
                           "contextSentence",
                           "sourceTextSlug",
                           "note",
+                          "image",
                           "createdAt",
                           "card"
                         ],
@@ -1426,6 +1480,55 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "image": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "wikimedia",
+                            "openverse",
+                            "upload"
+                          ]
+                        },
+                        "title": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "creator": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "license": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "licenseUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "landingUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "title",
+                        "creator",
+                        "license",
+                        "licenseUrl",
+                        "landingUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -1483,6 +1586,7 @@
                     "contextSentence",
                     "sourceTextSlug",
                     "note",
+                    "image",
                     "createdAt",
                     "card"
                   ],
@@ -1516,6 +1620,8 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },
@@ -1602,6 +1708,55 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "image": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "wikimedia",
+                            "openverse",
+                            "upload"
+                          ]
+                        },
+                        "title": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "creator": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "license": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "licenseUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "landingUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "title",
+                        "creator",
+                        "license",
+                        "licenseUrl",
+                        "landingUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -1659,6 +1814,7 @@
                     "contextSentence",
                     "sourceTextSlug",
                     "note",
+                    "image",
                     "createdAt",
                     "card"
                   ],
@@ -1757,6 +1913,55 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "image": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "wikimedia",
+                            "openverse",
+                            "upload"
+                          ]
+                        },
+                        "title": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "creator": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "license": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "licenseUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "landingUrl": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        }
+                      },
+                      "required": [
+                        "source",
+                        "title",
+                        "creator",
+                        "license",
+                        "licenseUrl",
+                        "landingUrl",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -1814,6 +2019,7 @@
                     "contextSentence",
                     "sourceTextSlug",
                     "note",
+                    "image",
                     "createdAt",
                     "card"
                   ],
@@ -1905,6 +2111,55 @@
                             "nullable": true,
                             "type": "string"
                           },
+                          "image": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "source": {
+                                "type": "string",
+                                "enum": [
+                                  "wikimedia",
+                                  "openverse",
+                                  "upload"
+                                ]
+                              },
+                              "title": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "creator": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "license": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "licenseUrl": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "landingUrl": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              }
+                            },
+                            "required": [
+                              "source",
+                              "title",
+                              "creator",
+                              "license",
+                              "licenseUrl",
+                              "landingUrl",
+                              "updatedAt"
+                            ],
+                            "additionalProperties": false
+                          },
                           "state": {
                             "type": "string",
                             "enum": [
@@ -1959,6 +2214,7 @@
                           "definition",
                           "translation",
                           "contextSentence",
+                          "image",
                           "state",
                           "due",
                           "nextDue"
@@ -2208,6 +2464,8 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },
@@ -2340,6 +2598,504 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
+    "/v1/vocabulary/images/search": {
+      "get": {
+        "operationId": "WordImagesController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9-]{1,64}$"
+                          },
+                          "title": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "creator": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "license": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "licenseUrl": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "landingUrl": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "creator",
+                          "license",
+                          "licenseUrl",
+                          "landingUrl"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "hasMore": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "hasMore"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Image search is disabled or did not answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "RATE_LIMITED",
+                            "PAYLOAD_TOO_LARGE",
+                            "INVALID_CREDENTIALS",
+                            "EMAIL_ALREADY_REGISTERED",
+                            "WORD_ALREADY_SAVED",
+                            "NOT_ENOUGH_WORDS",
+                            "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
+    "/v1/vocabulary/images/{imageId}/thumb": {
+      "get": {
+        "operationId": "WordImagesController_thumbnail",
+        "parameters": [
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9-]{1,64}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
+    "/v1/vocabulary/words/{id}/image": {
+      "get": {
+        "operationId": "WordImagesController_image",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      },
+      "put": {
+        "operationId": "WordImagesController_choose",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "imageId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9-]{1,64}$"
+                  }
+                },
+                "required": [
+                  "imageId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "wikimedia",
+                        "openverse",
+                        "upload"
+                      ]
+                    },
+                    "title": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "creator": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "license": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "licenseUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "landingUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "title",
+                    "creator",
+                    "license",
+                    "licenseUrl",
+                    "landingUrl",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Image search is disabled or did not answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "RATE_LIMITED",
+                            "PAYLOAD_TOO_LARGE",
+                            "INVALID_CREDENTIALS",
+                            "EMAIL_ALREADY_REGISTERED",
+                            "WORD_ALREADY_SAVED",
+                            "NOT_ENOUGH_WORDS",
+                            "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      },
+      "delete": {
+        "operationId": "WordImagesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
+    "/v1/vocabulary/words/{id}/image/upload": {
+      "put": {
+        "operationId": "WordImagesController_upload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "wikimedia",
+                        "openverse",
+                        "upload"
+                      ]
+                    },
+                    "title": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "creator": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "license": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "licenseUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "landingUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                    }
+                  },
+                  "required": [
+                    "source",
+                    "title",
+                    "creator",
+                    "license",
+                    "licenseUrl",
+                    "landingUrl",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a readable JPEG, PNG, WebP or GIF image",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "UNAUTHENTICATED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "RATE_LIMITED",
+                            "PAYLOAD_TOO_LARGE",
+                            "INVALID_CREDENTIALS",
+                            "EMAIL_ALREADY_REGISTERED",
+                            "WORD_ALREADY_SAVED",
+                            "NOT_ENOUGH_WORDS",
+                            "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },
@@ -2574,6 +3330,8 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },
@@ -2625,6 +3383,8 @@
                             "WORD_ALREADY_SAVED",
                             "NOT_ENOUGH_WORDS",
                             "AI_UNAVAILABLE",
+                            "IMAGE_INVALID",
+                            "IMAGE_SEARCH_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ]
                         },

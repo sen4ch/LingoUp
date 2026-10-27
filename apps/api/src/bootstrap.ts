@@ -6,6 +6,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from '@nestjs/swagger';
+import { WORD_IMAGE_MAX_UPLOAD_BYTES, WORD_IMAGE_UPLOAD_TYPES } from '@lingoup/contracts';
 import { LOG_REDACT_PATHS } from '@lingoup/shared';
 import { AppModule } from './app.module.js';
 import type { AppConfig } from './config/app-config.js';
@@ -52,6 +53,15 @@ export async function createApp(config: AppConfig): Promise<NestFastifyApplicati
     },
   });
   registerOriginCheck(app.getHttpAdapter().getInstance(), config.http.allowedOrigins);
+  // Picture uploads arrive as raw bytes; only these types get the larger body limit.
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addContentTypeParser(
+      [...WORD_IMAGE_UPLOAD_TYPES],
+      { parseAs: 'buffer', bodyLimit: WORD_IMAGE_MAX_UPLOAD_BYTES },
+      (_request, body, done) => done(null, body),
+    );
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.enableShutdownHooks();
 

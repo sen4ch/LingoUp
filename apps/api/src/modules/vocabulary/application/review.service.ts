@@ -8,7 +8,11 @@ import type {
 import { isPgError, PG_ERROR, type Database } from '@lingoup/database';
 import type { SpacedRepetitionScheduler } from '@lingoup/learning-engine';
 import { DATABASE, notFound, OutboxWriter } from '../../../platform/index.js';
-import { toSchedule, VocabularyRepository } from '../infrastructure/vocabulary.repository.js';
+import {
+  toSchedule,
+  toWordImage,
+  VocabularyRepository,
+} from '../infrastructure/vocabulary.repository.js';
 import { SCHEDULER } from './scheduler.provider.js';
 
 type ReviewLogRow = NonNullable<Awaited<ReturnType<VocabularyRepository['findReviewLog']>>>;
@@ -39,7 +43,7 @@ export class ReviewService {
     ]);
     return {
       totalDue,
-      cards: rows.map(({ word, card }) => {
+      cards: rows.map(({ word, card, image }) => {
         const preview = this.scheduler.preview(toSchedule(card), now);
         return {
           cardId: card.id,
@@ -48,6 +52,7 @@ export class ReviewService {
           definition: word.definition,
           translation: word.translation,
           contextSentence: word.contextSentence,
+          image: toWordImage(image),
           state: card.state as CardState,
           due: card.due.toISOString(),
           nextDue: {

@@ -15,6 +15,10 @@ export const ERROR_CODES = [
   'NOT_ENOUGH_WORDS',
   /** A feature that requires a language model could not get an answer from it. */
   'AI_UNAVAILABLE',
+  /** An uploaded or downloaded picture is not a supported, readable image. */
+  'IMAGE_INVALID',
+  /** Image search is disabled on this server or its provider did not answer. */
+  'IMAGE_SEARCH_UNAVAILABLE',
   'INTERNAL_ERROR',
 ] as const;
 export const ErrorCodeSchema = z.enum(ERROR_CODES);

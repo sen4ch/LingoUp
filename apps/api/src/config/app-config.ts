@@ -71,6 +71,9 @@ const EnvSchema = z.object({
     .string()
     .regex(/^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$/, 'Edge neural voice name')
     .default('en-US-AndrewMultilingualNeural'),
+  // Picture search for words, both free and keyless: wikimedia (Wikimedia Commons) or
+  // openverse (Wikimedia, Flickr and more; the public service is sometimes overloaded).
+  IMAGE_SEARCH_PROVIDER: z.enum(['none', 'wikimedia', 'openverse']).default('none'),
   SPEECH_CACHE_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 });
 
@@ -134,6 +137,7 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
       dailyQuotaPerUser: env.AI_DAILY_QUOTA_PER_USER,
       allowExternal: env.AI_ALLOW_EXTERNAL,
     },
+    images: { searchProvider: env.IMAGE_SEARCH_PROVIDER },
     speech: {
       provider: env.SPEECH_PROVIDER,
       azure:

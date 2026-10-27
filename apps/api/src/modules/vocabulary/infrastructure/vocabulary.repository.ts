@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { CardState, UpdateWordRequest, Word } from '@lingoup/contracts';
+import type { CardState, UpdateWordRequest, Word, WordImage } from '@lingoup/contracts';
 import type { Database, DbExecutor } from '@lingoup/database';
-import { cards, reviewLogs, words } from '@lingoup/database/schema/vocabulary';
+import { cards, reviewLogs, wordImages, words } from '@lingoup/database/schema/vocabulary';
 import type { CardSchedule } from '@lingoup/learning-engine';
 import { and, asc, count, desc, eq, ilike, lt, lte, sql } from 'drizzle-orm';
 import { DATABASE } from '../../../platform/index.js';
@@ -10,6 +10,34 @@ type WordRow = typeof words.$inferSelect;
 type CardRow = typeof cards.$inferSelect;
 type ReviewLogRow = typeof reviewLogs.$inferSelect;
 export type NewReviewLog = typeof reviewLogs.$inferInsert;
+export type NewWordImage = typeof wordImages.$inferInsert;
+
+/** Image metadata only: the bytes are loaded separately, when the picture is requested. */
+const imageColumns = {
+  source: wordImages.source,
+  title: wordImages.title,
+  creator: wordImages.creator,
+  license: wordImages.license,
+  licenseUrl: wordImages.licenseUrl,
+  landingUrl: wordImages.landingUrl,
+  updatedAt: wordImages.updatedAt,
+};
+type ImageColumns = {
+  [K in keyof typeof imageColumns]: (typeof imageColumns)[K]['_']['data'] | null;
+};
+
+export function toWordImage(image: ImageColumns | null | undefined): WordImage | null {
+  if (!image?.source || !image.updatedAt) return null;
+  return {
+    source: image.source as WordImage['source'],
+    title: image.title,
+    creator: image.creator,
+    license: image.license,
+    licenseUrl: image.licenseUrl,
+    landingUrl: image.landingUrl,
+    updatedAt: image.updatedAt.toISOString(),
+  };
+}
 
 export function toSchedule(card: CardRow): CardSchedule {
   return {
@@ -25,7 +53,7 @@ export function toSchedule(card: CardRow): CardSchedule {
   };
 }
 
-export function toWordDto(word: WordRow, card: CardRow): Word {
+export function toWordDto(word: WordRow, card: CardRow, image: WordImage | null = null): Word {
   return {
     id: word.id,
     term: word.term,
@@ -35,6 +63,7 @@ export function toWordDto(word: WordRow, card: CardRow): Word {
     contextSentence: word.contextSentence,
     sourceTextSlug: word.sourceTextSlug,
     note: word.note,
+    image,
     createdAt: word.createdAt.toISOString(),
     card: {
       id: card.id,
@@ -77,20 +106,22 @@ export class VocabularyRepository {
   async findWord(
     userId: string,
     wordId: string,
-  ): Promise<{ word: WordRow; card: CardRow } | undefined> {
+  ): Promise<{ word: WordRow; card: CardRow; image: ImageColumns | null } | undefined> {
     const [row] = await this.db
-      .select({ word: words, card: cards })
+      .select({ word: words, card: cards, image: imageColumns })
       .from(words)
       .innerJoin(cards, eq(cards.wordId, words.id))
+      .leftJoin(wordImages, eq(wordImages.wordId, words.id))
       .where(and(eq(words.userId, userId), eq(words.id, wordId)));
     return row;
   }
 
   async listWords(userId: string, options: { cursor?: string; limit: number; q?: string }) {
     return this.db
-      .select({ word: words, card: cards })
+      .select({ word: words, card: cards, image: imageColumns })
       .from(words)
       .innerJoin(cards, eq(cards.wordId, words.id))
+      .leftJoin(wordImages, eq(wordImages.wordId, words.id))
       .where(
         and(
           eq(words.userId, userId),
@@ -151,9 +182,10 @@ export class VocabularyRepository {
 
   async dueCards(userId: string, now: Date, limit: number) {
     return this.db
-      .select({ word: words, card: cards })
+      .select({ word: words, card: cards, image: imageColumns })
       .from(cards)
       .innerJoin(words, eq(words.id, cards.wordId))
+      .leftJoin(wordImages, eq(wordImages.wordId, words.id))
       .where(and(eq(cards.userId, userId), lte(cards.due, now)))
       .orderBy(asc(cards.due))
       .limit(limit);
@@ -212,12 +244,47 @@ export class VocabularyRepository {
     return { byState, dueNow: due?.value ?? 0, totalReviews: reviews?.value ?? 0 };
   }
 
+  async findImageData(userId: string, wordId: string) {
+    const [row] = await this.db
+      .select({
+        data: wordImages.data,
+        mimeType: wordImages.mimeType,
+        updatedAt: wordImages.updatedAt,
+      })
+      .from(wordImages)
+      .where(and(eq(wordImages.userId, userId), eq(wordImages.wordId, wordId)));
+    return row;
+  }
+
+  /** Inserts or replaces the picture of a word; returns its metadata. */
+  async upsertImage(image: NewWordImage): Promise<WordImage> {
+    const now = new Date();
+    const [row] = await this.db
+      .insert(wordImages)
+      .values({ ...image, updatedAt: now })
+      .onConflictDoUpdate({
+        target: wordImages.wordId,
+        set: { ...image, createdAt: undefined, updatedAt: now },
+      })
+      .returning(imageColumns);
+    return toWordImage(row)!;
+  }
+
+  async deleteImage(userId: string, wordId: string): Promise<boolean> {
+    const deleted = await this.db
+      .delete(wordImages)
+      .where(and(eq(wordImages.userId, userId), eq(wordImages.wordId, wordId)))
+      .returning({ wordId: wordImages.wordId });
+    return deleted.length > 0;
+  }
+
   async exportUser(userId: string) {
-    const [wordRows, logRows] = await Promise.all([
+    const [wordRows, logRows, imageRows] = await Promise.all([
       this.db
-        .select({ word: words, card: cards })
+        .select({ word: words, card: cards, image: imageColumns })
         .from(words)
         .innerJoin(cards, eq(cards.wordId, words.id))
+        .leftJoin(wordImages, eq(wordImages.wordId, words.id))
         .where(eq(words.userId, userId))
         .orderBy(asc(words.id)),
       this.db
@@ -233,9 +300,19 @@ export class VocabularyRepository {
         .from(reviewLogs)
         .where(eq(reviewLogs.userId, userId))
         .orderBy(asc(reviewLogs.reviewedAt), sql`${reviewLogs.id}`),
+      this.db
+        .select({ wordId: wordImages.wordId, mimeType: wordImages.mimeType, data: wordImages.data })
+        .from(wordImages)
+        .where(eq(wordImages.userId, userId))
+        .orderBy(asc(wordImages.wordId)),
     ]);
     return {
-      words: wordRows.map(({ word, card }) => toWordDto(word, card)),
+      words: wordRows.map(({ word, card, image }) => toWordDto(word, card, toWordImage(image))),
+      // Pictures are personal data too (uploads in particular): exported as data URLs.
+      images: imageRows.map(({ wordId, mimeType, data }) => ({
+        wordId,
+        dataUrl: `data:${mimeType};base64,${data.toString('base64')}`,
+      })),
       reviewLogs: logRows.map((log) => ({
         ...log,
         nextDue: log.nextDue.toISOString(),

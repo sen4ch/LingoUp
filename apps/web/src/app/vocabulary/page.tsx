@@ -14,7 +14,9 @@ import {
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useDeferredValue, useState } from 'react';
+import { ImagePicker } from '@/components/image-picker';
 import { DUE_COUNT_QUERY_KEY } from '@/components/site-header';
+import { wordImageUrl } from '@/components/word-picture';
 import { t } from '@/i18n';
 import { api } from '@/lib/api-client';
 import { useRequireUser } from '@/lib/auth';
@@ -33,6 +35,7 @@ export default function VocabularyPage() {
   const [search, setSearch] = useState('');
   const q = useDeferredValue(search.trim());
   const queryClient = useQueryClient();
+  const [pickingId, setPickingId] = useState<string | null>(null);
 
   const words = useInfiniteQuery({
     queryKey: ['words', q],
@@ -116,49 +119,83 @@ export default function VocabularyPage() {
         <ul className="flex flex-col gap-3">
           {items.map((word) => (
             <li key={word.id}>
-              <Card className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex min-w-0 flex-col gap-1.5">
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h2 className="text-lg font-semibold">{word.term}</h2>
-                    {word.translation ? (
-                      <span className="text-muted">{word.translation}</span>
+              <Card className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 gap-3">
+                    {word.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- served by the API, already resized
+                      <img
+                        src={wordImageUrl(word.id, word.image)}
+                        alt=""
+                        className="size-16 shrink-0 rounded-md object-cover"
+                      />
                     ) : null}
-                    <Badge tone={STATE_TONE[word.card.state]}>
-                      {t.vocabulary.states[word.card.state]}
-                    </Badge>
+                    <div className="flex min-w-0 flex-col gap-1.5">
+                      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <h2 className="text-lg font-semibold">{word.term}</h2>
+                        {word.translation ? (
+                          <span className="text-muted">{word.translation}</span>
+                        ) : null}
+                        <Badge tone={STATE_TONE[word.card.state]}>
+                          {t.vocabulary.states[word.card.state]}
+                        </Badge>
+                      </div>
+                      {word.definition ? <p className="text-sm">{word.definition}</p> : null}
+                      {word.contextSentence ? (
+                        <p className="font-reading text-sm text-muted italic">
+                          “{word.contextSentence}”
+                        </p>
+                      ) : null}
+                      <p className="text-xs text-muted">
+                        {Date.parse(word.card.due) <= words.dataUpdatedAt
+                          ? t.vocabulary.dueNow
+                          : t.vocabulary.due(formatDateTime(word.card.due))}
+                        {word.sourceTextSlug ? (
+                          <>
+                            {' · '}
+                            <Link href={`/read/${word.sourceTextSlug}`} className="underline">
+                              {t.vocabulary.fromText}
+                            </Link>
+                          </>
+                        ) : null}
+                      </p>
+                    </div>
                   </div>
-                  {word.definition ? <p className="text-sm">{word.definition}</p> : null}
-                  {word.contextSentence ? (
-                    <p className="font-reading text-sm text-muted italic">
-                      “{word.contextSentence}”
-                    </p>
-                  ) : null}
-                  <p className="text-xs text-muted">
-                    {Date.parse(word.card.due) <= words.dataUpdatedAt
-                      ? t.vocabulary.dueNow
-                      : t.vocabulary.due(formatDateTime(word.card.due))}
-                    {word.sourceTextSlug ? (
-                      <>
-                        {' · '}
-                        <Link href={`/read/${word.sourceTextSlug}`} className="underline">
-                          {t.vocabulary.fromText}
-                        </Link>
-                      </>
-                    ) : null}
-                  </p>
+                  <div className="flex shrink-0 gap-1 self-end sm:self-start">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-expanded={pickingId === word.id}
+                      onClick={() => setPickingId(pickingId === word.id ? null : word.id)}
+                    >
+                      {word.image ? t.images.change : t.images.add}
+                    </Button>
+                    <Button
+                      variant="danger-ghost"
+                      size="sm"
+                      loading={remove.isPending && remove.variables.id === word.id}
+                      onClick={() => {
+                        if (window.confirm(t.vocabulary.confirmDelete(word.term)))
+                          remove.mutate(word);
+                      }}
+                      aria-label={`${t.common.delete}: ${word.term}`}
+                    >
+                      {t.common.delete}
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  variant="danger-ghost"
-                  size="sm"
-                  className="self-end sm:self-start"
-                  loading={remove.isPending && remove.variables.id === word.id}
-                  onClick={() => {
-                    if (window.confirm(t.vocabulary.confirmDelete(word.term))) remove.mutate(word);
-                  }}
-                  aria-label={`${t.common.delete}: ${word.term}`}
-                >
-                  {t.common.delete}
-                </Button>
+                {pickingId === word.id ? (
+                  <ImagePicker
+                    wordId={word.id}
+                    term={word.term}
+                    current={word.image}
+                    onChange={() => {
+                      setPickingId(null);
+                      void queryClient.invalidateQueries({ queryKey: ['words'] });
+                    }}
+                    onClose={() => setPickingId(null)}
+                  />
+                ) : null}
               </Card>
             </li>
           ))}

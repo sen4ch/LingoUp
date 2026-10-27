@@ -23,7 +23,11 @@ import {
 import { AiGateway, MOCK_PROVIDER_NAME } from '../../ai-gateway/index.js';
 import { ContentQuery } from '../../content/index.js';
 import { UserSettingsQuery } from '../../identity/index.js';
-import { toWordDto, VocabularyRepository } from '../infrastructure/vocabulary.repository.js';
+import {
+  toWordDto,
+  toWordImage,
+  VocabularyRepository,
+} from '../infrastructure/vocabulary.repository.js';
 import { SCHEDULER } from './scheduler.provider.js';
 
 function normalizeOrFail(term: string): string {
@@ -137,7 +141,7 @@ export class VocabularyService implements PersonalDataExporter {
     });
     const page = rows.slice(0, query.limit);
     return {
-      items: page.map(({ word, card }) => toWordDto(word, card)),
+      items: page.map(({ word, card, image }) => toWordDto(word, card, toWordImage(image))),
       nextCursor: rows.length > query.limit ? (page.at(-1)?.word.id ?? null) : null,
     };
   }
@@ -145,7 +149,7 @@ export class VocabularyService implements PersonalDataExporter {
   async getWord(userId: string, wordId: string): Promise<Word> {
     const row = await this.repository.findWord(userId, wordId);
     if (!row) throw notFound('Word');
-    return toWordDto(row.word, row.card);
+    return toWordDto(row.word, row.card, toWordImage(row.image));
   }
 
   async updateWord(userId: string, wordId: string, patch: UpdateWordRequest): Promise<Word> {

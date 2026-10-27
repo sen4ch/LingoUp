@@ -15,6 +15,13 @@
       "when": 1793120064692,
       "tag": "0001_grammar-and-private-texts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793130460796,
+      "tag": "0002_word-images",
+      "breakpoints": true
     }
   ]
 }

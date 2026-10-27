@@ -29,6 +29,7 @@ export async function createTestContext(
     AI_PROVIDER: 'mock',
     // Never call a paid external speech service from tests.
     SPEECH_PROVIDER: 'none',
+    IMAGE_SEARCH_PROVIDER: 'none',
     ALLOWED_ORIGINS: WEB_ORIGIN,
     ...overrides,
   });
@@ -89,6 +90,29 @@ export class TestAgent {
       body: (response.body ? JSON.parse(response.body) : null) as T,
       headers: response.headers,
     };
+  }
+
+  /** Binary request/response (uploads, images); the session cookie is reused, not updated. */
+  async raw(
+    method: 'GET' | 'PUT',
+    url: string,
+    payload?: { data: Buffer; contentType: string },
+  ): Promise<{ status: number; headers: Record<string, unknown>; data: Buffer }> {
+    const response = await this.app
+      .getHttpAdapter()
+      .getInstance()
+      .inject({
+        method,
+        url,
+        remoteAddress: this.ip,
+        headers: {
+          origin: WEB_ORIGIN,
+          ...(this.cookie ? { cookie: this.cookie } : {}),
+          ...(payload ? { 'content-type': payload.contentType } : {}),
+        },
+        ...(payload ? { payload: payload.data } : {}),
+      });
+    return { status: response.statusCode, headers: response.headers, data: response.rawPayload };
   }
 
   async register(): Promise<{ id: string; email: string; password: string }> {

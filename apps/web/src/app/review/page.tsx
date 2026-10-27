@@ -6,13 +6,16 @@ import {
   SubmitReviewResponseSchema,
   type ReviewCard,
   type ReviewRating,
+  type WordImage,
 } from '@lingoup/contracts';
 import { Alert, Button, Card, EmptyState, Kbd, Skeleton, buttonClasses, cn } from '@lingoup/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DUE_COUNT_QUERY_KEY } from '@/components/site-header';
+import { ImagePicker } from '@/components/image-picker';
 import { SpeakButton } from '@/components/speak-button';
+import { WordPicture } from '@/components/word-picture';
 import { t } from '@/i18n';
 import { api } from '@/lib/api-client';
 import { useRequireUser } from '@/lib/auth';
@@ -93,6 +96,10 @@ function ReviewSession({
   const [clientReviewId, setClientReviewId] = useState(() => crypto.randomUUID());
   const shownAt = useRef(0);
   const card = cards[index];
+  // Pictures added or changed during this session (the due list is loaded once).
+  const [images, setImages] = useState<Record<string, WordImage | null>>({});
+  const [picking, setPicking] = useState(false);
+  const image = card ? (card.wordId in images ? images[card.wordId]! : card.image) : null;
 
   useEffect(() => {
     shownAt.current = performance.now();
@@ -114,6 +121,7 @@ function ReviewSession({
       void queryClient.invalidateQueries({ queryKey: DUE_COUNT_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['words'] });
       setRevealed(false);
+      setPicking(false);
       setClientReviewId(crypto.randomUUID());
       setIndex((i) => i + 1);
     },
@@ -189,11 +197,39 @@ function ReviewSession({
         ) : null}
         {revealed ? (
           <div className="flex flex-col gap-1 border-t border-border pt-4" aria-live="polite">
+            {image ? (
+              <WordPicture wordId={card.wordId} term={card.term} image={image} className="mb-2" />
+            ) : null}
             {card.translation ? <p className="text-xl font-semibold">{card.translation}</p> : null}
             {card.definition ? <p>{card.definition}</p> : null}
           </div>
         ) : null}
       </Card>
+
+      {revealed ? (
+        picking ? (
+          <ImagePicker
+            key={card.wordId}
+            wordId={card.wordId}
+            term={card.term}
+            current={image}
+            onChange={(next) => {
+              setImages((all) => ({ ...all, [card.wordId]: next }));
+              setPicking(false);
+            }}
+            onClose={() => setPicking(false)}
+          />
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="self-center"
+            onClick={() => setPicking(true)}
+          >
+            {image ? t.images.change : t.images.add}
+          </Button>
+        )
+      ) : null}
 
       {revealed ? (
         <div

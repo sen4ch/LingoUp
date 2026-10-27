@@ -86,6 +86,25 @@ export const CARD_STATES = ['new', 'learning', 'review', 'relearning'] as const;
 export const CardStateSchema = z.enum(CARD_STATES);
 export type CardState = z.infer<typeof CardStateSchema>;
 
+export const WORD_IMAGE_SOURCES = ['wikimedia', 'openverse', 'upload'] as const;
+
+/**
+ * Picture the learner chose for a word. The bytes are served by
+ * GET /v1/vocabulary/words/:id/image; attribution fields are shown under the picture
+ * because Creative Commons licenses require it.
+ */
+export const WordImageSchema = z.object({
+  source: z.enum(WORD_IMAGE_SOURCES),
+  title: z.string().nullable(),
+  creator: z.string().nullable(),
+  license: z.string().nullable(),
+  licenseUrl: z.string().nullable(),
+  landingUrl: z.string().nullable(),
+  /** Changes on every replacement; use it to bust the browser cache. */
+  updatedAt: IsoDateTimeSchema,
+});
+export type WordImage = z.infer<typeof WordImageSchema>;
+
 export const WordSchema = z.object({
   id: UuidSchema,
   term: z.string(),
@@ -95,6 +114,7 @@ export const WordSchema = z.object({
   contextSentence: z.string().nullable(),
   sourceTextSlug: z.string().nullable(),
   note: z.string().nullable(),
+  image: WordImageSchema.nullable(),
   createdAt: IsoDateTimeSchema,
   card: z.object({
     id: UuidSchema,
@@ -127,6 +147,7 @@ export const ReviewCardSchema = z.object({
   definition: z.string().nullable(),
   translation: z.string().nullable(),
   contextSentence: z.string().nullable(),
+  image: WordImageSchema.nullable(),
   state: CardStateSchema,
   due: IsoDateTimeSchema,
   /** Next due date for each rating, so the UI can show intervals on the buttons. */
@@ -221,3 +242,43 @@ export const PronunciationQuerySchema = z
     path: ['text'],
   });
 export type PronunciationQuery = z.infer<typeof PronunciationQuerySchema>;
+
+export const ImageSearchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(80),
+  page: z.coerce.number().int().min(1).max(10).default(1),
+});
+export type ImageSearchQuery = z.infer<typeof ImageSearchQuerySchema>;
+
+/** Provider-specific image id: a Wikimedia page id or an Openverse UUID. */
+export const ImageIdSchema = z.string().regex(/^[A-Za-z0-9-]{1,64}$/, 'Invalid image id');
+
+/** A free-licensed image found by image search; its thumbnail is proxied by the API. */
+export const ImageCandidateSchema = z.object({
+  id: ImageIdSchema,
+  title: z.string().nullable(),
+  creator: z.string().nullable(),
+  license: z.string().nullable(),
+  licenseUrl: z.string().nullable(),
+  landingUrl: z.string().nullable(),
+});
+export type ImageCandidate = z.infer<typeof ImageCandidateSchema>;
+
+export const ImageSearchResponseSchema = z.object({
+  items: z.array(ImageCandidateSchema),
+  hasMore: z.boolean(),
+});
+export type ImageSearchResponse = z.infer<typeof ImageSearchResponseSchema>;
+
+export const ChooseWordImageRequestSchema = z.object({ imageId: ImageIdSchema });
+export type ChooseWordImageRequest = z.infer<typeof ChooseWordImageRequestSchema>;
+
+export const ImageIdParamSchema = z.object({ imageId: ImageIdSchema });
+
+/** Image types accepted for uploads; every image is re-encoded to WebP on the server. */
+export const WORD_IMAGE_UPLOAD_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+] as const;
+export const WORD_IMAGE_MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
