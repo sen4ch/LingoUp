@@ -4,8 +4,9 @@ title: My Morning Routine
 level: A1
 summary: Tom describes what he does every morning before work.
 topics: [daily life, time]
-author: Open English Learning Platform contributors
-license: CC-BY-4.0
+author: AI-generated for the LingoUp project (no human author)
+provenance: ai-generated
+license: CC0-1.0
 glossary:
   - term: wake up
     partOfSpeech: phrasal verb

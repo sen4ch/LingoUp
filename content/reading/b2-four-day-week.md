@@ -4,8 +4,9 @@ title: Is the Four-Day Week Worth It?
 level: B2
 summary: A look at the arguments for and against a shorter working week, and why results differ between companies.
 topics: [work, society, economics]
-author: Open English Learning Platform contributors
-license: CC-BY-4.0
+author: AI-generated for the LingoUp project (no human author)
+provenance: ai-generated
+license: CC0-1.0
 glossary:
   - term: productivity
     partOfSpeech: noun

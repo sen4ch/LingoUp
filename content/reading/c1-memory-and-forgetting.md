@@ -4,8 +4,9 @@ title: Why Forgetting Helps Us Learn
 level: C1
 summary: An essay on the forgetting curve, spaced repetition and why struggling to remember strengthens memory.
 topics: [science, psychology, learning]
-author: Open English Learning Platform contributors
-license: CC-BY-4.0
+author: AI-generated for the LingoUp project (no human author)
+provenance: ai-generated
+license: CC0-1.0
 glossary:
   - term: counterintuitive
     partOfSpeech: adjective

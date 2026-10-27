@@ -4,8 +4,9 @@ title: Learning to Cycle at Thirty-Five
 level: B1
 summary: An adult learner explains why she decided to learn to ride a bike and what the experience taught her.
 topics: [personal growth, sport, city life]
-author: Open English Learning Platform contributors
-license: CC-BY-4.0
+author: AI-generated for the LingoUp project (no human author)
+provenance: ai-generated
+license: CC0-1.0
 glossary:
   - term: embarrassed
     partOfSpeech: adjective

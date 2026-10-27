@@ -15,17 +15,31 @@ const GlossaryItemSchema = z.object({
   example: z.string().trim().max(300).nullable().default(null),
 });
 
-const FrontmatterSchema = z.object({
-  slug: SlugSchema,
-  title: z.string().trim().min(1).max(200),
-  level: CefrLevelSchema,
-  summary: z.string().trim().min(1).max(500),
-  topics: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
-  author: z.string().trim().min(1).max(200),
-  /** SPDX licence identifier. Content is accepted only with an explicit licence. */
-  license: z.string().trim().min(1).max(60),
-  glossary: z.array(GlossaryItemSchema).max(200).default([]),
-});
+/**
+ * Who created a text. AI-generated material has no human author, so no exclusive copyright
+ * can be claimed for it: it must be released as CC0-1.0 and credited honestly.
+ */
+export const CONTENT_PROVENANCES = ['human', 'ai-assisted', 'ai-generated', 'third-party'] as const;
+const AI_GENERATED_LICENSE = 'CC0-1.0';
+
+const FrontmatterSchema = z
+  .object({
+    slug: SlugSchema,
+    title: z.string().trim().min(1).max(200),
+    level: CefrLevelSchema,
+    summary: z.string().trim().min(1).max(500),
+    topics: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
+    /** Credit line shown to readers; for AI-generated texts it must not name a human author. */
+    author: z.string().trim().min(1).max(200),
+    provenance: z.enum(CONTENT_PROVENANCES),
+    /** SPDX licence identifier. Content is accepted only with an explicit licence. */
+    license: z.string().trim().min(1).max(60),
+    glossary: z.array(GlossaryItemSchema).max(200).default([]),
+  })
+  .refine((meta) => meta.provenance !== 'ai-generated' || meta.license === AI_GENERATED_LICENSE, {
+    message: `AI-generated content cannot carry exclusive rights; use license ${AI_GENERATED_LICENSE}`,
+    path: ['license'],
+  });
 
 export type ContentDocument = Omit<z.infer<typeof FrontmatterSchema>, 'glossary'> & {
   paragraphs: string[];

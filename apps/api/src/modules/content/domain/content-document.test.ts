@@ -7,6 +7,7 @@ title: Test
 level: A2
 summary: A short test.
 author: Tester
+provenance: human
 license: CC-BY-4.0
 ${extra}
 ---
@@ -45,6 +46,25 @@ describe('parseContentDocument', () => {
         't.md',
       ),
     ).toThrow(/duplicate/);
+  });
+
+  it('requires a provenance and forbids attribution licences for AI-generated texts', () => {
+    expect(() =>
+      parseContentDocument(doc('Body.').replace('provenance: human\n', ''), 't.md'),
+    ).toThrow(/provenance/);
+    expect(() =>
+      parseContentDocument(
+        doc('Body.').replace('provenance: human', 'provenance: ai-generated'),
+        't.md',
+      ),
+    ).toThrow(/CC0-1.0/);
+    const ok = parseContentDocument(
+      doc('Body.')
+        .replace('provenance: human', 'provenance: ai-generated')
+        .replace('CC-BY-4.0', 'CC0-1.0'),
+      't.md',
+    );
+    expect(ok.license).toBe('CC0-1.0');
   });
 
   it('requires frontmatter', () => {

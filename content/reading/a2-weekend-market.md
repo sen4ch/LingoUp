@@ -4,8 +4,9 @@ title: A Saturday at the Market
 level: A2
 summary: Maria visits the local market with her grandmother and learns how to choose fresh food.
 topics: [food, shopping, family]
-author: Open English Learning Platform contributors
-license: CC-BY-4.0
+author: AI-generated for the LingoUp project (no human author)
+provenance: ai-generated
+license: CC0-1.0
 glossary:
   - term: stall
     partOfSpeech: noun

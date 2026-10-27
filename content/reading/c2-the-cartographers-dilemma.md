@@ -4,8 +4,9 @@ title: The Cartographer's Dilemma
 level: C2
 summary: A reflective essay on maps, simplification and the uneasy relationship between models and reality.
 topics: [philosophy, geography, language]
-author: Open English Learning Platform contributors
-license: CC-BY-4.0
+author: AI-generated for the LingoUp project (no human author)
+provenance: ai-generated
+license: CC0-1.0
 glossary:
   - term: verisimilitude
     partOfSpeech: noun

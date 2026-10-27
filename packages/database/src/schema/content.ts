@@ -21,7 +21,7 @@ export const texts = contentSchema.table(
       .default(sql`'{}'::text[]`),
     wordCount: integer('word_count').notNull(),
     author: text('author').notNull(),
-    /** SPDX identifier of the content licence, e.g. CC-BY-4.0. */
+    /** SPDX identifier of the content licence, e.g. CC-BY-4.0 or CC0-1.0. */
     license: text('license').notNull(),
     /** SHA-256 of the source file; lets the importer skip unchanged texts. */
     contentHash: text('content_hash').notNull(),

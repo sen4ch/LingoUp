@@ -31,7 +31,7 @@ describe('content library (public)', () => {
     expect(b2.body.items).toHaveLength(1);
     const text = await anonymous.request('GET', `/v1/texts/${b2.body.items[0].slug}`);
     expect(text.body.paragraphs.length).toBeGreaterThan(2);
-    expect(text.body.license).toBe('CC-BY-4.0');
+    expect(text.body.license).toBe('CC0-1.0');
 
     expect((await anonymous.request('GET', '/v1/texts?level=X1')).status).toBe(400);
     expect((await anonymous.request('GET', '/v1/texts/does-not-exist')).status).toBe(404);

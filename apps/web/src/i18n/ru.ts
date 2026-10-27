@@ -59,7 +59,7 @@ export const ru = {
     tooLong: 'Выделите не больше 6 слов.',
     markRead: 'Отметить как прочитанное',
     markedRead: 'Текст отмечен как прочитанный',
-    licence: (author: string, license: string) => `Автор: ${author}. Лицензия: ${license}.`,
+    licence: (author: string, license: string) => `Источник: ${author}. Лицензия: ${license}.`,
   },
   card: {
     title: 'Карточка слова',
