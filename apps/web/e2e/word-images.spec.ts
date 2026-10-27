@@ -20,20 +20,22 @@ test('a picture uploaded for a word shows up with the answer in reviews', async 
   });
   expect(saved.ok()).toBe(true);
 
-  await page.goto('/vocabulary');
-  const row = page.getByRole('listitem').filter({ hasText: 'flat' });
-  await row.getByRole('button', { name: 'Добавить картинку' }).click();
-  await row.locator('input[type=file]').setInputFiles({
+  await page.goto('/review');
+  await page.getByRole('button', { name: 'Добавить картинку' }).click();
+  await expect(page.getByRole('textbox', { name: 'Поиск картинки' })).toBeVisible();
+  await page.locator('input[type=file]').setInputFiles({
     name: 'flat.png',
     mimeType: 'image/png',
     buffer: PNG,
   });
-  await expect(row.locator('img[src*="/image?v="]')).toBeVisible();
-
-  await page.goto('/review');
+  await expect(page.getByRole('button', { name: 'Сменить картинку' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Показать ответ/ })).toBeVisible();
   await expect(page.getByRole('img', { name: 'flat' })).toHaveCount(0);
   await page.getByRole('button', { name: /Показать ответ/ }).click();
   await expect(page.getByRole('img', { name: 'flat' })).toBeVisible();
   await expect(page.getByText('Ваша картинка')).toBeVisible();
+
+  await page.goto('/vocabulary');
+  const row = page.getByRole('listitem').filter({ hasText: 'flat' });
+  await expect(row.locator('img[src*="/image?v="]')).toBeVisible();
 });

@@ -137,6 +137,7 @@ function ReviewSession({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
+        picking ||
         event.target instanceof HTMLInputElement ||
         event.altKey ||
         event.ctrlKey ||
@@ -153,7 +154,7 @@ function ReviewSession({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [rate, revealed]);
+  }, [rate, revealed, picking]);
 
   if (!card) {
     return (
@@ -206,30 +207,29 @@ function ReviewSession({
         ) : null}
       </Card>
 
-      {revealed ? (
-        picking ? (
-          <ImagePicker
-            key={card.wordId}
-            wordId={card.wordId}
-            term={card.term}
-            current={image}
-            onChange={(next) => {
-              setImages((all) => ({ ...all, [card.wordId]: next }));
-              setPicking(false);
-            }}
-            onClose={() => setPicking(false)}
-          />
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="self-center"
-            onClick={() => setPicking(true)}
-          >
-            {image ? t.images.change : t.images.add}
-          </Button>
-        )
-      ) : null}
+      {picking ? (
+        <ImagePicker
+          key={card.wordId}
+          wordId={card.wordId}
+          term={card.term}
+          current={image}
+          onChange={(next) => {
+            setImages((all) => ({ ...all, [card.wordId]: next }));
+            setPicking(false);
+          }}
+          onClose={() => setPicking(false)}
+        />
+      ) : (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="self-center"
+          aria-expanded={false}
+          onClick={() => setPicking(true)}
+        >
+          {image ? t.images.change : t.images.add}
+        </Button>
+      )}
 
       {revealed ? (
         <div
