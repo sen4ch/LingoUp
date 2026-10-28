@@ -10,12 +10,14 @@ from fastapi.responses import JSONResponse
 
 from .config import Settings
 from .providers import Provider, ProviderError, create_provider
+from .recognition import Recognizer
 from .schemas import (
     ExerciseGenerationInput,
     ExerciseResponse,
     HealthResponse,
     ReadingTextGenerationInput,
     ReadingTextResponse,
+    SpeakingTutorInput,
     TaskResponse,
     WordExplanationInput,
 )
@@ -37,6 +39,7 @@ def create_app(
 ) -> FastAPI:
     settings = settings or Settings()  # type: ignore[call-arg]  # values come from the environment
     active = provider or create_provider(settings)
+    recognizer = Recognizer(settings.whisper_model, settings.whisper_download_root)
 
     async def warm_up() -> None:
         try:
@@ -50,8 +53,20 @@ def create_app(
         logger.info("ai-service started with backend=%s model=%s", active.name, active.model)
         # Load the model in the background so the first learner request is not a cold start.
         warm_up_task = asyncio.create_task(warm_up())
+
+        async def warm_recognition() -> None:
+            try:
+                await recognizer.warm_up()
+            except Exception:  # noqa: BLE001 - recognition can retry after startup
+                logger.warning("Speech recognition warm-up failed")
+
+        recognition_task = (
+            asyncio.create_task(warm_recognition()) if settings.speaking_enabled else None
+        )
         yield
         warm_up_task.cancel()
+        if recognition_task:
+            recognition_task.cancel()
         await active.aclose()
 
     # No public docs: this service is internal and token-protected.
@@ -72,7 +87,13 @@ def create_app(
             # Chunked bodies would bypass the size check; the API always sends a length.
             if request.method in {"POST", "PUT", "PATCH"}:
                 return JSONResponse({"detail": "Content-Length required"}, status_code=411)
-        elif not length.isdigit() or int(length) > settings.max_body_bytes:
+        elif not length.isdigit() or int(length) > (
+            1_000_000
+            if request.url.path == "/v1/speaking/transcribe"
+            else 64_000
+            if request.url.path == "/v1/tasks/speaking-tutor"
+            else settings.max_body_bytes
+        ):
             return JSONResponse({"detail": "Request body too large"}, status_code=413)
         return await call_next(request)
 
@@ -127,6 +148,30 @@ def create_app(
             logger.warning("speech-synthesis failed: %s", error)
             raise HTTPException(status_code=502, detail="Speech backend failed") from error
         return Response(content=audio, media_type="audio/mpeg")
+
+    @app.post("/v1/tasks/speaking-tutor", dependencies=[Depends(require_token)])
+    async def speaking_tutor(task: SpeakingTutorInput) -> dict:
+        try:
+            output = await active.speaking_turn(task)
+        except ProviderError as error:
+            raise HTTPException(
+                status_code=502, detail="Teacher did not return an English reply"
+            ) from error
+        return {"provider": active.name, "model": active.model, "output": output.model_dump()}
+
+    @app.post("/v1/speaking/transcribe", dependencies=[Depends(require_token)])
+    async def transcribe(request: Request) -> dict[str, str]:
+        if not settings.speaking_enabled:
+            raise HTTPException(status_code=503, detail="Speech recognition is disabled")
+        data = await request.body()
+        try:
+            text = await recognizer.transcribe(data)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail="Invalid WAV audio") from error
+        except Exception as error:  # noqa: BLE001 - never expose transcripts or upstream details
+            logger.warning("Speech recognition failed: %s", type(error).__name__)
+            raise HTTPException(status_code=503, detail="Speech recognition unavailable") from error
+        return {"text": text}
 
     return app
 

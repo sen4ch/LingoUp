@@ -11,6 +11,7 @@ import type { AIProvider, DataLocality } from '../application/ai-provider.js';
 export const MOCK_PROVIDER_NAME = 'mock';
 
 const SUPPORTED: readonly AiTaskType[] = [
+  'speaking-tutor',
   'word-explanation',
   'reading-text-generation',
   'exercise-generation',
@@ -47,6 +48,11 @@ export class MockAIProvider implements AIProvider {
 
   private output(task: ImplementedAiTaskType, input: unknown): unknown {
     switch (task) {
+      case 'speaking-tutor':
+        return {
+          reply:
+            'Hello! I am your practice teacher. Tell me about your day. What did you do this morning?',
+        };
       case 'word-explanation': {
         const { term, context } = input as AiTaskInput<'word-explanation'>;
         return {

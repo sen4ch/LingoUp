@@ -29,6 +29,7 @@ export function SiteHeader() {
       ? [
           { href: '/vocabulary', label: t.nav.vocabulary },
           { href: '/review', label: t.nav.review, count: due?.totalDue },
+          { href: '/speaking', label: t.nav.speaking },
         ]
       : []),
   ];

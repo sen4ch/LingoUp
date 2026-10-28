@@ -12,9 +12,11 @@ from .prompts import (
     EXERCISE_SCHEMA,
     OUTPUT_SCHEMA,
     READING_TEXT_SCHEMA,
+    SPEAKING_SCHEMA,
     Messages,
     exercise_messages,
     reading_text_messages,
+    speaking_messages,
     word_explanation_messages,
 )
 from .schemas import (
@@ -24,6 +26,8 @@ from .schemas import (
     ExerciseItem,
     ReadingTextGenerationInput,
     ReadingTextGenerationOutput,
+    SpeakingTutorInput,
+    SpeakingTutorOutput,
     WordExplanationInput,
     WordExplanationOutput,
 )
@@ -49,6 +53,8 @@ class Provider(Protocol):
     ) -> ExerciseGenerationOutput: ...
 
     async def warm_up(self) -> None: ...
+
+    async def speaking_turn(self, task: SpeakingTutorInput) -> SpeakingTutorOutput: ...
 
     async def aclose(self) -> None: ...
 
@@ -103,6 +109,12 @@ class MockProvider:
     name = "mock"
     model = "mock-v1"
     data_locality: Literal["local", "external"] = "local"
+
+    async def speaking_turn(self, task: SpeakingTutorInput) -> SpeakingTutorOutput:
+        return SpeakingTutorOutput(
+            reply="Hello! I am your practice teacher. Tell me about your day. "
+            "What did you do this morning?"
+        )
 
     async def explain_word(self, task: WordExplanationInput) -> WordExplanationOutput:
         return WordExplanationOutput(
@@ -163,6 +175,10 @@ class LlmProvider:
     async def explain_word(self, task: WordExplanationInput) -> WordExplanationOutput:
         raw = await self.complete_json(word_explanation_messages(task), OUTPUT_SCHEMA, 0.2)
         return parse_output(raw, WordExplanationOutput)
+
+    async def speaking_turn(self, task: SpeakingTutorInput) -> SpeakingTutorOutput:
+        raw = await self.complete_json(speaking_messages(task), SPEAKING_SCHEMA, 0.4)
+        return parse_output(raw, SpeakingTutorOutput)
 
     async def generate_text(self, task: ReadingTextGenerationInput) -> ReadingTextGenerationOutput:
         raw = await self.complete_json(reading_text_messages(task), READING_TEXT_SCHEMA, 0.7)

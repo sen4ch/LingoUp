@@ -113,6 +113,7 @@ services:
       AI_DAILY_QUOTA_PER_USER: ${AI_DAILY_QUOTA_PER_USER:-200}
       AI_ALLOW_EXTERNAL: ${AI_ALLOW_EXTERNAL:-false}
       IMAGE_SEARCH_PROVIDER: ${IMAGE_SEARCH_PROVIDER:-none}
+      SPEAKING_ENABLED: ${SPEAKING_ENABLED:-false}
       SPEECH_PROVIDER: ${SPEECH_PROVIDER:-none}
       EDGE_SPEECH_VOICE: ${EDGE_SPEECH_VOICE:-en-US-AndrewMultilingualNeural}
       AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
@@ -204,6 +205,11 @@ services:
     environment:
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?}
       AI_BACKEND: ${AI_BACKEND:-mock}
+      SPEAKING_ENABLED: ${SPEAKING_ENABLED:-false}
+      WHISPER_MODEL: ${WHISPER_MODEL:-base}
+      WHISPER_DOWNLOAD_ROOT: /models
+      HF_HOME: /models/huggingface
+      HF_XET_CACHE: /models/xet
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
       OLLAMA_THINK: ${OLLAMA_THINK:-false}
@@ -212,6 +218,8 @@ services:
       OPENAI_COMPATIBLE_API_KEY: ${OPENAI_COMPATIBLE_API_KEY:-}
       OPENAI_COMPATIBLE_MODEL: ${OPENAI_COMPATIBLE_MODEL:-}
       OPENAI_COMPATIBLE_DATA_LOCALITY: ${OPENAI_COMPATIBLE_DATA_LOCALITY:-external}
+    volumes:
+      - whisper-models:/models
     # Lets OLLAMA_URL=http://host.docker.internal:11434 reach an Ollama installed on the host
     # (Docker Desktop resolves it anyway; Linux Docker Engine needs this mapping).
     extra_hosts:
@@ -253,3 +261,4 @@ volumes:
   postgres-data:
   valkey-data:
   ollama-data:
+  whisper-models:

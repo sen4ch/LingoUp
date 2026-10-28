@@ -4,7 +4,7 @@ import { z } from 'zod';
  * AI task catalogue. Every task has a typed input and a structured output schema;
  * provider responses are always validated against the output schema.
  *
- * Implemented: word-explanation, reading-text-generation, exercise-generation (see AI_TASKS).
+ * Implemented: word-explanation, reading-text-generation, exercise-generation, speaking-tutor.
  * The others are declared so routing, quotas and provider capabilities can be designed
  * around the full list; providers report them as unsupported until implemented.
  */
@@ -12,6 +12,7 @@ export const AI_TASK_TYPES = [
   'word-explanation',
   'reading-text-generation',
   'exercise-generation',
+  'speaking-tutor',
   'grammar-explanation',
   'writing-assessment',
   'speech-recognition',
@@ -90,11 +91,35 @@ export const ExerciseGenerationOutputSchema = z.object({
 });
 export type ExerciseGenerationOutput = z.infer<typeof ExerciseGenerationOutputSchema>;
 
+export const SpeakingTutorInputSchema = z.object({
+  level: CefrLevel,
+  topic: z.string().max(80),
+  messages: z
+    .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(1000) }))
+    .max(20),
+});
+export const SpeakingTutorOutputSchema = z.object({
+  reply: z
+    .string()
+    .min(1)
+    .max(600)
+    .refine(
+      (text) => /[a-z]/i.test(text) && !/[^\p{Script=Latin}\p{N}\p{P}\p{Z}\p{S}\s]/u.test(text),
+      'The teacher must answer in English',
+    ),
+});
+
 /** How long a task may take: interactive lookups vs. longer generation. */
 export type AiTaskDuration = 'interactive' | 'generation';
 
 /** Registry of implemented tasks: input and output schemas plus execution policy. */
 export const AI_TASKS = {
+  'speaking-tutor': {
+    input: SpeakingTutorInputSchema,
+    output: SpeakingTutorOutputSchema,
+    idempotent: false,
+    duration: 'interactive' as AiTaskDuration,
+  },
   'word-explanation': {
     input: WordExplanationInputSchema,
     output: WordExplanationOutputSchema,

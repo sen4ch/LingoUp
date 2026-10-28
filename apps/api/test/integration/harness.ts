@@ -94,7 +94,7 @@ export class TestAgent {
 
   /** Binary request/response (uploads, images); the session cookie is reused, not updated. */
   async raw(
-    method: 'GET' | 'PUT',
+    method: 'GET' | 'PUT' | 'POST',
     url: string,
     payload?: { data: Buffer; contentType: string },
   ): Promise<{ status: number; headers: Record<string, unknown>; data: Buffer }> {

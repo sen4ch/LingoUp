@@ -37,6 +37,31 @@ class ReadingTextGenerationInput(BaseModel):
     topic: str | None = Field(default=None, max_length=80)
 
 
+class SpeakingMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=1000)
+
+
+class SpeakingTutorInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    level: CefrLevel
+    topic: str = Field(max_length=80)
+    messages: list[SpeakingMessage] = Field(max_length=20)
+
+
+class SpeakingTutorOutput(BaseModel):
+    reply: str = Field(min_length=1, max_length=600)
+
+    @field_validator("reply")
+    @classmethod
+    def english_script(cls, value: str) -> str:
+        if not any("a" <= char.lower() <= "z" for char in value):
+            raise ValueError("English reply required")
+        if any(char.isalpha() and not char.isascii() for char in value):
+            raise ValueError("English reply required")
+        return value
+
+
 class ReadingTextGenerationOutput(BaseModel):
     model_config = ConfigDict(extra="ignore")
 

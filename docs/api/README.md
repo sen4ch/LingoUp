@@ -42,3 +42,5 @@
 | `POST /v1/learning/generated-texts`                                                          | сессия   | Личный текст из всех слов или выбранных `wordIds` (минимум 3; синхронно, до `AI_GENERATION_TIMEOUT_MS`) |
 | `GET /v1/learning/reading/completions`, `POST /v1/learning/reading/:slug/complete`           | сессия   | Прочитанные тексты                                                                                      |
 | `GET /v1/progress/summary`                                                                   | сессия   | Сводка прогресса                                                                                        |
+| `POST /v1/learning/speaking/turn`                                                            | сессия   | Ответ AI-учителя на английском: `{ messages, level?, topic? }`, последние 20 сообщений                  |
+| `POST /v1/learning/speaking/transcribe`                                                      | сессия   | Локальная расшифровка: `audio/wav`, моно PCM16 16 kHz, до 30 секунд / 1 МБ; `{ text }`                  |

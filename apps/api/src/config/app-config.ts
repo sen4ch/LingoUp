@@ -74,6 +74,10 @@ const EnvSchema = z.object({
   // Picture search for words, both free and keyless: wikimedia (Wikimedia Commons) or
   // openverse (Wikimedia, Flickr and more; the public service is sometimes overloaded).
   IMAGE_SEARCH_PROVIDER: z.enum(['none', 'wikimedia', 'openverse']).default('none'),
+  SPEAKING_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   SPEECH_CACHE_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 });
 
@@ -138,6 +142,7 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
       allowExternal: env.AI_ALLOW_EXTERNAL,
     },
     images: { searchProvider: env.IMAGE_SEARCH_PROVIDER },
+    speaking: { enabled: env.SPEAKING_ENABLED },
     speech: {
       provider: env.SPEECH_PROVIDER,
       azure:

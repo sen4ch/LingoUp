@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # Pronunciation through edge-tts; a word takes about a second.
     speech_timeout_seconds: float = 15.0
     max_body_bytes: int = 16 * 1024
+    speaking_enabled: bool = False
+    whisper_model: str = "base"
+    whisper_download_root: str = "/models"
 
     @field_validator("ai_service_token")
     @classmethod
