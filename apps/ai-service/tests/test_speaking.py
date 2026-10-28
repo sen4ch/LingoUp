@@ -8,8 +8,37 @@ import pytest
 import respx
 from test_api import HEADERS, client
 
+from app.prompts import speaking_messages
 from app.recognition import pcm_audio
-from app.schemas import SpeakingTutorOutput
+from app.schemas import SpeakingTutorInput, SpeakingTutorOutput
+
+
+def test_speaking_preserves_chat_roles_and_only_opens_an_empty_conversation() -> None:
+    history = [
+        {"role": "assistant", "content": "Hello! How do you spend your free time?"},
+        {"role": "user", "content": "I play football with my brother."},
+        {"role": "assistant", "content": "That sounds fun. Where do you play?"},
+        {"role": "user", "content": "In a park near our home."},
+    ]
+    messages = speaking_messages(
+        SpeakingTutorInput(level="A2", topic="Free time", messages=history)
+    )
+    assert [message["role"] for message in messages] == [
+        "system",
+        "user",
+        "assistant",
+        "user",
+        "assistant",
+        "user",
+        "system",
+    ]
+    assert messages[-2]["content"] == history[-1]["content"]
+    assert json.loads(messages[-3]["content"]) == {"reply": history[-2]["content"]}
+    assert "MUST be in English only" in messages[-1]["content"]
+    assert "Begin the call" not in messages[1]["content"]
+    assert "ONLY on the first turn" in messages[0]["content"]
+    initial = speaking_messages(SpeakingTutorInput(level="A2", topic="Free time", messages=[]))
+    assert "Begin the call" in initial[-2]["content"]
 
 
 def wav(seconds: int = 1, rate: int = 16000) -> bytes:
@@ -66,6 +95,8 @@ def test_teacher_keeps_english_policy_for_russian_user_requests() -> None:
         sent = json.loads(chat.calls.last.request.read())
         assert "ALWAYS reply ONLY in English" in sent["messages"][0]["content"]
         assert sent["messages"][1]["role"] == "user"
+        assert sent["messages"][-2] == task["messages"][-1]
+        assert sent["messages"][-1]["role"] == "system"
         chat.mock(
             return_value=httpx.Response(
                 200, json={"message": {"content": json.dumps({"reply": "Привет! Как дела?"})}}
