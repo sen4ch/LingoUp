@@ -7,6 +7,7 @@ import { AiGateway } from './application/ai-gateway.js';
 import { AiQuota } from './application/ai-quota.js';
 import { SpeechGateway } from './application/speech-gateway.js';
 import { RecognitionGateway } from './application/recognition-gateway.js';
+import { ListeningAudioGateway } from './application/listening-audio-gateway.js';
 import { SPEECH_PROVIDER, type SpeechProvider } from './application/speech-provider.js';
 import { AiServiceSpeechProvider } from './infrastructure/ai-service-speech-provider.js';
 import { AzureSpeechProvider } from './infrastructure/azure-speech-provider.js';
@@ -57,7 +58,8 @@ function createSpeechProvider(config: AppConfig): SpeechProvider | null {
     AiGateway,
     SpeechGateway,
     RecognitionGateway,
+    ListeningAudioGateway,
   ],
-  exports: [AiGateway, SpeechGateway, RecognitionGateway],
+  exports: [AiGateway, SpeechGateway, RecognitionGateway, ListeningAudioGateway],
 })
 export class AiGatewayModule {}

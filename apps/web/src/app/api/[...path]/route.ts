@@ -52,7 +52,11 @@ async function proxy(
       redirect: 'manual',
       cache: 'no-store',
       signal: AbortSignal.timeout(
-        LONG_RUNNING_PATHS.has(path.join('/')) ? LONG_TIMEOUT_MS : TIMEOUT_MS,
+        path.join('/') === 'v1/learning/listening'
+          ? 300_000
+          : LONG_RUNNING_PATHS.has(path.join('/'))
+            ? LONG_TIMEOUT_MS
+            : TIMEOUT_MS,
       ),
     });
   } catch {

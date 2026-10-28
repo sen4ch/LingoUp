@@ -30,6 +30,7 @@ export function SiteHeader() {
           { href: '/vocabulary', label: t.nav.vocabulary },
           { href: '/review', label: t.nav.review, count: due?.totalDue },
           { href: '/speaking', label: t.nav.speaking },
+          { href: '/listening', label: t.nav.listening },
         ]
       : []),
   ];
@@ -44,7 +45,7 @@ export function SiteHeader() {
           aria-label={t.nav.main}
           className="order-3 w-full overflow-x-auto sm:order-none sm:w-auto"
         >
-          <ul className="flex justify-between gap-0.5 sm:justify-start sm:gap-1">
+          <ul className="flex flex-wrap gap-0.5 sm:gap-1">
             {links.map((link) => {
               const active = pathname.startsWith(link.href);
               return (

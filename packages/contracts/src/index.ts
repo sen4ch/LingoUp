@@ -7,3 +7,4 @@ export * from './learning.js';
 export * from './progress.js';
 export * from './grammar.js';
 export * from './speaking.js';
+export * from './listening.js';

@@ -12,6 +12,7 @@ export const MOCK_PROVIDER_NAME = 'mock';
 
 const SUPPORTED: readonly AiTaskType[] = [
   'speaking-tutor',
+  'listening-generation',
   'word-explanation',
   'reading-text-generation',
   'exercise-generation',
@@ -48,6 +49,27 @@ export class MockAIProvider implements AIProvider {
 
   private output(task: ImplementedAiTaskType, input: unknown): unknown {
     switch (task) {
+      case 'listening-generation': {
+        const { level } = input as AiTaskInput<'listening-generation'>;
+        return {
+          title: 'Placeholder listening lesson',
+          script:
+            'Nora works at the library in a small town near the sea. She takes the bus to work every Monday because she wants to save money. She organises a book club with a new volunteer. '.repeat(
+              16,
+            ),
+          questions: Array.from(
+            { length: ['A1', 'A2'].includes(level) ? 5 : ['B1', 'B2'].includes(level) ? 6 : 8 },
+            (_, index) => ({
+              question: `Question ${index + 1}: Where does Nora work?`,
+              options: ['At the library', 'At a station', 'At a museum', 'At an office'],
+              answerIndex: 0,
+              explanation: 'The narrator describes Nora at the library.',
+              evidence: 'Nora works at the library',
+              kind: 'inference',
+            }),
+          ),
+        };
+      }
       case 'speaking-tutor':
         return {
           reply:

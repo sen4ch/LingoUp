@@ -12,6 +12,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "media-src 'self' blob:",
+  'frame-src https://www.youtube-nocookie.com',
   "font-src 'self'",
   `connect-src 'self'${isDev ? ' ws:' : ''}`,
   "frame-ancestors 'none'",

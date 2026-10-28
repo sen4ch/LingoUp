@@ -44,3 +44,6 @@
 | `GET /v1/progress/summary`                                                                   | сессия   | Сводка прогресса                                                                                        |
 | `POST /v1/learning/speaking/turn`                                                            | сессия   | Ответ AI-учителя на английском: `{ messages, level?, topic? }`, последние 20 сообщений                  |
 | `POST /v1/learning/speaking/transcribe`                                                      | сессия   | Локальная расшифровка: `audio/wav`, моно PCM16 16 kHz, до 30 секунд / 1 МБ; `{ text }`                  |
+| `POST /v1/learning/listening`                                                                | сессия   | Генерация аудио на 3–5 минут и вопросов по CEFR; `{ level, topic? }`                                    |
+| `GET /v1/learning/listening/:id/audio`                                                       | сессия   | MP3 владельца, доступен 24 часа                                                                         |
+| `POST /v1/learning/listening/:id/answers`                                                    | сессия   | Проверка `{ answers }`, пояснения, цитаты и текст записи                                                |

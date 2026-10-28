@@ -13,6 +13,7 @@ export const AI_TASK_TYPES = [
   'reading-text-generation',
   'exercise-generation',
   'speaking-tutor',
+  'listening-generation',
   'grammar-explanation',
   'writing-assessment',
   'speech-recognition',
@@ -23,6 +24,28 @@ export const AiTaskTypeSchema = z.enum(AI_TASK_TYPES);
 export type AiTaskType = z.infer<typeof AiTaskTypeSchema>;
 
 const CefrLevel = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+
+export const ListeningGenerationInputSchema = z.object({
+  level: CefrLevel,
+  topic: z.string().max(80),
+});
+export const ListeningGenerationOutputSchema = z.object({
+  title: z.string().min(1).max(120),
+  script: z.string().min(1000).max(10000),
+  questions: z
+    .array(
+      z.object({
+        question: z.string().min(5).max(300),
+        options: z.array(z.string().min(1).max(180)).length(4),
+        answerIndex: z.number().int().min(0).max(3),
+        explanation: z.string().min(1).max(500),
+        evidence: z.string().min(1).max(500),
+        kind: z.enum(['detail', 'gist', 'inference', 'attitude', 'purpose', 'vocabulary']),
+      }),
+    )
+    .min(5)
+    .max(8),
+});
 
 export const WordExplanationInputSchema = z.object({
   term: z.string().min(1).max(80),
@@ -114,6 +137,12 @@ export type AiTaskDuration = 'interactive' | 'generation';
 
 /** Registry of implemented tasks: input and output schemas plus execution policy. */
 export const AI_TASKS = {
+  'listening-generation': {
+    input: ListeningGenerationInputSchema,
+    output: ListeningGenerationOutputSchema,
+    idempotent: false,
+    duration: 'generation' as AiTaskDuration,
+  },
   'speaking-tutor': {
     input: SpeakingTutorInputSchema,
     output: SpeakingTutorOutputSchema,

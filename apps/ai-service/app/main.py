@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
 from .config import Settings
+from .listening import ListeningAudioInput, ListeningInput, narration
 from .providers import Provider, ProviderError, create_provider
 from .recognition import Recognizer
 from .schemas import (
@@ -158,6 +159,24 @@ def create_app(
                 status_code=502, detail="Teacher did not return an English reply"
             ) from error
         return {"provider": active.name, "model": active.model, "output": output.model_dump()}
+
+    @app.post("/v1/tasks/listening-generation", dependencies=[Depends(require_token)])
+    async def listening_generation(task: ListeningInput) -> dict:
+        try:
+            output = await active.generate_listening(task)
+        except ProviderError as error:
+            raise HTTPException(status_code=502, detail="Listening generation failed") from error
+        return {"provider": active.name, "model": active.model, "output": output.model_dump()}
+
+    @app.post("/v1/listening/audio", dependencies=[Depends(require_token)])
+    async def listening_audio(task: ListeningAudioInput) -> Response:
+        try:
+            audio, duration = await narration(task)
+        except SpeechError as error:
+            raise HTTPException(status_code=502, detail="Narration failed") from error
+        return Response(
+            content=audio, media_type="audio/mpeg", headers={"x-audio-duration": str(duration)}
+        )
 
     @app.post("/v1/speaking/transcribe", dependencies=[Depends(require_token)])
     async def transcribe(request: Request) -> dict[str, str]:

@@ -8,10 +8,17 @@ import { TextGenerationService } from './application/text-generation.service.js'
 import { ReadingController } from './http/reading.controller.js';
 import { TextGenerationController } from './http/text-generation.controller.js';
 import { SpeakingController } from './http/speaking.controller.js';
+import { ListeningController } from './http/listening.controller.js';
+import { ListeningService } from './application/listening.service.js';
 
 @Module({
   imports: [ContentModule, VocabularyModule, IdentityModule, AiGatewayModule],
-  controllers: [ReadingController, TextGenerationController, SpeakingController],
-  providers: [ReadingService, TextGenerationService],
+  controllers: [
+    ReadingController,
+    TextGenerationController,
+    SpeakingController,
+    ListeningController,
+  ],
+  providers: [ReadingService, TextGenerationService, ListeningService],
 })
 export class LearningModule {}

@@ -8,6 +8,8 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from .config import Settings
+from .listening import ListeningInput, ListeningOutput
+from .listening import generate_listening as create_listening
 from .prompts import (
     EXERCISE_SCHEMA,
     OUTPUT_SCHEMA,
@@ -55,6 +57,8 @@ class Provider(Protocol):
     async def warm_up(self) -> None: ...
 
     async def speaking_turn(self, task: SpeakingTutorInput) -> SpeakingTutorOutput: ...
+
+    async def generate_listening(self, task: ListeningInput) -> ListeningOutput: ...
 
     async def aclose(self) -> None: ...
 
@@ -109,6 +113,33 @@ class MockProvider:
     name = "mock"
     model = "mock-v1"
     data_locality: Literal["local", "external"] = "local"
+
+    async def generate_listening(self, task: ListeningInput) -> ListeningOutput:
+        from .listening import question_count
+
+        paragraph = (
+            "Nora works at the library in a small town near the sea. Every Monday she takes "
+            "the bus to work because she wants to save money. One rainy morning she meets "
+            "a new volunteer who enjoys reading stories to children. They decide to organise "
+            "a book club for local families. Nora asks her neighbours to bring their favourite "
+            "books. The children are excited about the club, and their parents help prepare "
+            "the room. At the end of the day Nora feels proud: everyone has worked together. "
+        )
+        return ListeningOutput(
+            title="Placeholder listening lesson",
+            script=paragraph * 6,
+            questions=[
+                {
+                    "question": f"Question {i + 1}: Where does Nora work?",
+                    "options": ["At the library", "At a station", "At a museum", "At an office"],
+                    "answerIndex": 0,
+                    "explanation": "The narrator describes Nora's workplace.",
+                    "evidence": "Nora works at the library",
+                    "kind": "inference",
+                }
+                for i in range(question_count(task.level))
+            ],
+        )
 
     async def speaking_turn(self, task: SpeakingTutorInput) -> SpeakingTutorOutput:
         return SpeakingTutorOutput(
@@ -179,6 +210,12 @@ class LlmProvider:
     async def speaking_turn(self, task: SpeakingTutorInput) -> SpeakingTutorOutput:
         raw = await self.complete_json(speaking_messages(task), SPEAKING_SCHEMA, 0.4)
         return parse_output(raw, SpeakingTutorOutput)
+
+    async def generate_listening(self, task: ListeningInput) -> ListeningOutput:
+        try:
+            return await create_listening(self.complete_json, task)
+        except ValueError as error:
+            raise ProviderError("Listening lesson failed validation") from error
 
     async def generate_text(self, task: ReadingTextGenerationInput) -> ReadingTextGenerationOutput:
         raw = await self.complete_json(reading_text_messages(task), READING_TEXT_SCHEMA, 0.7)
