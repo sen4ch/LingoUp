@@ -1,6 +1,32 @@
 import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 
+test.use({
+  channel: 'chromium',
+  launchOptions: { args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] },
+});
+
+test.describe('browser microphone policy', () => {
+  test('allows native microphone access and local audio playback under the real response headers', async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(['microphone']);
+    const response = await page.goto('/login');
+    expect(response!.headers()['permissions-policy']).toContain('microphone=(self)');
+    expect(response!.headers()['permissions-policy']).toContain('camera=()');
+    expect(response!.headers()['content-security-policy']).toContain("media-src 'self' blob:");
+    const device = await page.evaluate(async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const track = stream.getAudioTracks()[0]!;
+      const state = track.readyState;
+      stream.getTracks().forEach((item) => item.stop());
+      return { state, released: track.readyState };
+    });
+    expect(device).toEqual({ state: 'live', released: 'ended' });
+  });
+});
+
 test('voice call transcribes a turn, answers in English, pauses and releases the microphone', async ({
   page,
 }) => {

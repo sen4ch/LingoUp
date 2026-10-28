@@ -22,7 +22,9 @@ function callError(error: unknown): string {
   }
   if (error instanceof Error && error.message.includes('English voice'))
     return t.speaking.voiceError;
-  return t.speaking.microphoneError;
+  if (error instanceof Error && error.message.includes('HTTPS or localhost'))
+    return t.speaking.microphoneError;
+  return t.speaking.callError;
 }
 
 export default function SpeakingPage() {

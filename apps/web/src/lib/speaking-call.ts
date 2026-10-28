@@ -189,7 +189,7 @@ export class SpeakingCall {
     this.options.onState('idle');
   }
   private fail(error: unknown) {
-    if (this.ended || (error instanceof DOMException && error.name === 'AbortError')) return;
+    if (this.ended) return;
     this.end();
     this.options.onError(error);
   }
