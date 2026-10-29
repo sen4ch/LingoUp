@@ -1,22 +1,22 @@
-# ADR-0003: Одна база PostgreSQL, отдельная схема на модуль
+# ADR-0003: One PostgreSQL database, separate schema per module
 
-- Статус: принято
-- Дата: 2026-10-26
+- Status: Accepted
+- Date: 2026-10-26
 
-## Контекст
+## Context
 
-Модули не должны читать чужие таблицы, но отдельная БД на модуль на старте усложняет транзакции, бэкапы и локальный запуск.
+Modules should not read other tables, but a separate DB per module complicates transactions, backups, and local startup.
 
-## Решение
+## Solution
 
-- Одна база, по одной PostgreSQL-схеме на модуль (`identity`, `content`, `vocabulary`, `learning`, `progress`, `platform`).
-- Drizzle-схемы экспортируются из `@lingoup/database` отдельными subpath-ами (`@lingoup/database/schema/vocabulary`). Модуль импортирует только свою схему — это проверяет архитектурный тест.
-- Межсхемные FK разрешены только на `identity.users(id)` с `ON DELETE CASCADE`. Так удаление аккаунта гарантированно удаляет все персональные данные.
-- Ссылки на контент хранятся без FK (`source_text_id` + снимок контекста).
-- Миграции — одна общая последовательность (`packages/database/migrations`): drizzle-kit не поддерживает независимые цепочки, а при выделении модуля его схему можно перенести вместе с миграциями.
+- One database, one PostgreSQL schema per module (`identity`, `content`, `vocabulary`, `learning`, `progress`, `platform`).
+- Drizzle schemas are exported from `@lingoup/database` via separate subpaths (`@lingoup/database/schema/vocabulary`). A module imports only its own schema — this is checked by an architectural test.
+- Cross-schema FKs are allowed only on `identity.users(id)` with `ON DELETE CASCADE`. This ensures deletion of an account guarantees deletion of all personal data.
+- Links to content are stored without FK (`source_text_id` + context snapshot).
+- Migrations — one common sequence (`packages/database/migrations`): drizzle-kit does not support independent chains, and when a module is separated, its schema can be moved along with migrations.
 
-## Последствия
+## Consequences
 
-- \+ Атомарные транзакции «изменение + outbox-событие».
-- \+ Выделение модуля = перенос одной схемы.
-- − Каскад от `identity.users` связывает модули с Identity. Это осознанный компромисс ради корректного удаления персональных данных; при выделении сервиса его заменит событие `UserDeleted`.
+- \+ Atomic transactions "change + outbox event".
+- \+ Module separation = moving one schema.
+- − Cascade from `identity.users` links modules to Identity. This is an intentional compromise for correct deletion of personal data; when a service is separated, it will be replaced by the `UserDeleted` event.

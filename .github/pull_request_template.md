@@ -1,17 +1,18 @@
-## Что сделано
+﻿## Changes
 
-<!-- Кратко: какую проблему решает PR и как. -->
+<!-- Explain the problem and the resulting behavior. -->
 
-## Как проверить
+## Validation
 
-<!-- Команды, сценарий в UI, скриншоты для изменений интерфейса. -->
+<!-- Include commands, UI steps, and screenshots for interface changes. -->
 
-## Чек-лист
+## Checklist
 
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` проходят
-- [ ] Интеграционные тесты добавлены или обновлены, если менялось поведение API
-- [ ] Новые таблицы — только в схеме своего модуля, миграция сгенерирована (`pnpm db:generate`)
-- [ ] Новые события — версионированный контракт в `packages/contracts/src/events`
-- [ ] Нет секретов, персональных данных в логах, непроверенного HTML
-- [ ] Документация обновлена (ARCHITECTURE.md, ADR, tech-debt), если менялась архитектура
-- [ ] Добавленный учебный контент имеет совместимую лицензию
+- [ ] `pnpm lint && pnpm typecheck && pnpm test` pass.
+- [ ] Integration tests cover changes to API behavior.
+- [ ] New tables belong to the owning module schema, with generated migrations (`pnpm db:generate`).
+- [ ] New events have versioned contracts in `packages/contracts/src/events`.
+- [ ] No secrets, personal data in logs, or unvalidated HTML are introduced.
+- [ ] Architecture documentation, ADRs and technical debt are updated where relevant.
+- [ ] Added learning content has a compatible license and accurate provenance.
+- [ ] Interface text, documentation and bundled lesson explanations are written in English.

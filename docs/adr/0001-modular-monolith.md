@@ -1,22 +1,22 @@
-# ADR-0001: Модульный монолит с событиями и отдельными AI-сервисами
+# ADR-0001: Modular Monolith with Events and Separate AI Services
 
-- Статус: принято
-- Дата: 2026-10-26
+- Status: Accepted
+- Date: 2026-10-26
 
-## Контекст
+## Context
 
-Платформа должна развиваться годами силами open-source сообщества, запускаться локально одной командой и масштабироваться при росте. Команда на старте маленькая, доменные границы ещё уточняются.
+The platform should evolve over years by the power of the open-source community, be launched locally by one team, and scale as it grows. The team starts small, and domain boundaries are still being refined.
 
-## Решение
+## Solution
 
-1. Бизнес-логика живёт в одном приложении `apps/api` (NestJS), разделённом на модули с явным публичным API.
-2. Фоновая обработка — отдельный процесс `apps/worker` (BullMQ), получающий события через Transactional Outbox.
-3. AI-инференс — отдельный сервис `apps/ai-service` (Python/FastAPI), потому что у него другой runtime, экосистема и профиль ресурсов (GPU, память).
-4. Kubernetes, Kafka и микросервисы не используются до появления измеримой необходимости.
+1. Business logic lives in one application `apps/api` (NestJS), divided into modules with an explicit public API.
+2. Background processing — a separate process `apps/worker` (BullMQ), receiving events through Transactional Outbox.
+3. AI inference — a separate service `apps/ai-service` (Python/FastAPI), because it has a different runtime, ecosystem, and resource profile (GPU, memory).
+4. Kubernetes, Kafka, and microservices are not used until there is measurable need.
 
-## Последствия
+## Consequences
 
-- \+ Один деплой, одна БД, простые транзакции и отладка.
-- \+ Модули можно выделять по одному: границы и события уже есть.
-- − Дисциплину границ нужно проверять автоматически (архитектурный тест), иначе монолит деградирует в «big ball of mud».
-- − Все модули API масштабируются вместе; тяжёлые операции поэтому выносятся в worker и ai-service.
+- \+ One deployment, one database, simple transactions, and debugging.
+- \+ Modules can be separated one by one: boundaries and events are already in place.
+- − Discipline of boundaries needs to be checked automatically (architectural test), otherwise the monolith degrades into a "big ball of mud".
+- − All API modules scale together; heavy operations are therefore moved out to worker and ai-service.

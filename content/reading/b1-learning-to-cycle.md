@@ -11,32 +11,26 @@ glossary:
   - term: embarrassed
     partOfSpeech: adjective
     definition: feeling shy or uncomfortable because you think people are judging you
-    translation: смущённый
     example: She was embarrassed when she forgot his name.
   - term: give up
     partOfSpeech: phrasal verb
     definition: to stop trying to do something
-    translation: сдаваться, бросать
     example: Don't give up — you are almost there.
   - term: balance
     partOfSpeech: noun
     definition: the ability to stay steady without falling
-    translation: равновесие
     example: Small children often lose their balance.
   - term: confidence
     partOfSpeech: noun
     definition: the feeling that you can do something well
-    translation: уверенность
     example: Practice gives you confidence.
   - term: commute
     partOfSpeech: noun
     definition: the regular journey between home and work
-    translation: дорога на работу и обратно
     example: My commute takes forty minutes.
   - term: look forward to
     partOfSpeech: phrasal verb
     definition: to feel happy about something that is going to happen
-    translation: с нетерпением ждать
     example: I'm looking forward to the holidays.
 ---
 

@@ -1,16 +1,16 @@
-# ADR-0006: Opaque-сессии в PostgreSQL вместо JWT
+# ADR-0006: Opaque Sessions in PostgreSQL Instead of JWT
 
-- Статус: принято
-- Дата: 2026-10-26
+- Status: Accepted
+- Date: 2026-10-26
 
-## Решение
+## Solution
 
-- После входа сервер генерирует 256-битный случайный токен и отдаёт его в cookie `HttpOnly; SameSite=Lax; Secure` (в production).
-- В БД хранится только SHA-256 токена, поэтому утечка БД не даёт рабочих сессий.
-- Сессия мгновенно отзывается удалением строки (logout, удаление аккаунта).
-- Web проксирует `/api/*` на API через rewrites Next.js: cookie остаются same-origin, CORS не нужен.
-- Изменяющие запросы дополнительно проверяют заголовок `Origin`.
+- After login, the server generates a 256-bit random token and sends it in the cookie `HttpOnly; SameSite=Lax; Secure` (in production).
+- Only the SHA-256 of the token is stored in the database, so a database leak does not provide working sessions.
+- The session is immediately revoked by deleting the row (logout, account deletion).
+- Web proxies `/api/*` to the API through Next.js rewrites: cookies remain same-origin, CORS is not needed.
+- Requesting changes additionally check the `Origin` header.
 
-## Альтернативы
+## Alternatives
 
-JWT с коротким сроком жизни и refresh-токенами сложнее отзывать и легче реализовать небезопасно. Его преимущество — проверка без БД — пока не нужно: запрос к сессии занимает один индексный lookup. При росте нагрузки сессии можно кэшировать в Valkey.
+JWT with a short lifetime and refresh tokens is more complex to revoke and easier to implement insecurely. Its advantage — verification without a database — is not needed: a session query takes one indexed lookup. When load increases, sessions can be cached in Valkey.

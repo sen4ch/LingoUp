@@ -9,13 +9,13 @@ const CATALOG = [
   {
     title: 'The Flatmates · Episode 1',
     author: 'BBC Learning English',
-    description: 'Учебный сериал о жизни соседей. Британский английский, короткие эпизоды.',
+    description: 'An educational series about flatmates. British English in short episodes.',
     url: 'https://www.youtube.com/watch?v=vAi1JlMIQVM',
   },
   {
     title: 'Sintel',
     author: 'Blender Foundation',
-    description: 'Короткометражный фэнтези-фильм на английском. История путешествия и дружбы.',
+    description: 'A short fantasy film in English. A story of adventure and friendship.',
     url: 'https://www.youtube.com/watch?v=eRsGyueVLvQ',
   },
 ];

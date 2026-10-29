@@ -1,38 +1,38 @@
-# ADR-0009: Озвучка слов голосами Microsoft (Edge и Azure AI Speech)
+# ADR-0009: Text-to-Speech with Microsoft Voices (Edge and Azure AI Speech)
 
-- Статус: принято
-- Дата: 2026-10-27
+- Status: Accepted
+- Date: 2026-10-27
 
-## Контекст
+## Context
 
-В карточке слова нужно слышать, как звучат слово и предложение, в котором оно встретилось. Пользователь выбрал Azure AI Speech, мужской американский голос `en-US-DerekMultilingualNeural`. Azure — внешний платный сервис, а проект по умолчанию self-hosted и не отправляет пользовательский контент наружу без согласия (ADR-0005).
+In the word card, the user should hear how a word and the sentence in which it appears sound. The user selected Azure AI Speech, male American voice `en-US-DerekMultilingualNeural`. Azure is an external paid service, and the default project is self-hosted and does not send user content outside without consent (ADR-0005).
 
-## Решение
+## Solution
 
-- В модуле AI Gateway добавлены порт `SpeechProvider`, адаптер `AzureSpeechProvider` (REST, без SDK) и `SpeechGateway`. API обращается к Azure напрямую, без ai-service: это один HTTP-запрос без моделей, а озвучка должна работать при любом `AI_PROVIDER`.
-- `SPEECH_PROVIDER=none | azure` (по умолчанию `none`). Выбор `azure` с ключом — явное решение администратора; `AI_ALLOW_EXTERNAL` на озвучку не влияет.
-- **Приватность:** отдельное слово (≤ 80 символов) — словарная единица, а не личные данные, оно отправляется без согласия пользователя. Предложение-контекст может быть из личного текста, поэтому отправляется в Azure только при включённом согласии `ai_data_sharing`. Текст никогда не пишется в логи.
-- **Стоимость:** аудио кэшируется в Valkey по голосу и SHA-256 текста на `SPEECH_CACHE_TTL_DAYS` (30 дней) — каждое слово синтезируется один раз на все аккаунты. Обращение к Azure тратит единицу общей дневной AI-квоты, попадание в кэш — нет. Rate limit — 60 запросов в минуту на пользователя.
-- Маршрут `GET /v1/vocabulary/pronunciation?text=&kind=term|sentence` отдаёт `audio/mpeg`, чтобы элемент `<audio>` играл его напрямую и браузер кэшировал ответ (`Cache-Control: private`). Ошибки — 503 `AI_UNAVAILABLE` с `details.aiStatus`.
-- SSML строится с экранированием текста: пользователь не может вставить теги (паузы, другие голоса).
-- **Запасной вариант** — встроенный синтез речи браузера (Web Speech API). Если сервер не ответил, клиент пять минут не обращается к нему. Для предложения без согласия выбираются только голоса, работающие на устройстве (`localService`): онлайн-голоса браузера (например, Google в Chrome) сами отправляют текст во внешний сервис.
+- The AI Gateway module has been added with the `SpeechProvider` port, the `AzureSpeechProvider` adapter (REST, no SDK), and `SpeechGateway`. The API directly calls Azure without ai-service: this is a single HTTP request without models, and text-to-speech should work for any `AI_PROVIDER`.
+- `SPEECH_PROVIDER=none | azure` (default is `none`). Choosing `azure` with a key is an explicit administrator decision; `AI_ALLOW_EXTERNAL` does not affect text-to-speech.
+- **Privacy:** A single word (≤ 80 characters) is a dictionary unit, not personal data, and is sent without user consent. The sentence context may come from personal text, so it is sent to Azure only when the `ai_data_sharing` consent is enabled. Text is never written to logs.
+- **Cost:** audio is cached in Valkey by voice and SHA-256 text hash for `SPEECH_CACHE_TTL_DAYS` (30 days) — each word is synthesized once for all accounts. A call to Azure consumes one unit of daily AI quota, while cache hit does not. Rate limit — 60 requests per minute per user.
+- The route `GET /v1/vocabulary/pronunciation?text=&kind=term|sentence` returns `audio/mpeg`, so that the element `<audio>` plays it directly and the browser caches the response (`Cache-Control: private`). Errors — 503 `AI_UNAVAILABLE` with `details.aiStatus`.
+- SSML is built with text escaping: the user cannot insert tags (pauses, other voices).
+- **Fallback option** — built-in text-to-speech synthesis in the browser (Web Speech API). If the server does not respond, the client does not make requests to it for five minutes. For a sentence without consent, only voices that work on the device (`localService`) are selected: browser-based voices (e.g., Google in Chrome) themselves send the text to an external service.
 
-### Дополнение: бесплатный режим Edge
+### Additional information: free mode Edge
 
-Пользователь попросил бесплатный вариант без ключа по образцу своего скрипта AnkiTTS (edge-tts). Добавлен `SPEECH_PROVIDER=edge`:
+The user requested a free option without a key following the pattern of their AnkiTTS script (edge-tts). Added `SPEECH_PROVIDER=edge`:
 
-- ai-service получил задачу `POST /v1/tasks/speech-synthesis` (библиотека `edge-tts` 7.3.1, LGPL-3.0, совместима с AGPL). API вызывает её адаптером `AiServiceSpeechProvider`; кэш, квота и политика согласия те же, что у Azure, потому что текст тоже уходит в Microsoft.
-- Голос по умолчанию — `en-US-AndrewMultilingualNeural`: Derek в Edge недоступен (сервис отвечает «No audio was received»).
-- Это неофициальный интерфейс функции «Читать вслух» Microsoft Edge: условия Microsoft не описывают его использование сторонними приложениями, и сервис может измениться без предупреждения. Поэтому по умолчанию `SPEECH_PROVIDER=none`, режим включает администратор своей установки, а при сбое работает голос браузера.
+- ai-service received a task `POST /v1/tasks/speech-synthesis` (library `edge-tts` 7.3.1, LGPL-3.0, compatible with AGPL). The API calls it via the adapter `AiServiceSpeechProvider`; cache, quota, and consent policy are the same as with Azure, because the text also goes to Microsoft.
+- Default voice — `en-US-AndrewMultilingualNeural`: Derek is unavailable in Edge (service responds with «No audio was received»).
+- This is an unofficial interface for the Microsoft Edge 'Read Aloud' feature: Microsoft's terms do not describe its use by third-party applications, and the service may change without warning. Therefore, by default `SPEECH_PROVIDER=none`, the mode enables the administrator's own installation, and if there is a failure, the browser's voice is used.
 
-## Альтернативы
+## Alternatives
 
-- **Только голос браузера.** Бесплатно и приватно, но качество и набор голосов зависят от ОС; в Linux голосов часто нет.
-- **Локальный TTS (Piper) в ai-service.** Self-hosted и приватно, но требует моделей голосов и CPU. Хороший следующий шаг; порт `SpeechProvider` это позволяет.
-- **Azure Speech SDK.** Тяжёлая нативная зависимость ради одного REST-вызова.
+- **Only browser voice.** Free and private, but quality and set of voices depend on the OS; there are often no voices in Linux.
+- **Local TTS (Piper) in ai-service.** Self-hosted and private, but requires voice models and CPU. A good next step; the `SpeechProvider` port allows this.
+- **Azure Speech SDK.** Heavy native dependency for a single REST call.
 
-## Последствия
+## Consequences
 
-- Новые переменные: `SPEECH_PROVIDER`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `AZURE_SPEECH_VOICE`, `SPEECH_CACHE_TTL_DAYS`. Регион проверяется регулярным выражением, чтобы нельзя было подменить хост запроса.
-- Интеграционные тесты принудительно выключают озвучку, чтобы не обращаться к платному сервису.
-- Объём кэша в Valkey не ограничен отдельно (см. tech-debt).
+- New variables: `SPEECH_PROVIDER`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `AZURE_SPEECH_VOICE`, `SPEECH_CACHE_TTL_DAYS`. Region is validated by a regular expression to prevent host request substitution.
+- Integration tests forcibly disable speech to avoid contacting a paid service.
+- Cache size in Valkey is not limited separately (see tech-debt).

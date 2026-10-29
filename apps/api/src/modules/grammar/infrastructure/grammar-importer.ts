@@ -13,8 +13,8 @@ export interface GrammarImportReport {
 
 /**
  * Imports grammar topics from `content/grammar/**.md`. Idempotent like the text importer.
- * A changed topic replaces its exercises, which also removes the learners' attempts on the
- * old exercises (they no longer match the new prompts).
+ * Explanatory edits preserve exercise IDs and attempts. Changed prompts, options or answers
+ * replace the exercises because the previous attempts no longer match the questions.
  */
 export class GrammarImporter {
   constructor(private readonly db: Database) {}
@@ -62,6 +62,32 @@ export class GrammarImporter {
       let topicId: string;
       if (existing) {
         await tx.update(topics).set(values).where(eq(topics.id, existing.id));
+        const current = await tx
+          .select()
+          .from(exercises)
+          .where(eq(exercises.topicId, existing.id))
+          .orderBy(exercises.position);
+        const questionsUnchanged =
+          current.length === document.exercises.length &&
+          current.every((row, position) => {
+            const next = document.exercises[position]!;
+            return (
+              row.position === position &&
+              row.kind === next.kind &&
+              row.prompt === next.prompt &&
+              JSON.stringify(row.options) === JSON.stringify(next.options) &&
+              JSON.stringify(row.answers) === JSON.stringify(next.answers)
+            );
+          });
+        if (questionsUnchanged) {
+          for (const [position, row] of current.entries()) {
+            await tx
+              .update(exercises)
+              .set({ explanation: document.exercises[position]!.explanation })
+              .where(eq(exercises.id, row.id));
+          }
+          return 'updated';
+        }
         await tx.delete(exercises).where(eq(exercises.topicId, existing.id));
         topicId = existing.id;
       } else {

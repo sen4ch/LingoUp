@@ -1,49 +1,49 @@
 # API
 
-- **Swagger UI:** http://localhost:4000/docs (при `SWAGGER_ENABLED=true`)
-- **OpenAPI JSON:** http://localhost:4000/docs/openapi.json, копия в репозитории — [openapi.json](openapi.json)
-- Обновить копию после изменения API: `pnpm build && pnpm openapi:export`
+- **Swagger UI:** http://localhost:4000/docs (when `SWAGGER_ENABLED=true`)
+- **OpenAPI JSON:** http://localhost:4000/docs/openapi.json, copy in the repository — [openapi.json](openapi.json)
+- Update the copy after changing the API: `pnpm build && pnpm openapi:export`
 
-Схемы запросов и ответов генерируются из тех же Zod-схем (`packages/contracts`), которыми API валидирует запросы, а frontend — ответы. Документация и проверки не расходятся.
+Request and response schemas are generated from the same Zod schemas (`packages/contracts`), which the API uses to validate requests, and the frontend uses to validate responses. Documentation and validations are consistent.
 
-## Соглашения
+## Agreements
 
-|                 |                                                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Версионирование | Префикс `/v1`. Несовместимые изменения — новая версия маршрута                                                            |
-| Аутентификация  | Cookie `lingoup_session` (HttpOnly, SameSite=Lax) после `POST /v1/auth/login` или `/register`                             |
-| CSRF            | Изменяющие запросы из браузера должны приходить с Origin из `ALLOWED_ORIGINS`                                             |
-| Ошибки          | `{ "error": { "code", "message", "details?", "requestId" } }`; коды — `ERROR_CODES` в `packages/contracts/src/errors.ts`  |
-| Пагинация       | Keyset: `?limit=20&cursor=<id последнего элемента>`, ответ `{ items, nextCursor }`                                        |
-| Идемпотентность | `POST /v1/vocabulary/reviews` принимает `clientReviewId` (UUID); повтор возвращает исходный результат с `duplicate: true` |
-| Лимиты          | 300 запросов/мин на IP, вход и регистрация — 10/мин, lookup — 60/мин, экспорт и удаление — 5/мин; `429 RATE_LIMITED`      |
-| Размер тела     | До 64 КБ (`BODY_LIMIT_BYTES`)                                                                                             |
+|                |                                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Versioning     | Prefix `/v1`. Incompatible changes — new version of the route                                                              |
+| Authentication | Cookie `lingoup_session` (HttpOnly, SameSite=Lax) after `POST /v1/auth/login` or `/register`                               |
+| CSRF           | Changing requests from the browser must come with Origin from `ALLOWED_ORIGINS`                                            |
+| Errors         | `{ "error": { "code", "message", "details?", "requestId" } }`; codes — `ERROR_CODES` in `packages/contracts/src/errors.ts` |
+| Pagination     | Keyset: `?limit=20&cursor=<last item ID>`, response `{ items, nextCursor }`                                                |
+| Idempotency    | `POST /v1/vocabulary/reviews` accepts `clientReviewId` (UUID); repeat returns the original result with `duplicate: true`   |
+| Limits         | 300 requests/min per IP, login and registration — 10/min, lookup — 60/min, export and deletion — 5/min; `429 RATE_LIMITED` |
+| Body size      | Up to 64 KB (`BODY_LIMIT_BYTES`)                                                                                           |
 
-## Маршруты
+## Routes
 
-| Метод и путь                                                                                 | Доступ   | Назначение                                                                                              |
-| -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `GET /health/live`, `GET /health/ready`                                                      | публично | Health checks                                                                                           |
-| `POST /v1/auth/register`, `POST /v1/auth/login`                                              | публично | Регистрация и вход, устанавливают cookie                                                                |
-| `POST /v1/auth/logout`                                                                       | сессия   | Выход, отзыв сессии                                                                                     |
-| `GET /v1/me`, `PATCH /v1/me/settings`                                                        | сессия   | Профиль и настройки                                                                                     |
-| `GET /v1/me/export`, `DELETE /v1/me`                                                         | сессия   | Экспорт и удаление персональных данных                                                                  |
-| `GET /v1/texts?level=B1`, `GET /v1/texts/:slug`                                              | публично | Библиотека текстов (личный текст по slug — только владельцу)                                            |
-| `GET /v1/texts/mine`, `DELETE /v1/texts/mine/:slug`                                          | сессия   | Личные AI-тексты                                                                                        |
-| `GET /v1/grammar/topics?level=A1`, `GET /v1/grammar/topics/:slug`                            | публично | Грамматика; с сессией — прогресс по теме                                                                |
-| `POST /v1/grammar/exercises/:id/attempts`                                                    | сессия   | Проверка ответа на упражнение                                                                           |
-| `POST /v1/vocabulary/lookup`                                                                 | сессия   | Карточка слова: глоссарий и AI                                                                          |
-| `GET/POST /v1/vocabulary/words`, `GET/PATCH/DELETE /v1/vocabulary/words/:id`                 | сессия   | Персональный словарь                                                                                    |
-| `GET /v1/vocabulary/reviews/due`, `POST /v1/vocabulary/reviews`                              | сессия   | FSRS-повторения                                                                                         |
-| `POST /v1/vocabulary/practice`, `POST /v1/vocabulary/practice/complete`                      | сессия   | Упражнение с пропуском по своим словам (AI или сохранённые примеры)                                     |
-| `GET /v1/vocabulary/images/search?q=…&page=1`, `GET /v1/vocabulary/images/:imageId/thumb`    | сессия   | Поиск свободных картинок (миниатюры проксируются API)                                                   |
-| `GET/PUT/DELETE /v1/vocabulary/words/:id/image`, `PUT /v1/vocabulary/words/:id/image/upload` | сессия   | Картинка слова: выбрать из поиска (`{ imageId }`) или загрузить (`Content-Type: image/*`, до 5 МБ)      |
-| `GET /v1/vocabulary/pronunciation?text=…&kind=term\|sentence`                                | сессия   | Аудио произношения (`audio/mpeg`); 503 с `details.aiStatus`, если озвучка выключена или нужно согласие  |
-| `POST /v1/learning/generated-texts`                                                          | сессия   | Личный текст из всех слов или выбранных `wordIds` (минимум 3; синхронно, до `AI_GENERATION_TIMEOUT_MS`) |
-| `GET /v1/learning/reading/completions`, `POST /v1/learning/reading/:slug/complete`           | сессия   | Прочитанные тексты                                                                                      |
-| `GET /v1/progress/summary`                                                                   | сессия   | Сводка прогресса                                                                                        |
-| `POST /v1/learning/speaking/turn`                                                            | сессия   | Ответ AI-учителя на английском: `{ messages, level?, topic? }`, последние 20 сообщений                  |
-| `POST /v1/learning/speaking/transcribe`                                                      | сессия   | Локальная расшифровка: `audio/wav`, моно PCM16 16 kHz, до 30 секунд / 1 МБ; `{ text }`                  |
-| `POST /v1/learning/listening`                                                                | сессия   | Генерация аудио на 3–5 минут и вопросов по CEFR; `{ level, topic? }`                                    |
-| `GET /v1/learning/listening/:id/audio`                                                       | сессия   | MP3 владельца, доступен 24 часа                                                                         |
-| `POST /v1/learning/listening/:id/answers`                                                    | сессия   | Проверка `{ answers }`, пояснения, цитаты и текст записи                                                |
+| Method and path                                                                              | Access  | Purpose                                                                                                         |
+| -------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| `GET /health/live`, `GET /health/ready`                                                      | public  | Health checks                                                                                                   |
+| `POST /v1/auth/register`, `POST /v1/auth/login`                                              | public  | Registration and login, set cookie                                                                              |
+| `POST /v1/auth/logout`                                                                       | session | Logout, revoke session                                                                                          |
+| `GET /v1/me`, `PATCH /v1/me/settings`                                                        | session | Profile and settings                                                                                            |
+| `GET /v1/me/export`, `DELETE /v1/me`                                                         | session | Export and deletion of personal data                                                                            |
+| `GET /v1/texts?level=B1`, `GET /v1/texts/:slug`                                              | public  | Text library (personal text by slug — only for owner)                                                           |
+| `GET /v1/texts/mine`, `DELETE /v1/texts/mine/:slug`                                          | session | Personal AI texts                                                                                               |
+| `GET /v1/grammar/topics?level=A1`, `GET /v1/grammar/topics/:slug`                            | public  | Grammar; with session — progress on the topic                                                                   |
+| `POST /v1/grammar/exercises/:id/attempts`                                                    | session | Checking the answer to an exercise                                                                              |
+| `POST /v1/vocabulary/lookup`                                                                 | session | Word card: glossary and AI                                                                                      |
+| `GET/POST /v1/vocabulary/words`, `GET/PATCH/DELETE /v1/vocabulary/words/:id`                 | session | Personal dictionary                                                                                             |
+| `GET /v1/vocabulary/reviews/due`, `POST /v1/vocabulary/reviews`                              | session | FSRS repetitions                                                                                                |
+| `POST /v1/vocabulary/practice`, `POST /v1/vocabulary/practice/complete`                      | session | Practice with skipping by your own words (AI or saved examples)                                                 |
+| `GET /v1/vocabulary/images/search?q=…&page=1`, `GET /v1/vocabulary/images/:imageId/thumb`    | session | Search for free images (thumbnails are proxied by API)                                                          |
+| `GET/PUT/DELETE /v1/vocabulary/words/:id/image`, `PUT /v1/vocabulary/words/:id/image/upload` | session | Word image: choose from search (`{ imageId }`) or upload (`Content-Type: image/*`, up to 5 MB)                  |
+| `GET /v1/vocabulary/pronunciation?text=…&kind=term\|sentence`                                | session | Audio pronunciation (`audio/mpeg`); 503 with `details.aiStatus`, if speech is disabled or consent needed        |
+| `POST /v1/learning/generated-texts`                                                          | session | Personal text from all words or selected `wordIds` (minimum 3; synchronously, up to `AI_GENERATION_TIMEOUT_MS`) |
+| `GET /v1/learning/reading/completions`, `POST /v1/learning/reading/:slug/complete`           | session | Read texts                                                                                                      |
+| `GET /v1/progress/summary`                                                                   | session | Progress summary                                                                                                |
+| `POST /v1/learning/speaking/turn`                                                            | session | AI teacher's response in English: `{ messages, level?, topic? }`, last 20 messages                              |
+| `POST /v1/learning/speaking/transcribe`                                                      | session | Local transcription: `audio/wav`, mono PCM16 16 kHz, up to 30 seconds / 1 MB; `{ text }`                        |
+| `POST /v1/learning/listening`                                                                | session | Audio generation for 3–5 minutes and questions according to CEFR; `{ level, topic? }`                           |
+| `GET /v1/learning/listening/:id/audio`                                                       | session | Owner's MP3, available 24 hours                                                                                 |
+| `POST /v1/learning/listening/:id/answers`                                                    | session | Check `{ answers }`, explanations, quotes and recording text                                                    |

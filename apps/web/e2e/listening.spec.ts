@@ -81,54 +81,54 @@ test('listening has exactly two sections, grades questions and opens publisher v
   );
   await page.goto('/listening');
   await expect(page.getByRole('tab')).toHaveCount(2);
-  const generate = page.getByRole('button', { name: 'Создать аудио на 3–5 минут' });
+  const generate = page.getByRole('button', { name: 'Create 3–5 minute audio' });
   await expect(generate).toBeEnabled();
-  await page.getByRole('combobox', { name: 'Уровень английского' }).selectOption('A1');
-  await page.getByRole('textbox', { name: 'Тема (необязательно)' }).fill('A library');
+  await page.getByRole('combobox', { name: 'English level' }).selectOption('A1');
+  await page.getByRole('textbox', { name: 'Topic (optional)' }).fill('A library');
   await generate.click();
   await expect(page.getByRole('heading', { name: 'A day at the library' })).toBeVisible();
-  await expect(page.getByLabel('Аудиозапись для слушания')).toHaveAttribute(
+  await expect(page.getByLabel('Listening audio')).toHaveAttribute(
     'src',
     `/api/v1/learning/listening/${id}/audio`,
   );
   await expect(page.getByText('A1 · 4:00', { exact: true })).toBeVisible();
-  await expect(page.getByText('Показать текст записи')).toHaveCount(0);
-  const check = page.getByRole('button', { name: 'Проверить ответы' });
+  await expect(page.getByText('Show transcript')).toHaveCount(0);
+  const check = page.getByRole('button', { name: 'Check answers' });
   await expect(check).toBeDisabled();
   for (let index = 1; index <= 5; index++)
     await page
-      .getByRole('group', { name: `Вопрос ${index}`, exact: true })
+      .getByRole('group', { name: `Question ${index}`, exact: true })
       .getByRole('button')
       .first()
       .click();
   await check.click();
-  await expect(page.getByRole('status').filter({ hasText: 'Результат: 5 из 5' })).toBeVisible();
-  await page.getByText('Показать текст записи', { exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Score: 5 of 5' })).toBeVisible();
+  await page.getByText('Show transcript', { exact: true }).click();
   await expect(
     page.getByText('Nora works at the library in a small town.', { exact: true }),
   ).toBeVisible();
-  await page.getByRole('tab', { name: 'Фильмы и сериалы' }).click();
+  await page.getByRole('tab', { name: 'Films and series' }).click();
   await page
-    .getByRole('textbox', { name: 'Ссылка на видео или плейлист YouTube' })
+    .getByRole('textbox', { name: 'YouTube video or playlist link' })
     .fill('https://youtu.be/eRsGyueVLvQ');
-  await page.getByRole('button', { name: 'Открыть видео' }).click();
+  await page.getByRole('button', { name: 'Open video' }).click();
   await expect(page.locator('iframe')).toHaveAttribute(
     'src',
     /youtube-nocookie\.com\/embed\/eRsGyueVLvQ/,
   );
   await expect(page.frameLocator('iframe').getByText('Publisher player')).toBeVisible();
-  await page.getByLabel('Открыть своё видео', { exact: true }).setInputFiles({
+  await page.getByLabel('Open your own video', { exact: true }).setInputFiles({
     name: 'episode.mp4',
     mimeType: 'video/mp4',
     buffer: Buffer.from('test video'),
   });
   await expect(page.locator('iframe')).toHaveCount(0);
   await expect(page.locator('video')).toHaveAttribute('src', /^blob:/);
-  await page.getByLabel('Добавить субтитры SRT / VTT', { exact: true }).setInputFiles({
+  await page.getByLabel('Add SRT / VTT subtitles', { exact: true }).setInputFiles({
     name: 'english.srt',
     mimeType: 'text/plain',
     buffer: Buffer.from('1\n00:00:01,000 --> 00:00:03,000\nHello!'),
   });
-  await expect(page.getByText('Английские субтитры подключены.', { exact: false })).toBeVisible();
+  await expect(page.getByText('English subtitles are ready.', { exact: false })).toBeVisible();
   await expect(page.locator('video track')).toHaveAttribute('srclang', 'en');
 });

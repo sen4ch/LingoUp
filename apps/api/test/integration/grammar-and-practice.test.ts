@@ -1,9 +1,13 @@
 import { randomUUID } from 'node:crypto';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { outboxEvents } from '@lingoup/database/schema/platform';
 import { texts } from '@lingoup/database/schema/content';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestContext, TestAgent, type TestContext } from './harness.js';
+import { GrammarImporter } from '../../src/modules/grammar/index.js';
 
 let ctx: TestContext;
 
@@ -26,6 +30,62 @@ const saveWords = async (agent: TestAgent, entries: [string, string | null][]) =
 };
 
 describe('grammar', () => {
+  it('preserves progress for translated explanations and resets it for changed questions', async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), 'lingoup-grammar-'));
+    const file = path.join(directory, 'topic.md');
+    const document = `---
+slug: b1-import-progress
+title: Import progress
+level: B1
+summary: An importer regression fixture.
+author: Test fixture
+provenance: ai-generated
+license: CC0-1.0
+exercises:
+  - type: choice
+    prompt: I ___ ready.
+    options: [am, is, are]
+    answer: am
+    explanation: Initial explanation.
+---
+
+## Rule
+
+Use the correct form of to be.
+`;
+    try {
+      const importer = new GrammarImporter(ctx.database.db);
+      await writeFile(file, document);
+      await importer.importDirectory(directory);
+      const agent = new TestAgent(ctx.app);
+      await agent.register();
+      const before = await agent.request('GET', '/v1/grammar/topics/b1-import-progress');
+      const id = before.body.exercises[0].id as string;
+      await agent.request('POST', `/v1/grammar/exercises/${id}/attempts`, { answer: 'am' });
+      const translated = document.replace('Initial explanation.', 'Updated English explanation.');
+      await writeFile(file, translated);
+      await importer.importDirectory(directory);
+      const after = await agent.request('GET', '/v1/grammar/topics/b1-import-progress');
+      expect(after.body.exercises[0].id).toBe(id);
+      expect(after.body.progress).toEqual({ attempted: 1, correct: 1 });
+      const feedback = await agent.request('POST', `/v1/grammar/exercises/${id}/attempts`, {
+        answer: 'am',
+      });
+      expect(feedback.body.explanation).toBe('Updated English explanation.');
+
+      await writeFile(
+        file,
+        translated.replace('I ___ ready.', 'She ___ ready.').replace('answer: am', 'answer: is'),
+      );
+      await importer.importDirectory(directory);
+      const changed = await agent.request('GET', '/v1/grammar/topics/b1-import-progress');
+      expect(changed.body.exercises[0].id).not.toBe(id);
+      expect(changed.body.progress).toEqual({ attempted: 0, correct: 0 });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it('lists topics by level and never exposes the answers', async () => {
     const anonymous = new TestAgent(ctx.app);
     const all = await anonymous.request('GET', '/v1/grammar/topics');

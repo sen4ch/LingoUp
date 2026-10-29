@@ -97,16 +97,16 @@ test('voice call transcribes a turn, answers in English, pauses and releases the
     await route.fulfill({ json: { text: 'Я хочу учить английский' } });
   });
   await page.goto('/speaking');
-  await expect(page.getByRole('link', { name: 'Спикинг', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Позвонить учителю' }).click();
-  await expect(page.locator('p[role=status]')).toHaveText('Слушаю вас');
-  await page.getByRole('button', { name: 'Выключить микрофон' }).click();
-  await expect(page.locator('p[role=status]')).toHaveText('Микрофон выключен');
+  await expect(page.getByRole('link', { name: 'Speaking', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Call the teacher' }).click();
+  await expect(page.locator('p[role=status]')).toHaveText('Listening to you');
+  await page.getByRole('button', { name: 'Mute microphone' }).click();
+  await expect(page.locator('p[role=status]')).toHaveText('Microphone muted');
   expect(await page.evaluate(() => (window as any).testStream.getAudioTracks()[0].enabled)).toBe(
     false,
   );
-  await page.getByRole('button', { name: 'Продолжить разговор' }).click();
-  await expect(page.locator('p[role=status]')).toHaveText('Слушаю вас');
+  await page.getByRole('button', { name: 'Resume conversation' }).click();
+  await expect(page.locator('p[role=status]')).toHaveText('Listening to you');
   // Stop the source after enough PCM frames to let silence detection submit automatically.
   const resumedAt = await page.evaluate(() => Number((window as any).testTone.context.currentTime));
   await expect
@@ -114,10 +114,10 @@ test('voice call transcribes a turn, answers in English, pauses and releases the
     .toBeGreaterThan(resumedAt + 0.5);
   await page.evaluate(() => (window as any).testTone.stop());
   await expect(page.getByText('Я хочу учить английский', { exact: true })).toBeVisible();
-  await expect(page.locator('p[role=status]')).toHaveText('Слушаю вас');
+  await expect(page.locator('p[role=status]')).toHaveText('Listening to you');
   await expect(page.locator('p[lang=en]')).toHaveCount(2);
-  await page.getByRole('button', { name: 'Завершить звонок' }).click();
-  await expect(page.getByRole('button', { name: 'Позвонить учителю' })).toBeVisible();
+  await page.getByRole('button', { name: 'End call' }).click();
+  await expect(page.getByRole('button', { name: 'Call the teacher' })).toBeVisible();
   expect(await page.evaluate(() => (window as any).testStream.getAudioTracks()[0].readyState)).toBe(
     'ended',
   );

@@ -1,8 +1,8 @@
 ---
 slug: b2-passive-voice
-title: 'Страдательный залог (Passive Voice)'
+title: 'Passive Voice (Passive Voice)'
 level: B2
-summary: 'The bridge was built in 1890: когда важно действие, а не тот, кто его совершил.'
+summary: 'The bridge was built in 1890: when the action is important, not who performed it.'
 author: AI-generated for the LingoUp project (no human author)
 provenance: ai-generated
 license: CC0-1.0
@@ -19,7 +19,7 @@ exercises:
   - type: gap
     prompt: 'The results ___ (will / announce) next week.'
     answers: ['will be announced']
-    explanation: 'Будущее время: will be + V3.'
+    explanation: 'Future tense: will be + V3.'
   - type: choice
     prompt: 'My car ___ at the moment.'
     options: [is repairing, is being repaired, repairs]
@@ -33,19 +33,19 @@ exercises:
     prompt: 'The novel was written ___ a young doctor.'
     options: [by, from, with]
     answer: by
-    explanation: 'Исполнителя действия вводят предлогом by.'
+    explanation: 'The performer of the action is introduced by the preposition by.'
 ---
 
-## Зачем нужен пассив
+## Why use passive voice
 
-Пассив используют, когда **неважно** или **неизвестно**, кто совершил действие, или когда в центре внимания предмет.
+Passive voice is used when **it doesn't matter** or **it is unknown** who performed the action, or when the object is in focus.
 
-> The window was broken. (кем — неизвестно)
+> The window was broken. (who — unknown)
 > This bridge was designed by a famous engineer.
 
-## Форма
+## Form
 
-**be** в нужном времени + **третья форма глагола** (V3).
+**be** in the correct tense + **third form of the verb** (V3).
 
 - Present Simple: is / are **made**
 - Past Simple: was / were **made**
@@ -53,6 +53,6 @@ exercises:
 - Future: will **be made**
 - Continuous: is / was **being made**
 
-## Исполнитель действия
+## Performer of the action
 
-Если нужно назвать, кто сделал действие, используют **by**: **The song was written by Freddie Mercury.**
+If you need to name who did the action, use **by**: **The song was written by Freddie Mercury.**

@@ -53,7 +53,7 @@ describe('interactive reading + personal vocabulary', () => {
       normalizedTerm: 'bargain',
       aiStatus: 'skipped',
       ai: null,
-      glossary: { translation: 'выгодная покупка' },
+      glossary: { translation: null },
     });
 
     const ai = await agent.request('POST', '/v1/vocabulary/lookup', {

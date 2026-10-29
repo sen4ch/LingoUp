@@ -1,21 +1,21 @@
-# Эксплуатация
+# Operations
 
-## Развёртывание на одном сервере
+## Deployment on a single server
 
 ```bash
-cp .env.example .env    # задайте сильные секреты: openssl rand -hex 32
+cp .env.example .env    # set strong secrets: openssl rand -hex 32
 docker compose up -d --build --wait
 ```
 
-Обязательно для production:
+Mandatory for production:
 
-1. **Reverse proxy с HTTPS** (Caddy, nginx, Traefik) перед `web:3000`. Наружу публикуется только он; порты PostgreSQL, Valkey, API и web в Compose привязаны к `127.0.0.1`.
-2. Прокси должен **перезаписывать** `X-Forwarded-For` (а не дописывать к клиентскому значению). Next.js передаёт этот заголовок в API без изменений, а API доверяет внутренней сети (`TRUST_PROXY=uniquelocal`). Без такого прокси клиент может подменить IP и обойти лимиты по IP.
-3. `COOKIE_SECURE=true` и `ALLOWED_ORIGINS=https://ваш-домен`.
-4. `SWAGGER_ENABLED=false`, если публичная документация API не нужна.
-5. Регулярные бэкапы PostgreSQL (см. ниже).
+1. **Reverse proxy with HTTPS** (Caddy, nginx, Traefik) in front of `web:3000`. Only it is published outside; ports PostgreSQL, Valkey, API and web in Compose are bound to `127.0.0.1`.
+2. The proxy must **rewrite** `X-Forwarded-For` (not append to the client's value). Next.js passes this header to the API without changes, and the API trusts the internal network (`TRUST_PROXY=uniquelocal`). Without such a proxy, a client may spoof an IP and bypass IP limits.
+3. `COOKIE_SECURE=true` and `ALLOWED_ORIGINS=https://example.com`.
+4. `SWAGGER_ENABLED=false` if public API documentation is not needed.
+5. Regular PostgreSQL backups (see below).
 
-Пример Caddyfile:
+Example Caddyfile:
 
 ```caddyfile
 learn.example.org {
@@ -25,41 +25,41 @@ learn.example.org {
 }
 ```
 
-## Секреты
+## Secrets
 
-| Переменная                  | Где используется               | Как задать                                     |
-| --------------------------- | ------------------------------ | ---------------------------------------------- |
-| `POSTGRES_PASSWORD`         | postgres, api, worker, migrate | `openssl rand -hex 32`                         |
-| `VALKEY_PASSWORD`           | valkey, api, worker            | `openssl rand -hex 32`                         |
-| `AI_SERVICE_TOKEN`          | api ↔ ai-service               | `openssl rand -hex 32` (не короче 32 символов) |
-| `OPENAI_COMPATIBLE_API_KEY` | ai-service                     | ключ провайдера, если он нужен                 |
+| Variable                    | Where used                     | How to set                                              |
+| --------------------------- | ------------------------------ | ------------------------------------------------------- |
+| `POSTGRES_PASSWORD`         | postgres, api, worker, migrate | `openssl rand -hex 32`                                  |
+| `VALKEY_PASSWORD`           | valkey, api, worker            | `openssl rand -hex 32`                                  |
+| `AI_SERVICE_TOKEN`          | api ↔ ai-service               | `openssl rand -hex 32` (not shorter than 32 characters) |
+| `OPENAI_COMPATIBLE_API_KEY` | ai-service                     | provider key if needed                                  |
 
-`node scripts/init-env.mjs` (или `pnpm setup:env`) создаёт `.env` со случайными секретами. В production (`NODE_ENV=production`) API, worker и ai-service отказываются стартовать, если в секретах остался плейсхолдер `change-me`.
+`node scripts/init-env.mjs` (or `pnpm setup:env`) creates `.env` with random secrets. In production (`NODE_ENV=production`), API, worker and ai-service refuse to start if a placeholder `change-me` remains in the secrets.
 
-Секреты передаются только через переменные окружения. Файл `.env` в `.gitignore`; Compose отказывается стартовать без обязательных переменных (`${VAR:?}`).
+Secrets are passed only through environment variables. File `.env` in `.gitignore`; Compose refuses to start without required variables (`${VAR:?}`).
 
-## Масштабирование
+## Scaling
 
-| Компонент  | Как масштабировать                                                                                        |
-| ---------- | --------------------------------------------------------------------------------------------------------- |
-| web, api   | Горизонтально: `docker compose up -d --scale api=3` + балансировщик. Сессии в PostgreSQL, лимиты в Valkey |
-| worker     | Горизонтально: relay использует `FOR UPDATE SKIP LOCKED`, задачи BullMQ распределяются между репликами    |
-| ai-service | Отдельно от API; для GPU — vLLM/Ollama на выделенных узлах                                                |
-| PostgreSQL | Пул на процесс задаётся `DATABASE_POOL_MAX`: следите, чтобы `реплики × пул < max_connections`             |
+| Component  | How to scale                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------ |
+| web, api   | Horizontally: `docker compose up -d --scale api=3` + load balancer. Sessions in PostgreSQL, limits in Valkey |
+| worker     | Horizontally: relay uses `FOR UPDATE SKIP LOCKED`, BullMQ tasks are distributed among replicas               |
+| ai-service | Separately from API; for GPU — vLLM/Ollama on dedicated nodes                                                |
+| PostgreSQL | Pool per process is set by `DATABASE_POOL_MAX`: make sure that `replicas × pool < max_connections`           |
 
-## Health checks и остановка
+## Health checks and stopping
 
-- `GET /health/live` — процесс жив (не проверяет зависимости).
-- `GET /health/ready` — PostgreSQL и Valkey доступны; используется в healthcheck Compose.
+- `GET /health/live` — process is alive (does not check dependencies).
+- `GET /health/ready` — PostgreSQL and Valkey are available; used in Compose healthcheck.
 - ai-service: `GET /health/live`.
-- При `SIGTERM` API дожидается текущих запросов (`enableShutdownHooks`); worker перестаёт забирать события, дожидается обработчиков и закрывает соединения (таймаут 25 с, `stop_grace_period: 30s`).
-- После перезапуска PostgreSQL API и worker переподключаются без рестарта (проверено).
+- On `SIGTERM` API waits for current requests (`enableShutdownHooks`); worker stops taking events, waits for handlers and closes connections (timeout 25 s, `stop_grace_period: 30s`).
+- After restart PostgreSQL API and worker reconnect without restart (verified).
 
-## Резервное копирование и восстановление
+## Backup and restoration
 
-Источник истины — только PostgreSQL. Valkey хранит очереди, лимиты и квоты; его потеря не приводит к потере бизнес-данных: неопубликованные события остаются в `platform.outbox_events` и будут отправлены повторно.
+The source of truth is only PostgreSQL. Valkey stores queues, limits, and quotas; its loss does not result in the loss of business data: unprocessed events remain in `platform.outbox_events` and will be resent.
 
-### Бэкап
+### Backup
 
 ```bash
 mkdir -p backups
@@ -67,64 +67,64 @@ docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES
   > backups/lingoup-$(date +%F-%H%M).dump
 ```
 
-Рекомендации: ежедневно по cron, хранить копии вне сервера, шифровать (бэкап содержит персональные данные и хеши паролей). Регулярно проверяйте восстановление.
+Recommendations: daily via cron, store copies off-server, encrypt (backup contains personal data and password hashes). Regularly verify recovery.
 
-### Восстановление
+### Recovery
 
 ```bash
 docker compose stop api worker web
 docker compose exec -T postgres sh -c 'dropdb -U "$POSTGRES_USER" --force "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
 docker compose exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner' < backups/lingoup-YYYY-MM-DD-HHMM.dump
-docker compose up -d --wait   # migrate применит миграции, появившиеся после бэкапа
+docker compose up -d --wait   # migrate applies migrations that appeared after the backup
 ```
 
-Удалённые после бэкапа аккаунты появятся снова. Если пользователь требовал удаления данных, повторите удаление после восстановления: ведите журнал запросов на удаление вне БД.
+Accounts deleted after the backup will reappear. If a user requested data deletion, repeat the deletion after recovery: maintain a log of deletion requests outside the database.
 
-## Персональные данные
+## Personal Data
 
-- Экспорт: `GET /v1/me/export` (кнопка в профиле) — JSON со всеми данными пользователя по модулям.
-- Удаление: `DELETE /v1/me` с паролем. Каскадное удаление через `identity.users`, плюс очистка событий пользователя из outbox.
-- Логи не содержат тел запросов, cookie, заголовков авторизации и email (pino `redact`).
-- Данные во внешние AI-провайдеры уходят только при `AI_ALLOW_EXTERNAL=true` **и** согласии пользователя в профиле.
-- Озвучка (`SPEECH_PROVIDER=edge` или `azure`, оба — серверы Microsoft): отдельные слова отправляются без согласия пользователя, предложения-контексты — только при согласии. Сам выбор провайдера — решение администратора, `AI_ALLOW_EXTERNAL` на озвучку не влияет.
+- Export: `GET /v1/me/export` (button in profile) — JSON with all user data by modules.
+- Deletion: `DELETE /v1/me` with password. Cascade deletion through `identity.users`, plus cleaning user events from outbox.
+- Logs do not contain request bodies, cookies, authorization headers, and email (pino `redact`).
+- Data to external AI providers goes only when `AI_ALLOW_EXTERNAL=true` **and** user consent in the profile.
+- Speech (`SPEECH_PROVIDER=edge` or `azure`, both — Microsoft servers): individual words are sent without user consent, context-based suggestions — only with consent. The choice of provider is an administrator's decision, `AI_ALLOW_EXTERNAL` does not affect speech.
 
-## Подключение AI
+## AI Connection
 
-По умолчанию `AI_PROVIDER=mock`: ответы явно помечены как заглушка. Варианты:
+By default `AI_PROVIDER=mock`: responses are explicitly marked as a mock. Options:
 
-**Локальная модель через Ollama (данные не покидают сервер):**
+**Local model via Ollama (data does not leave the server):**
 
 ```bash
 # .env
 AI_PROVIDER=ai-service
 AI_BACKEND=ollama
-OLLAMA_MODEL=qwen3:4b          # проверьте лицензию модели
+OLLAMA_MODEL=qwen3:4b          # check model license
 
 docker compose --profile ollama up -d --wait
 docker compose exec ollama ollama pull qwen3:4b
 ```
 
-CPU достаточно для небольших моделей; для GPU раскомментируйте блок `deploy` у сервиса `ollama`.
+CPU is sufficient for small models; for GPU uncomment the `deploy` block in the `ollama` service.
 
-**Ollama, уже установленный на компьютере** (удобно для разработки: модели и GPU уже настроены):
+**Ollama, already installed on the computer** (convenient for development: models and GPU are already configured):
 
 ```bash
 # .env
 AI_PROVIDER=ai-service
 AI_BACKEND=ollama
-OLLAMA_URL=http://host.docker.internal:11434   # Ollama на хосте, а не в контейнере
-OLLAMA_MODEL=qwen3:8b                          # любая модель из `ollama list`
+OLLAMA_URL=http://host.docker.internal:11434   # Ollama on host, not in container
+OLLAMA_MODEL=qwen3:8b                          # any model from `ollama list`
 OLLAMA_THINK=false
 OLLAMA_KEEP_ALIVE=30m
 
-docker compose --profile ai up -d --wait        # профиль ollama не нужен
+docker compose --profile ai up -d --wait        # ollama profile is not needed
 ```
 
-- `OLLAMA_THINK=false` выключает режим рассуждений у qwen3 и deepseek-r1. С ним ответ занимает десятки секунд и не укладывается в `AI_TIMEOUT_MS` (20 с), без него — около 2 с на GPU (замер: qwen3:8b, прогретая модель).
-- `OLLAMA_KEEP_ALIVE` держит модель в памяти; ai-service также загружает её при старте. Холодная загрузка 8B-модели может занять минуты, и первый запрос в это время вернёт «AI недоступен».
-- Модель работает на вашем компьютере, поэтому данные считаются локальными и согласие пользователя не требуется.
+- `OLLAMA_THINK=false` disables the reasoning mode for qwen3 and deepseek-r1. With it, the response takes dozens of seconds and does not fit into `AI_TIMEOUT_MS` (20 s), without it — about 2 s on GPU (measurement: qwen3:8b, warmed-up model).
+- `OLLAMA_KEEP_ALIVE` keeps the model in memory; ai-service also loads it on startup. Cold loading an 8B model may take minutes, and the first request during this time will return «AI is unavailable».
+- The model runs on your computer, so data is considered local and user consent is not required.
 
-**vLLM или другой OpenAI-совместимый сервер на вашей инфраструктуре:**
+**vLLM or another OpenAI-compatible server on your infrastructure:**
 
 ```bash
 AI_PROVIDER=ai-service
@@ -134,7 +134,7 @@ OPENAI_COMPATIBLE_MODEL=...
 OPENAI_COMPATIBLE_DATA_LOCALITY=local
 ```
 
-**Внешний API (данные уходят третьей стороне):**
+**External API (data leaves to a third party):**
 
 ```bash
 AI_PROVIDER=ai-service
@@ -143,73 +143,73 @@ OPENAI_COMPATIBLE_BASE_URL=https://api.provider.example/v1
 OPENAI_COMPATIBLE_API_KEY=...
 OPENAI_COMPATIBLE_MODEL=...
 OPENAI_COMPATIBLE_DATA_LOCALITY=external
-AI_ALLOW_EXTERNAL=true         # и каждый пользователь включает согласие в профиле
+AI_ALLOW_EXTERNAL=true         # and each user enables consent in their profile
 ```
 
-Лимиты: `AI_TIMEOUT_MS` (подсказка по слову), `AI_GENERATION_TIMEOUT_MS` (личный текст и упражнение по словам, по умолчанию 120 с; прокси web ждёт эти маршруты до 150 с, поэтому больше не ставьте), `AI_MAX_CONCURRENCY` (на экземпляр API), `AI_MAX_RETRIES` (только для идемпотентных задач — генерация не повторяется), `AI_DAILY_QUOTA_PER_USER`.
+Limits: `AI_TIMEOUT_MS` (word hint), `AI_GENERATION_TIMEOUT_MS` (personal text and word exercise, default 120 sec; proxy web waits for these routes up to 150 sec, so do not set higher), `AI_MAX_CONCURRENCY` (per API instance), `AI_MAX_RETRIES` (only for idempotent tasks — generation is not retried), `AI_DAILY_QUOTA_PER_USER`.
 
-Замер на qwen3:8b (`OLLAMA_THINK=false`, прогретая модель): личный текст — 4–6 с, упражнение по словам — около 4 с.
+Measurement on qwen3:8b (`OLLAMA_THINK=false`, warmed-up model): personal text — 4–6 sec, word exercise — about 4 sec.
 
-## Листенинг
+## Listening
 
-В `/listening` два раздела: генерация аудио на 3–5 минут с вопросами по уровню CEFR и просмотр фильмов / сериалов. Для генерации нужны API, ai-service с работающим LLM и Valkey. Озвучка Piper локальная, без ключей и передачи текста Microsoft; голос `en_US-lessac-medium` скачивается при первом упражнении и кэшируется в `/models/piper` существующего тома моделей. Для загрузки нужен интернет, последующий синтез выполняется на CPU. Обновление: `docker compose --profile ai up -d --build --wait api web ai-service`.
+In `/listening` there are two sections: audio generation for 3–5 minutes with questions by CEFR level and watching movies / series. For generation you need APIs, ai-service with a working LLM and Valkey. Piper TTS is local, without Microsoft keys and text transmission; voice `en_US-lessac-medium` is downloaded during the first exercise and cached in `/models/piper` of the existing models volume. Internet is needed for download, subsequent synthesis is performed on CPU. Update: `docker compose --profile ai up -d --build --wait api web ai-service`.
 
-Аудио и закрытые ответы хранятся 24 часа. Пользователь может скачать MP3. При росте нагрузки контролируйте память Valkey: одна запись обычно занимает 1–2 МБ. Исходный текст и ответы появляются после проверки вопросов. Подробности — [ADR-0012](adr/0012-listening.md).
+Audio and private answers are stored for 24 hours. The user can download MP3. When load increases, control Valkey memory: one record usually takes 1–2 MB. Original text and answers appear after question checks. Details — [ADR-0012](adr/0012-listening.md).
 
-Фильмы показываются через плеер издателя YouTube или локально из файла пользователя. Локальные видео и SRT/VTT-субтитры не передаются серверу. Для YouTube необходимы доступ к его доменам и разрешение издателя на встраивание; запасной вариант — открыть оригинал по ссылке. Браузерные кодеки могут ограничивать форматы локальных файлов.
+Movies are played through the YouTube publisher player or locally from the user's file. Local videos and SRT/VTT subtitles are not sent to the server. For YouTube, access to its domains and publisher permission for embedding is required; an alternative is to open the original by link. Browser codecs may limit the formats of local files.
 
-## Разговор с AI-учителем
+## Conversation with an AI Teacher
 
-Страница `/speaking`: звонок с автоматической отправкой реплик после паузы, английскими ответами, расшифровкой, паузой и завершением звонка. Нужны работающий AI-провайдер и локальное распознавание:
+Page `/speaking`: call with automatic sending of replies after a pause, English answers, transcription, pause, and call termination. A working AI provider and local recognition are needed:
 
 ```env
 SPEAKING_ENABLED=true
 WHISPER_MODEL=base
 ```
 
-Запустите `docker compose --profile ai up -d --build --wait api web ai-service`. При первом запуске `faster-whisper` скачивает мультиязычную модель в том `whisper-models`; дальнейшее распознавание выполняется на CPU без передачи записей сторонним сервисам. `HF_HOME` и `HF_XET_CACHE` направлены в этот же доступный для записи том. Для браузера нужен HTTPS или localhost и разрешение микрофона. Английская озвучка берётся из существующих настроек Speech или из локальных голосов браузера; передача текста внешнему сервису требует согласия в профиле.
+Run `docker compose --profile ai up -d --build --wait api web ai-service`. On the first run, `faster-whisper` downloads a multilingual model into the `whisper-models`; further recognition is performed on CPU without sending recordings to external services. `HF_HOME` and `HF_XET_CACHE` are directed to this same writable volume. For the browser, HTTPS or localhost and microphone permission are needed. English voice is taken from existing Speech settings or from local browser voices; sending text to an external service requires consent in the profile.
 
-Ответ приходит после обработки реплики; это диалог по очереди. Данные звонка не пишутся в БД. Архитектура и ограничения — [ADR-0011](adr/0011-speaking-tutor.md).
+The response comes after processing the reply; this is a turn-based dialogue. Call data is not written to the database. Architecture and limitations — [ADR-0011](adr/0011-speaking-tutor.md).
 
-## Картинки к словам
+## Pictures to Words
 
-Пользователь сам выбирает картинку к слову (в словаре или в повторении): из поиска свободно лицензированных изображений или загружает свою. В повторении кнопка «Добавить картинку» доступна сразу, а сохранённая картинка показывается вместе с ответом. Загрузка работает всегда, поиск включается так:
+The user selects an image for the word (in the dictionary or in repetition): from the search for freely licensed images or uploads their own. In repetition, the «Add Image» button is available immediately, and the saved image is displayed together with the answer. Upload works always, search is activated like this:
 
 ```env
-IMAGE_SEARCH_PROVIDER=wikimedia   # Wikimedia Commons: бесплатно, без ключа
-# IMAGE_SEARCH_PROVIDER=openverse # Openverse: больше источников, но публичный API бывает перегружен
+IMAGE_SEARCH_PROVIDER=wikimedia   # Wikimedia Commons: free, no key required
+# IMAGE_SEARCH_PROVIDER=openverse # Openverse: more sources, but the public API can be overloaded
 ```
 
-Наружу уходит только поисковая фраза; картинки скачивает API и сохраняет в PostgreSQL как WebP ≤ 640 px без метаданных (~30–60 КБ на слово). Под картинкой показываются автор, лицензия и ссылка на источник — этого требуют лицензии CC. Wikimedia Commons не фильтрует взрослый контент. Подробности — [ADR-0010](adr/0010-word-pictures.md).
+Only the search phrase is sent out; the images are downloaded by the API and saved in PostgreSQL as WebP ≤ 640 px without metadata (~30–60 KB per word). Below the image, the author, license, and source link are displayed — this is required by CC licenses. Wikimedia Commons does not filter adult content. Details — [ADR-0010](adr/0010-word-pictures.md).
 
-## Озвучка слов
+## Word Pronunciation
 
-В карточке слова есть кнопки 🔊 у слова и у предложения-контекста. Без настройки звучит встроенный голос браузера (на Windows — Microsoft David/Zira). Естественные голоса Microsoft подключаются одним из двух способов.
+In the word card, there are buttons 🔊 for the word and for the sentence-context. Without settings, it reads out the built-in browser voice (on Windows — Microsoft David/Zira). Natural Microsoft voices are activated in one of two ways.
 
-### Edge (бесплатно, без ключа)
+### Edge (free, no key)
 
-Голоса функции «Читать вслух» Microsoft Edge через библиотеку [edge-tts](https://github.com/rany2/edge-tts) в ai-service. Нужен запущенный ai-service (`--profile ai`) и доступ в интернет.
+Voices of the Microsoft Edge «Read Aloud» function through the [edge-tts](https://github.com/rany2/edge-tts) library in ai-service. A running ai-service (`--profile ai`) and internet access are needed.
 
 ```env
 SPEECH_PROVIDER=edge
-EDGE_SPEECH_VOICE=en-US-AndrewMultilingualNeural   # см. edge-tts --list-voices
+EDGE_SPEECH_VOICE=en-US-AndrewMultilingualNeural   # see edge-tts --list-voices
 ```
 
-Это неофициальный интерфейс: Microsoft может его изменить или закрыть, тогда сработает голос браузера. Набор голосов меньше, чем в Azure (например, `en-US-DerekMultilingualNeural` в нём нет). Замер: слово — около 1,6 с, предложение — около 4 с, из кэша — ~15 мс.
+This is an unofficial interface: Microsoft may change or close it, then the browser's voice will be used. The set of voices is smaller than in Azure (for example, `en-US-DerekMultilingualNeural` is not available in it). Measurement: word — about 1.6 seconds, sentence — about 4 seconds, from cache — ~15 ms.
 
-### Azure AI Speech (официально, есть бесплатный тариф)
+### Azure AI Speech (official, has a free tier)
 
-1. В портале Azure создайте ресурс **Speech service** (тариф Free F0 — 0,5 млн символов в месяц).
-2. На странице **Keys and Endpoint** возьмите ключ и регион.
-3. Пропишите в `.env` (не в Git):
+1. In the Azure portal, create a resource **Speech service** (tier Free F0 — 0.5 million characters per month).
+2. On the **Keys and Endpoint** page, take the key and region.
+3. Write in `.env` (not in Git):
 
 ```env
 SPEECH_PROVIDER=azure
 AZURE_SPEECH_KEY=...
 AZURE_SPEECH_REGION=westeurope
-AZURE_SPEECH_VOICE=en-US-DerekMultilingualNeural   # любой нейронный голос Azure
+AZURE_SPEECH_VOICE=en-US-DerekMultilingualNeural   # any Azure neural voice
 ```
 
-4. Перезапустите API: `docker compose --profile ai up -d api`.
+4. Restart the API: `docker compose --profile ai up -d api`.
 
-Аудио кэшируется в Valkey на `SPEECH_CACHE_TTL_DAYS` (30 дней) по голосу и тексту, поэтому каждое слово уходит в Microsoft один раз на все аккаунты. Попадание в кэш не тратит дневную квоту AI, обращение к сервису — тратит. Если сервис не ответил, браузер озвучивает сам и пять минут не обращается к серверу.
+Audio is cached in Valkey on `SPEECH_CACHE_TTL_DAYS` (30 days) by voice and text, so each word is sent to Microsoft once for all accounts. Cache hit does not consume the AI daily quota, service call does. If the service does not respond, the browser will speak itself and will not contact the server for five minutes.

@@ -54,7 +54,7 @@
     "lint": "eslint .",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
-    "db:migrate": "node dist/migrate.js"
+    "db:migrate": "node --env-file-if-exists=../../.env dist/migrate.js"
   },
   "dependencies": {
     "drizzle-orm": "0.45.4",

@@ -23,7 +23,7 @@ describe('identity', () => {
     expect(me.status).toBe(200);
     expect(me.body).toMatchObject({
       email: user.email,
-      settings: { aiDataSharing: false, targetLevel: 'B1' },
+      settings: { aiDataSharing: false, targetLevel: 'B1', nativeLanguage: 'en' },
     });
 
     const events = await ctx.database.db

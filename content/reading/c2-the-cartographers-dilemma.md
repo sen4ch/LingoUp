@@ -11,32 +11,26 @@ glossary:
   - term: verisimilitude
     partOfSpeech: noun
     definition: the quality of seeming true or real
-    translation: правдоподобие
     example: The novel's verisimilitude made readers believe it was a memoir.
   - term: abstraction
     partOfSpeech: noun
     definition: the process of keeping only the general, essential features of something
-    translation: абстракция, обобщение
     example: Every model is an abstraction of reality.
   - term: belie
     partOfSpeech: verb
     definition: to give a false impression of something; to hide its true nature
-    translation: скрывать, маскировать (истинную природу)
     example: His calm voice belied his nervousness.
   - term: inextricably
     partOfSpeech: adverb
     definition: in a way that cannot be separated
-    translation: неразрывно
     example: Language and culture are inextricably linked.
   - term: hubris
     partOfSpeech: noun
     definition: excessive pride or self-confidence that leads to mistakes
-    translation: высокомерие, гордыня
     example: The project failed because of the founders' hubris.
   - term: tacit
     partOfSpeech: adjective
     definition: understood or implied without being stated directly
-    translation: негласный, подразумеваемый
     example: There was a tacit agreement not to discuss money.
 ---
 

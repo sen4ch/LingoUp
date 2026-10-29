@@ -28,7 +28,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="en">
       <body className="flex min-h-dvh flex-col antialiased">
         <a
           href="#main"

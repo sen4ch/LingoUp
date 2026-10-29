@@ -1,8 +1,8 @@
 ---
 slug: b1-present-perfect-vs-past-simple
-title: 'Present Perfect или Past Simple'
+title: 'Present Perfect or Past Simple'
 level: B1
-summary: 'Когда важен результат к настоящему моменту, а когда — конкретное время в прошлом.'
+summary: 'When is the result important at the present moment, and when is it a specific time in the past.'
 author: AI-generated for the LingoUp project (no human author)
 provenance: ai-generated
 license: CC0-1.0
@@ -11,48 +11,48 @@ exercises:
     prompt: 'I ___ this film three times.'
     options: [saw, have seen, see]
     answer: have seen
-    explanation: 'Опыт без указания времени — Present Perfect.'
+    explanation: 'Experience without specifying a time — Present Perfect.'
   - type: choice
     prompt: 'We ___ to Rome in 2019.'
     options: [have been, went, have gone]
     answer: went
-    explanation: 'Указано время в прошлом (in 2019) — Past Simple.'
+    explanation: 'Time in the past is specified (in 2019) — Past Simple.'
   - type: gap
     prompt: 'She ___ (just / finish) her homework.'
     answers: ['has just finished']
-    explanation: 'just часто используется с Present Perfect: has + just + V3.'
+    explanation: 'just is often used with Present Perfect: has + just + V3.'
   - type: choice
     prompt: '___ you ever eaten sushi?'
     options: [Did, Have, Has]
     answer: Have
-    explanation: 'Вопрос об опыте с ever — Present Perfect: Have you ever…?'
+    explanation: 'Questions about experience with ever — Present, Perfect: Have you ever…?'
   - type: gap
     prompt: 'I lost my keys yesterday, but I ___ (find) them now.'
     answers: ['have found', "'ve found"]
-    explanation: 'Результат к настоящему моменту — Present Perfect.'
+    explanation: 'Result at the present moment — Present Perfect.'
   - type: choice
     prompt: 'When ___ you start learning English?'
     options: [have, did, has]
     answer: did
-    explanation: 'Вопрос со словом when касается времени в прошлом — Past Simple.'
+    explanation: 'Questions with the word when concern a time in the past — Past Simple.'
 ---
 
 ## Present Perfect
 
-Форма: **have / has + третья форма глагола** (V3). Используется, когда важен **результат** или **опыт**, а время не указано.
+Form: **have / has + third form of the verb** (V3). It is used when the **result** or **experience** is important, and the time is not specified.
 
-> I have lost my phone. (его нет сейчас)
+> I have lost my phone. (It is not here now)
 > Have you ever been to London?
 
-Типичные слова: **ever**, **never**, **already**, **yet**, **just**, **so far**.
+Typical words: **ever**, **never**, **already**, **yet**, **just**, **so far**.
 
 ## Past Simple
 
-Используется, когда действие произошло в **конкретный момент в прошлом** и этот момент известен или указан.
+It is used when the action took place at a **specific moment in the past** and this moment is known or specified.
 
 > I lost my phone yesterday.
 > She moved to Berlin in 2021.
 
-## Главное правило
+## Main rule
 
-Если в предложении есть **yesterday**, **last year**, **ago** или **in 2020**, выбирайте **Past Simple**. Слова **when** и **what time** в вопросе тоже указывают на Past Simple.
+If the sentence has **yesterday**, **last year**, **ago** or **in 2020**, choose **Past Simple**. Words **when** and **what time** in the question also indicate Past Simple.

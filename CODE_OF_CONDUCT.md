@@ -1,17 +1,17 @@
-# Кодекс поведения
+# Code of Conduct
 
-Проект принимает [Contributor Covenant, версия 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) ([русский перевод](https://www.contributor-covenant.org/ru/version/2/1/code_of_conduct/)). Полный текст по ссылке является частью этого документа.
+The project adopts the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). The full text at the link is part of this document.
 
-## Коротко
+## In Short
 
-Мы стремимся, чтобы участие в проекте было свободным от притеснений для всех, независимо от возраста, телосложения, инвалидности, этнической принадлежности, половых характеристик, гендерной идентичности и самовыражения, уровня опыта, образования, социального статуса, национальности, внешности, расы, религии, сексуальной идентичности и ориентации.
+We strive for participation in the project to be free from harassment for everyone, regardless of age, body size, disability, ethnic identity, gender characteristics, gender identity and expression, level of experience, education, social status, nationality, appearance, race, religion, sexual identity and orientation.
 
-**Приветствуется:** уважение к другим мнениям и опыту, конструктивная критика, признание ошибок, забота об учащихся — в том числе о тех, для кого английский только начинается.
+**Encouraged:** respect for other opinions and experiences, constructive criticism, acknowledgment of mistakes, care for learners — including those for whom English is a second language.
 
-**Недопустимо:** оскорбления, домогательства, троллинг, публикация чужих персональных данных без согласия, иное поведение, неуместное в профессиональной среде.
+**Not tolerated:** harassment, sexual harassment, trolling, publication of personal data of others without consent, and other behavior inappropriate for a professional environment.
 
-## Применение
+## Application
 
-> **Контакт для сообщений о нарушениях пока не указан.** Владелец проекта должен его предоставить (например, отдельный email или форму) до публичного анонса. До этого сообщите о проблеме приватно через профиль сопровождающего на GitHub; не публикуйте подробности в открытых issues.
+> **Contact for reporting violations is not specified yet.** The project owner must provide it (for example, a separate email or form) before the public announcement. Until then, report the issue privately through the maintainer's profile on GitHub; do not publish details in public issues.
 
-Все сообщения рассматриваются конфиденциально. Меры — от предупреждения до бессрочного запрета на участие — по руководству Contributor Covenant.
+All messages are treated confidentially. Measures range from a warning to permanent ban on participation, according to the Contributor Covenant guidelines.

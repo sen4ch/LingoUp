@@ -1,25 +1,25 @@
-# Политика безопасности
+# Security Policy
 
-## Как сообщить об уязвимости
+## How to Report a Vulnerability
 
-**Не создавайте публичный issue.** Используйте приватный канал GitHub: вкладка **Security → Report a vulnerability** в репозитории (GitHub Private Vulnerability Reporting; владельцу нужно включить его в настройках репозитория).
+**Do not create a public issue.** Use a private GitHub channel: tab **Security → Report a vulnerability** in the repository (GitHub Private Vulnerability Reporting; the owner needs to enable it in the repository settings).
 
-Опишите:
+Describe:
 
-- затронутый компонент и версию (коммит);
-- шаги воспроизведения или proof of concept;
-- оценку влияния.
+- affected component and version (commit);
+- reproduction steps or proof of concept;
+- impact assessment.
 
-Мы постараемся подтвердить получение в течение 3 рабочих дней и согласовать срок исправления. После выпуска исправления информация будет опубликована с благодарностью автору (если вы не против).
+We will try to confirm receipt within 3 working days and agree on a fix timeline. After the fix is released, the information will be published with thanks to the author (if you don't mind).
 
-## Поддерживаемые версии
+## Supported Versions
 
-До первого релиза исправления вносятся только в ветку `main`.
+Fixes are only made in the `main` branch until the first release.
 
-## Что уже сделано
+## What Has Already Been Done
 
-Описано в разделе «Безопасность» [ARCHITECTURE.md](ARCHITECTURE.md#9-безопасность). Известные ограничения — в [docs/architecture/tech-debt.md](docs/architecture/tech-debt.md).
+See [Security](ARCHITECTURE.md#9-security) in the architecture document and the [known limitations](docs/architecture/tech-debt.md).
 
-## Рекомендации для тех, кто разворачивает платформу
+## Recommendations for Those Deploying the Platform
 
-См. [docs/operations.md](docs/operations.md): HTTPS-прокси, перезапись `X-Forwarded-For`, `COOKIE_SECURE=true`, сильные секреты, зашифрованные бэкапы.
+See [docs/operations.md](docs/operations.md): HTTPS proxy, `X-Forwarded-For` rewrite, `COOKIE_SECURE=true`, strong secrets, encrypted backups.

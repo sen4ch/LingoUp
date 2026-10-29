@@ -1,40 +1,40 @@
-# Участие в проекте
+# Participation in the Project
 
-Спасибо, что хотите помочь! Проекту нужны разработчики, преподаватели английского, авторы текстов, дизайнеры и переводчики интерфейса.
+Thank you for wanting to help! The project needs developers, English teachers, text authors, designers, and interface translators.
 
-## С чего начать
+## How to Start
 
-1. Прочитайте [ARCHITECTURE.md](ARCHITECTURE.md) и [docs/development.md](docs/development.md).
-2. Поднимите окружение по инструкции из [README.md](README.md).
-3. Выберите задачу из issues (метка `good first issue`) или из [технического долга](docs/architecture/tech-debt.md). Для крупных изменений сначала откройте issue с обсуждением.
+1. Read [ARCHITECTURE.md](ARCHITECTURE.md) and [docs/development.md](docs/development.md).
+2. Set up the environment according to the instructions in [README.md](README.md).
+3. Choose a task from issues (label `good first issue`) or from [technical debt](docs/architecture/tech-debt.md). For major changes, first open an issue for discussion.
 
-## Процесс
+## Process
 
-1. Форкните репозиторий и создайте ветку: `feat/…`, `fix/…`, `docs/…`, `content/…`.
-2. Делайте небольшие PR, по возможности один вертикальный срез на PR.
-3. Перед PR выполните:
+1. Fork the repository and create a branch: `feat/…`, `fix/…`, `docs/…`, `content/…`.
+2. Make small PRs, preferably one vertical slice per PR.
+3. Before submitting a PR, do the following:
    ```bash
    pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm test:integration
    ```
-4. Сообщения коммитов — в стиле [Conventional Commits](https://www.conventionalcommits.org/): `feat(vocabulary): …`, `fix(web): …`.
-5. Заполните чек-лист в шаблоне PR.
+4. Commit messages — in the style of [Conventional Commits](https://www.conventionalcommits.org/): `feat(vocabulary): …`, `fix(web): …`.
+5. Fill out the checklist in the PR template.
 
-## Архитектурные правила
+## Architectural Rules
 
-- Модуль меняет только свои таблицы и обращается к другим модулям через их `index.ts`; это проверяет архитектурный тест.
-- Побочные эффекты — через события и Transactional Outbox, обработчики идемпотентны.
-- Значимое архитектурное решение оформляется в ADR (`docs/adr`).
-- Никаких заглушек, выдающих себя за готовую реализацию: нереализованное явно документируется.
-- Новые зависимости — только с обоснованием. Пакеты с install-скриптами требуют явного разрешения в `pnpm-workspace.yaml`.
+- A module changes only its own tables and interacts with other modules through their `index.ts`; this is checked by the architectural test.
+- Side effects — through events and Transactional Outbox, handlers are idempotent.
+- Significant architectural decisions are documented in ADR (`docs/adr`).
+- No stubs pretending to be complete implementations: unimplemented items are explicitly documented.
+- New dependencies — only with justification. Packages with install scripts require explicit approval in `pnpm-workspace.yaml`.
 
-## Учебный контент
+## Educational Content
 
-Добавляйте только тексты, на которые у вас есть права, с указанием автора и лицензии. Формат описан в [content/README.md](content/README.md).
+Add only texts for which you have the rights, with indication of the author and license. The format is described in [content/README.md](content/README.md).
 
-## Лицензирование вклада
+## Licensing Contributions
 
-Код проекта распространяется по лицензии AGPL-3.0-only ([LICENSE](LICENSE)). Открывая PR, вы соглашаетесь, что ваш вклад распространяется на тех же условиях (inbound = outbound). CLA не требуется. Указывайте авторство честно: не добавляйте код, на который у вас нет прав, и не копируйте код с несовместимыми лицензиями.
+The project code is distributed under the AGPL-3.0-only license ([LICENSE](LICENSE)). By opening a PR, you agree that your contribution is distributed under the same terms (inbound = outbound). A CLA is not required. Attribute authorship honestly: do not add code for which you do not have the rights, and do not copy code with incompatible licenses.
 
-## Поведение
+## Behavior
 
-Участвуя в проекте, вы соглашаетесь соблюдать [Кодекс поведения](CODE_OF_CONDUCT.md).
+By participating in the project, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md).

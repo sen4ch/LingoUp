@@ -1,18 +1,19 @@
 # Architecture Decision Records
 
-| #                                          | Решение                                                                    | Статус  |
-| ------------------------------------------ | -------------------------------------------------------------------------- | ------- |
-| [0001](0001-modular-monolith.md)           | Модульный монолит с событиями и отдельными AI-сервисами                    | принято |
-| [0002](0002-technology-stack.md)           | Технологический стек и выбор версий                                        | принято |
-| [0003](0003-postgres-schema-per-module.md) | Одна база PostgreSQL, отдельная схема на модуль                            | принято |
-| [0004](0004-transactional-outbox.md)       | Transactional Outbox и BullMQ                                              | принято |
-| [0005](0005-ai-gateway.md)                 | AI Gateway, адаптеры и приватность                                         | принято |
-| [0006](0006-auth-sessions.md)              | Opaque-сессии в PostgreSQL                                                 | принято |
-| [0007](0007-license-proposal.md)           | Лицензия кода: AGPL-3.0-only                                               | принято |
-| [0008](0008-grammar-and-ai-practice.md)    | Grammar, личные AI-тексты и AI-упражнения по словарю                       | принято |
-| [0009](0009-pronunciation-azure-speech.md) | Озвучка слов голосами Microsoft (Edge, Azure), голос браузера как запасной | принято |
-| [0010](0010-word-pictures.md)              | Картинки к словам: выбор из Wikimedia Commons/Openverse или своя           | принято |
-| [0011](0011-speaking-tutor.md)             | Голосовой разговор с AI-преподавателем английского                         | принято |
-| [0012](0012-listening.md)                  | Листенинг: аудио с вопросами и фильмы / сериалы                            | принято |
+| #                                          | Solution                                                                                         | Status   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ | -------- |
+| [0001](0001-modular-monolith.md)           | Modular Monolith with Events and Separate AI Services                                            | Accepted |
+| [0002](0002-technology-stack.md)           | Technology Stack and Version Selection                                                           | Accepted |
+| [0003](0003-postgres-schema-per-module.md) | One PostgreSQL Database, Separate Schema per Module                                              | Accepted |
+| [0004](0004-transactional-outbox.md)       | Transactional Outbox and BullMQ                                                                  | Accepted |
+| [0005](0005-ai-gateway.md)                 | AI Gateway, Adapters and Privacy                                                                 | Accepted |
+| [0006](0006-auth-sessions.md)              | Opaque Sessions in PostgreSQL                                                                    | Accepted |
+| [0007](0007-license-proposal.md)           | Code License: AGPL-3.0-only                                                                      | Accepted |
+| [0008](0008-grammar-and-ai-practice.md)    | Grammar, Personal AI Texts and AI Exercises with Dictionary                                      | Accepted |
+| [0009](0009-pronunciation-azure-speech.md) | Word Pronunciation with Microsoft (Edge, Azure) Voices, Browser Voice as Backup                  | Accepted |
+| [0010](0010-word-pictures.md)              | Word pictures: selection from Wikimedia Commons/Openverse or your own                            | accepted |
+| [0011](0011-speaking-tutor.md)             | Voice conversation with an AI English tutor                                                      | accepted |
+| [0012](0012-listening.md)                  | Listening: audio with questions and movies / series                                              | accepted |
+| [0013](0013-english-language.md)           | English interface, documentation and bundled lessons; preserve progress during explanatory edits | accepted |
 
-Новый ADR: скопируйте ближайший файл, увеличьте номер и опишите контекст, решение, альтернативы и последствия.
+New ADR: copy the nearest file, increase the number and describe the context, solution, alternatives and consequences.

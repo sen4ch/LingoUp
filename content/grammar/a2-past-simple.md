@@ -1,8 +1,8 @@
 ---
 slug: a2-past-simple
-title: 'Past Simple: что произошло в прошлом'
+title: 'Past Simple: What happened in the past'
 level: A2
-summary: 'Правильные и неправильные глаголы, отрицание и вопросы с did.'
+summary: 'Regular and irregular verbs, negation and questions with did.'
 author: AI-generated for the LingoUp project (no human author)
 provenance: ai-generated
 license: CC0-1.0
@@ -10,53 +10,53 @@ exercises:
   - type: gap
     prompt: 'Yesterday I ___ (visit) my grandmother.'
     answers: [visited]
-    explanation: 'Правильный глагол: visit + -ed.'
+    explanation: 'Regular verb: visit + -ed.'
   - type: choice
     prompt: 'We ___ to the cinema last weekend.'
     options: [go, went, goed]
     answer: went
-    explanation: 'go — неправильный глагол: go → went.'
+    explanation: 'go — irregular verb: go → went.'
   - type: gap
     prompt: 'She ___ (not / call) me last night.'
     answers: ["didn't call", 'did not call']
-    explanation: "Отрицание: didn't + глагол в начальной форме."
+    explanation: "Negation: didn't + verb in base form."
   - type: choice
     prompt: 'Did you ___ the email?'
     options: [send, sent, sended]
     answer: send
-    explanation: 'После did основной глагол стоит в начальной форме.'
+    explanation: 'After did, the main verb is in base form.'
   - type: gap
     prompt: 'They ___ (buy) a new car in 2024.'
     answers: [bought]
-    explanation: 'buy — неправильный глагол: buy → bought.'
+    explanation: 'buy — irregular verb: buy → bought.'
   - type: gap
     prompt: 'When ___ you arrive?'
     answers: [did]
-    explanation: 'Вопрос в Past Simple строится с did.'
+    explanation: 'Question in Past Simple is formed with did.'
 ---
 
-## Когда используется
+## When is it used
 
-Past Simple описывает **законченные действия в прошлом**, особенно если указано время: **yesterday**, **last week**, **in 2020**, **two days ago**.
+Past Simple describes **completed actions in the past**, especially if a time is specified: **yesterday**, **last week**, **in 2020**, **two days ago**.
 
 > I watched a film last night.
 
-## Правильные глаголы
+## Regular verbs
 
-К правильным глаголам добавляется **-ed**: **work → worked**, **play → played**, **stop → stopped**, **study → studied**.
+The **-ed** is added to regular verbs: **work → worked**, **play → played**, **stop → stopped**, **study → studied**.
 
-## Неправильные глаголы
+## Irregular verbs
 
-Их формы нужно запомнить:
+Their forms need to be memorized:
 
 - go → **went**
 - see → **saw**
 - buy → **bought**
 - have → **had**
 
-## Отрицание и вопрос
+## Negation and questions
 
-Используется **did** для всех лиц, а основной глагол возвращается в начальную форму.
+The **did** is used for all persons, and the main verb returns to its base form.
 
 - I **didn't go** to work.
 - **Did** you **go** to work?

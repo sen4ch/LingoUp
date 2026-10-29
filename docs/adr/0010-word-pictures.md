@@ -1,38 +1,38 @@
-# ADR-0010: Картинки к словам
+# ADR-0010: Word Images
 
-- Статус: принято
-- Дата: 2026-10-27
+- Status: Accepted
+- Date: 2026-10-27
 
-## Контекст
+## Context
 
-Ассоциация «слово — картинка» помогает запоминать. Пользователь хочет видеть картинку к слову в повторении (например, квартиру для «flat») и выбрал вариант «выбираю сам»: картинку подбирает он, а не система. Показывать её — вместе с ответом, чтобы она не подсказывала до попытки вспомнить.
+The association between a word and an image helps with memorization. The user wants to see an image for a word during repetition (e.g., an apartment for "flat") and has selected the option "I choose myself": the image is picked by the user, not the system. Display it together with the answer, so it does not give away the answer until the attempt to recall.
 
-## Решение
+## Solution
 
-- **Одна картинка на слово**, таблица `vocabulary.word_images` (байты в `bytea`, метаданные и атрибуция). Удаляется вместе со словом и аккаунтом, входит в экспорт персональных данных (data URL).
-- **Источники:** поиск свободно лицензированных изображений или загрузка своей (JPEG, PNG, WebP, GIF до 5 МБ).
-- **Поиск подключаемый**, `IMAGE_SEARCH_PROVIDER = none | wikimedia | openverse`, по умолчанию `none`:
-  - `wikimedia` — API Wikimedia Commons: бесплатно, без ключа, >100 млн файлов, User-Agent по правилам Wikimedia. Только растровые файлы, без SVG.
-  - `openverse` — Openverse (Wikimedia, Flickr и др., есть фильтр взрослого контента). При проверке публичный API отвечал 504 через минуту, поэтому он не основной.
-- **Многозначность** решает пользователь: поиск стартует со слова, но запрос можно уточнить («apartment» вместо «flat»).
-- **Приватность и безопасность:**
-  - наружу уходит только поисковая фраза; картинки скачивает API, браузер не обращается к сторонним сайтам (IP пользователя не раскрывается, CSP не расширяется);
-  - скачивание только с медиахостов Wikimedia/Openverse, с таймаутом и лимитом размера;
-  - всё, что сохраняется или показывается, перекодируется `sharp` в WebP ≤ 640 px без метаданных (EXIF/GPS), с защитой от «пиксельных бомб» (`limitInputPixels`). Файл, который не декодируется как изображение, отклоняется (422), SVG не принимается вовсе;
-  - ссылки атрибуции принимаются только `http(s)`, HTML из метаданных Commons превращается в текст.
-- **Лицензии:** под картинкой из поиска показываются название, автор, лицензия и ссылка на источник — этого требуют CC BY / BY-SA. Загруженная картинка подписана «Ваша картинка».
-- Загрузка идёт сырым телом (`Content-Type: image/*`) с отдельным лимитом 5 МБ только для этих типов; общий лимит тела API не меняется.
+- **One image per word**, table `vocabulary.word_images` (bytes in `bytea`, metadata and attribution). It is deleted together with the word and account, and is included in the export of personal data (data URL).
+- **Sources:** searching for freely licensed images or uploading your own (JPEG, PNG, WebP, GIF up to 5 MB).
+- **Search is pluggable**, `IMAGE_SEARCH_PROVIDER = none | wikimedia | openverse`, default is `none`:
+  - `wikimedia` — Wikimedia Commons API: free, no key required, >100 million files, User-Agent according to Wikimedia rules. Only raster files, no SVG.
+  - `openverse` — Openverse (Wikimedia, Flickr and others, has adult content filter). During testing, the public API responded with 504 after a minute, so it is not the primary option.
+- **Polysemy** is resolved by the user: the search starts with the word, but the query can be refined ("apartment" instead of "flat").
+- **Privacy and security:**
+  - Only the search phrase is sent outward; images are downloaded by the API, the browser does not access external sites (the user's IP is not disclosed, CSP is not expanded);
+  - Downloading is only from Wikimedia/Openverse media hosts, with a timeout and size limit;
+  - Everything that is saved or displayed is re-encoded by `sharp` into WebP ≤ 640 px without metadata (EXIF/GPS), with protection against "pixel bombs" (`limitInputPixels`). Files that cannot be decoded as images are rejected (422), SVG is not accepted at all;
+  - Attribution links are accepted only `http(s)`, HTML from metadata on Commons is converted into text.
+- **Licenses:** The name, author, license, and source link are displayed under the image from the search — this is required by CC BY / BY-SA. The uploaded image is signed as "Your image."
+- Upload proceeds with the raw body (`Content-Type: image/*`) with a separate limit of 5 MB only for these types; the overall API body limit remains unchanged.
 
-## Альтернативы
+## Alternatives
 
-- **Генерация картинок локально (Stable Diffusion).** Точно под смысл слова и приватно, но ~7 ГБ моделей и общая видеопамять с qwen3 на 8 ГБ. Можно добавить позже как ещё один источник.
-- **Автоматический подбор без участия пользователя.** Для многозначных и абстрактных слов первая картинка часто неудачна.
-- **Хранение ссылок вместо файлов.** Картинки пропадали бы вместе с источником, а браузер обращался бы к сторонним хостам.
-- **Unsplash/Pexels/Pixabay.** Нужны ключи API и свои условия показа.
+- **Local image generation (Stable Diffusion).** Exactly matching the meaning of the word and private, but ~7 GB models and overall video memory with qwen3 on 8 GB. Can be added later as another source.
+- **Automatic selection without user involvement.** For ambiguous and abstract words, the first image is often unsuccessful.
+- **Storing links instead of files.** Images would disappear along with the source, and the browser would access external hosts.
+- **Unsplash/Pexels/Pixabay.** API keys and your display terms are needed.
 
-## Последствия
+## Consequences
 
-- Миграция `0002_word-images`; поле `image` в `Word` и `ReviewCard` (только метаданные, байты — отдельным запросом с `?v=updatedAt` для кэша).
-- Зависимость `sharp` в API (уже была в lockfile через Next.js; LGPL-3.0 у libvips).
-- Wikimedia Commons не фильтрует взрослый контент; поиск запускает сам пользователь (tech-debt).
-- Картинки занимают место в PostgreSQL: ~30–60 КБ на слово.
+- Migration `0002_word-images`; `image` field in `Word` and `ReviewCard` (only metadata, bytes — separate request with `?v=updatedAt` for cache).
+- Dependency `sharp` in API (already present in lockfile via Next.js; LGPL-3.0 for libvips).
+- Wikimedia Commons does not filter adult content; search is initiated by the user (tech-debt).
+- Images take up space in PostgreSQL: ~30–60 KB per word.

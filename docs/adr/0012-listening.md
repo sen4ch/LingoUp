@@ -1,27 +1,27 @@
-# ADR-0012: Листенинг — аудио с вопросами и просмотр видео
+# ADR-0012: Listening — audio with questions and video viewing
 
-- Статус: принято
-- Дата: 2026-10-28
+- Status: accepted
+- Date: 2026-10-28
 
-## Решение
+## Solution
 
-Страница `/listening` содержит ровно два раздела: «Аудио и вопросы» и «Фильмы и сериалы».
+The page `/listening` contains exactly two sections: "Audio and Questions" and "Movies and Series".
 
-### Генерация упражнения
+### Exercise Generation
 
-- AI сначала создаёт связный многоабзацный текст, затем отдельно вопросы по готовому тексту. Это даёт локальным моделям достаточный объём вывода для длинной записи. Короткий черновик дополняется перед заключением; принимается только текст на 450–750 слов.
-- Уровень CEFR определяет лексику, грамматику и тип вопросов. A1–A2: 5 вопросов; B1–B2: 6; C1–C2: 8. Для B2 и выше обязательны вопросы на выводы, отношение и намерения. У каждого ответа есть цитата, проверяемая на наличие в тексте.
-- Озвучка — локальный Piper `en_US-lessac-medium` на CPU. Модель автоматически загружается в `/models/piper` внутри существующего тома моделей. Синтезированные WAV преобразуются PyAV в один MP3 с корректными метаданными. Длительность измеряется по аудио; при выходе за 180–300 секунд речь пересинтезируется с изменённым темпом. Неподходящая длительность отклоняется, паузы для искусственного растягивания не добавляются.
-- Piper: [исходный код и лицензия GPL-3.0](https://github.com/OHF-Voice/piper1-gpl); [карточка голоса и источник данных](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/lessac/medium/MODEL_CARD). Внешняя озвучка для упражнений не используется. Для внешнего LLM действуют существующие согласия AI Gateway.
-- Learning хранит MP3 и закрытые ответы в Valkey 24 часа под ключами с ID владельца. Правильные варианты, пояснения и текст записи не выдаются до проверки ответов. Повторное скачивание не вызывает AI; файл можно сохранить как MP3. Чужое или истёкшее упражнение возвращает 404.
-- Маршруты: `POST /v1/learning/listening`, `GET /v1/learning/listening/:id/audio`, `POST /v1/learning/listening/:id/answers`. Сессия обязательна; генерация ограничена частотой и общей AI-квотой. Для генерации и озвучки используются отдельные ограничители параллелизма и таймауты. Web-прокси ждёт создание упражнения до 5 минут.
+- AI first creates a coherent multi-paragraph text, then separately generates questions based on the prepared text. This provides local models with sufficient output volume for long recordings. A short draft is supplemented before the conclusion; only text between 450–750 words is accepted.
+- The CEFR level determines the vocabulary, grammar, and type of questions. A1–A2: 5 questions; B1–B2: 6; C1–C2: 8. For B2 and above, questions on inference, attitude, and intentions are mandatory. Each answer has a quote, which is checked for presence in the text.
+- Voice-over — local Piper `en_US-lessac-medium` on CPU. The model automatically loads into `/models/piper` within an existing model volume. Synthesized WAV files are converted by PyAV into a single MP3 with correct metadata. Duration is measured by audio; if it exceeds 180–300 seconds, speech is resynthesized with a modified speaking rate. Unacceptable duration is rejected, and pauses for artificial elongation are not added.
+- Piper: [source code and GPL-3.0 license](https://github.com/OHF-Voice/piper1-gpl); [voice card and data source](https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/lessac/medium/MODEL_CARD). External text-to-speech is not used for exercises. Existing AI Gateway agreements apply for external LLMs.
+- Learning stores MP3 and private answers in Valkey for 24 hours under owner ID keys. Correct answers, explanations, and recording text are not released until answers are checked. Redownloading does not trigger AI; the file can be saved as MP3. Foreign or expired exercises return 404.
+- Routes: `POST /v1/learning/listening`, `GET /v1/learning/listening/:id/audio`, `POST /v1/learning/listening/:id/answers`. Session is required; generation is limited by frequency and overall AI quota. Separate parallelism and timeout limits are used for generation and text-to-speech. Web proxy waits for exercise creation up to 5 minutes.
 
-### Фильмы и сериалы
+### Movies and Series
 
-- Стартовая подборка: учебный сериал BBC Learning English The Flatmates и открытый фильм Blender Foundation Sintel. Просмотр через плеер издателя YouTube, без скачивания и обхода ограничений. Пользователь также может открыть видео или плейлист YouTube по ссылке.
-- В iframe разрешён только `youtube-nocookie.com`; ID видео и плейлистов проверяются, произвольные URL не встраиваются. Referrer передаётся согласно требованиям YouTube. Если издатель запретил встраивание, доступна ссылка на оригинал.
-- Собственные фильмы и серии открываются локально через Blob URL, без загрузки на сервер. Поддерживаются английские WebVTT/SRT-субтитры; SRT конвертируется в WebVTT. Доступность кодеков зависит от браузера; рекомендуются MP4/H.264 и WebM.
+- Starter selection: educational BBC Learning English series The Flatmates and open-source film Blender Foundation Sintel. Viewing through the publisher's YouTube player, without downloading or bypassing restrictions. The user can also open a YouTube video or playlist by the link.
+- Only `youtube-nocookie.com` is allowed in an iframe; video IDs and playlists are checked, arbitrary URLs are not embedded. Referrer is passed according to YouTube's requirements. If the publisher prohibits embedding, a link to the original is available.
+- Original movies and series are opened locally through Blob URL, without uploading to the server. English WebVTT/SRT subtitles are supported; SRT is converted to WebVTT. Codec availability depends on the browser; MP4/H.264 and WebM are recommended.
 
-## Ограничения
+## Limitations
 
-AI-вопросы проверяются структурно и по цитатам, но это не заменяет редакторскую оценку их однозначности. Упражнения временные, отдельная таблица и долговременная история результатов не создаются. Нужен контроль объёма аудиокэша при росте числа пользователей. Каталог внешнего видео зависит от доступности роликов, ограничений издателя и субтитров.
+AI questions are checked structurally and by quotes, but this does not replace editorial assessment of their definitiveness. Exercises are temporary, separate tables and long-term history of results are not created. Control of audio cache volume is needed when the number of users grows. The external video catalog depends on the availability of clips, publisher restrictions, and subtitles.

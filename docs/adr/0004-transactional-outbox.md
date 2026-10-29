@@ -1,26 +1,26 @@
-# ADR-0004: Transactional Outbox и BullMQ для доменных событий
+# ADR-0004: Transactional Outbox and BullMQ for Domain Events
 
-- Статус: принято
-- Дата: 2026-10-26
+- Status: Accepted
+- Date: 2026-10-26
 
-## Контекст
+## Context
 
-Нужно надёжно публиковать события после изменения данных в PostgreSQL. Прямая публикация в очередь после `COMMIT` теряет события при сбое между двумя операциями.
+It is necessary to reliably publish events after data changes in PostgreSQL. Direct publishing to the queue after `COMMIT` loses events in case of a failure between two operations.
 
-## Решение
+## Solution
 
-1. Событие записывается в `platform.outbox_events` в той же транзакции, что и бизнес-изменение.
-2. Outbox relay в `apps/worker` периодически выбирает неопубликованные записи (`FOR UPDATE SKIP LOCKED`, порциями) и ставит задачи в BullMQ с `jobId = event.id`.
-3. Обработчики идемпотентны: каждый записывает `(consumer, event_id)` в `platform.processed_events` в одной транзакции со своим изменением.
-4. Retry: `attempts` + экспоненциальный backoff в BullMQ.
-5. Через очередь идут только побочные эффекты. То, что пользователь должен увидеть сразу, выполняется синхронно.
+1. The event is written to `platform.outbox_events` in the same transaction as the business change.
+2. Outbox relay in `apps/worker` periodically selects un-published records (`FOR UPDATE SKIP LOCKED`, in batches) and puts tasks in BullMQ with `jobId = event.id`.
+3. Handlers are idempotent: each writes `(consumer, event_id)` to `platform.processed_events` in one transaction with its own change.
+4. Retry: `attempts` + exponential backoff in Bull.MQ.
+5. Only side effects go through the queue. What the user should see immediately is executed synchronously.
 
-## Альтернативы
+## Alternatives
 
-- **LISTEN/NOTIFY** — нет гарантий доставки и повторов.
-- **Kafka / Debezium** — избыточно для текущего масштаба.
+- **LISTEN/NOTIFY** — no guarantees of delivery and retries.
+- **Kafka / Debezium** — overkill for the current scale.
 
-## Последствия
+## Implications
 
-- Доставка at-least-once, задержка проекций — до `OUTBOX_POLL_INTERVAL_MS`.
-- Опубликованные записи outbox нужно чистить (плановая задача `cleanup-event-tables` в worker (раз в час) удаляет опубликованные записи и отметки `processed_events` старше `OUTBOX_RETENTION_DAYS`).
+- Delivery at-least-once, projection delay — up to `OUTBOX_POLL_INTERVAL_MS`.
+- Published outbox records need to be cleaned up (scheduled task `cleanup-event-tables` in worker (once per hour) deletes published records and marks `processed_events` older than `OUTBOX_RETENTION_DAYS`).

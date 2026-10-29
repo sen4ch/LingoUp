@@ -1,23 +1,23 @@
-# Разработка
+# Development
 
-## Окружение
+## Environment
 
-| Инструмент | Версия                                      | Примечание                                           |
-| ---------- | ------------------------------------------- | ---------------------------------------------------- |
-| Node.js    | 24 LTS (`.nvmrc`)                           | `engine-strict` включён                              |
-| pnpm       | 12.15.0 (`packageManager` в `package.json`) | `npm i -g pnpm@12.15.0` или `corepack enable`        |
-| Docker     | с Compose v2                                | PostgreSQL, Valkey, сборка образов, тесты ai-service |
-| Python     | 3.13+ (опционально)                         | только для разработки ai-service вне Docker          |
+| Tool    | Version                                      | Note                                                 |
+| ------- | -------------------------------------------- | ---------------------------------------------------- |
+| Node.js | 24 LTS (`.nvmrc`)                            | `engine-strict` is enabled                           |
+| pnpm    | 12.15.0 (`packageManager` in `package.json`) | `npm i -g pnpm@12.15.0` or `corepack enable`         |
+| Docker  | with Compose v2                              | PostgreSQL, Valkey, image building, tests ai-service |
+| Python  | 3.13+ (optional)                             | only for development of ai-service outside Docker    |
 
-pnpm в этом проекте:
+pnpm in this project:
 
-- блокирует install-скрипты зависимостей. Разрешённые и запрещённые перечислены в `allowBuilds` в `pnpm-workspace.yaml`. Новая зависимость с install-скриптом потребует явного решения;
-- отклоняет версии пакетов, опубликованные менее суток назад (`minimumReleaseAge`). Не добавляйте исключения без причины — лучше выберите предыдущую версию.
+- blocks install scripts of dependencies. Allowed and disallowed are listed in `allowBuilds` in `pnpm-workspace.yaml`. A new dependency with an install script will require an explicit decision;
+- rejects package versions published less than a day ago (`minimumReleaseAge`). Do not add exceptions without reason — better choose the previous version.
 
-## Первый запуск
+## First Run
 
 ```bash
-pnpm setup:env                # .env со случайными секретами (не перезаписывает существующий)
+pnpm setup:env                # .env with random secrets (does not overwrite existing one)
 docker compose up -d postgres valkey
 pnpm install
 pnpm build
@@ -26,70 +26,70 @@ pnpm content:import
 pnpm dev
 ```
 
-`pnpm dev` запускает через Turborepo:
+`pnpm dev` runs through Turborepo:
 
-- `apps/web` — `next dev` на :3000;
-- `apps/api` — инкрементальный `tsc --watch` и автоматический перезапуск на :4000;
-- `apps/worker` — то же для worker;
+- `apps/web` — `next dev` on :3000;
+- `apps/api` — incremental `tsc --watch` and automatic restart on :4000;
+- `apps/worker` — same for worker;
 - `packages/*` — `tsc --watch`.
 
-Почему API собирается через `tsc`, а не через esbuild/tsx: внедрение зависимостей в NestJS опирается на метаданные декораторов (`emitDecoratorMetadata`), а esbuild их не генерирует.
+Why API is built through `tsc`, not through esbuild/tsx: dependency injection in NestJS relies on decorator metadata (`emitDecoratorMetadata`), and esbuild does not generate them.
 
-## Тесты
+## Tests
 
-| Уровень            | Команда                                      | Что нужно                                                            |
-| ------------------ | -------------------------------------------- | -------------------------------------------------------------------- |
-| Unit + архитектура | `pnpm test`                                  | ничего                                                               |
-| Интеграционные     | `pnpm test:integration`                      | PostgreSQL и Valkey из `.env`                                        |
-| API smoke          | `pnpm smoke:api`                             | запущенный API (`API_URL`, по умолчанию http://localhost:4000)       |
-| E2E (Playwright)   | `pnpm test:e2e`                              | запущенный стек (`E2E_BASE_URL`, по умолчанию http://localhost:3000) |
-| ai-service         | `docker build --target test apps/ai-service` | Docker                                                               |
+| Level               | Command                                      | What is needed                                                |
+| ------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Unit + architecture | `pnpm test`                                  | nothing                                                       |
+| Integration         | `pnpm test:integration`                      | PostgreSQL and Valkey from `.env`                             |
+| API smoke           | `pnpm smoke:api`                             | running API (`API_URL`, default http://localhost:4000)        |
+| E2E (Playwright)    | `pnpm test:e2e`                              | running stack (`E2E_BASE_URL`, default http://localhost:3000) |
+| ai-service          | `docker build --target test apps/ai-service` | Docker                                                        |
 
-Интеграционные тесты **пересоздают** базу из `TEST_DATABASE_URL` (имя должно оканчиваться на `_test`, иначе хелпер откажется работать), применяют миграции и импортируют демо-контент. Ключи Valkey тестов API пишутся в логическую БД 15.
+Integration tests **recreate** the database from `TEST_DATABASE_URL` (the name must end with `_test`, otherwise the helper will refuse to work), apply migrations, and import demo content. API Valkey test keys are written to logical DB 15.
 
-Браузеры для Playwright: `pnpm --filter @lingoup/web exec playwright install chromium`.
+Browsers for Playwright: `pnpm --filter @lingoup/web exec playwright install chromium`.
 
-### Архитектурный тест
+### Architecture Test
 
-`apps/api/test/architecture.test.ts` запрещает:
+`apps/api/test/architecture.test.ts` prohibits:
 
-- импортировать из другого модуля что-либо, кроме его `index.ts`;
-- использовать таблицы чужой PostgreSQL-схемы;
-- импортировать модули из `platform`;
-- циклические зависимости между модулями.
+- importing anything from another module except its `index.ts`;
+- using tables from another PostgreSQL schema;
+- importing modules from `platform`;
+- cyclic dependencies between modules.
 
-Новый модуль нужно добавить в `OWNED_SCHEMA` в этом тесте.
+A new module must be added to `OWNED_SCHEMA` in this test.
 
-## Как добавить…
+## How to Add…
 
-### …таблицу
+### …a table
 
-1. Опишите её в `packages/database/src/schema/<module>.ts` (в схеме своего модуля).
-2. `pnpm db:generate` — drizzle-kit создаст SQL-миграцию в `packages/database/migrations`. Проверьте SQL глазами и закоммитьте его.
+1. Describe it in `packages/database/src/schema/<module>.ts` (in your module's schema).
+2. `pnpm db:generate` — drizzle-kit will create an SQL migration in `packages/database/migrations`. Check the SQL with your eyes and commit it.
 3. `pnpm db:migrate`.
 
-Не редактируйте уже применённые миграции — добавляйте новые.
+Do not edit already applied migrations — add new ones.
 
-### …доменное событие
+### …a domain event
 
-1. Контракт — в `packages/contracts/src/events/index.ts` (`defineEvent(type, version, payload)`), добавьте его в `DomainEventSchema`.
-2. Публикация — `OutboxWriter.append(tx, event)` **в той же транзакции**, что и изменение данных.
-3. Обработчик — класс с `EventHandler` в `apps/worker/src/handlers`, идемпотентный через `platform.processed_events`; зарегистрируйте его в `apps/worker/src/main.ts`.
-4. Изменение payload несовместимым образом = новая версия события.
+1. Contract — in `packages/contracts/src/events/index.ts` (`defineEvent(type, version, payload)`), add it to `DomainEventSchema`.
+2. Publication — `OutboxWriter.append(tx, event)` **in the same transaction** as the data change.
+3. Handler — class with `EventHandler` in `apps/worker/src/handlers`, idempotent through `platform.processed_events`; register it in `apps/worker/src/main.ts`.
+4. Incompatible payload change = new version of the event.
 
-### …AI-задачу
+### …AI-task
 
-1. Схемы входа и выхода — в `packages/ai-sdk/src/tasks.ts` (`AI_TASKS`), там же флаг идемпотентности.
-2. Реализация — в провайдерах API (`modules/ai-gateway/infrastructure`) и в `apps/ai-service` (эндпоинт + Pydantic-схемы, которые должны совпадать с TS-контрактом).
-3. Вызов — только через `AiGateway.run()`: политика приватности, квоты и таймауты применяются там.
+1. Input and output schemas — in `packages/ai-sdk/src/tasks.ts` (`AI_TASKS`), the same place the idempotency flag.
+2. Implementation — in API providers (`modules/ai-gateway/infrastructure`) and in `apps/ai-service` (endpoint + Pydantic schemas, which should match the TS contract).
+3. Call — only through `AiGateway.run()`: privacy policy, quotas and timeouts are applied there.
 
-### …учебный текст
+### …sample text
 
-См. [content/README.md](../content/README.md).
+See [content/README.md](../content/README.md).
 
-## Стиль кода
+## Code Style
 
 - TypeScript strict + `noUncheckedIndexedAccess`; ESLint `strictTypeChecked`; Prettier.
-- Имена, комментарии и идентификаторы — на английском; документация для владельца — на русском.
-- Строки интерфейса — только в `apps/web/src/i18n`.
-- Модули API: `domain` (чистые правила), `application` (use cases), `infrastructure` (БД и адаптеры), `http` (контроллеры). Интерфейс-репозиторий заводите только при реальной необходимости.
+- Names, comments, identifiers and documentation are written in English.
+- Interface strings — only in `apps/web/src/i18n`.
+- API modules use `domain` for pure rules, `application` for use cases, `infrastructure` for databases and adapters, and `http` for controllers. Introduce repository interfaces only when they serve a concrete need.

@@ -11,32 +11,26 @@ glossary:
   - term: wake up
     partOfSpeech: phrasal verb
     definition: to stop sleeping
-    translation: просыпаться
     example: I wake up at seven o'clock.
   - term: brush my teeth
     partOfSpeech: phrase
     definition: to clean your teeth with a toothbrush
-    translation: чистить зубы
     example: I brush my teeth after breakfast.
   - term: breakfast
     partOfSpeech: noun
     definition: the first meal of the day
-    translation: завтрак
     example: We eat breakfast in the kitchen.
   - term: usually
     partOfSpeech: adverb
     definition: in most cases; most of the time
-    translation: обычно
     example: I usually drink tea.
   - term: leave
     partOfSpeech: verb
     definition: to go away from a place
-    translation: уходить, выходить
     example: I leave home at eight.
   - term: bus stop
     partOfSpeech: noun
     definition: a place where a bus stops for people to get on or off
-    translation: автобусная остановка
     example: The bus stop is near my house.
 ---
 

@@ -1,8 +1,8 @@
 ---
 slug: b2-reported-speech
-title: 'Косвенная речь (Reported Speech)'
+title: 'Indirect Speech (Reported Speech)'
 level: B2
-summary: 'He said that he was tired: как пересказать чужие слова и сдвинуть времена.'
+summary: "He said that he was tired: how to report someone else's words and shift the tenses."
 author: AI-generated for the LingoUp project (no human author)
 provenance: ai-generated
 license: CC0-1.0
@@ -11,7 +11,7 @@ exercises:
     prompt: '"I am tired." → She said that she ___ tired.'
     options: [is, was, has been]
     answer: was
-    explanation: 'Present Simple сдвигается в Past Simple: am → was.'
+    explanation: 'Present Simple shifts to Past Simple: am → was.'
   - type: gap
     prompt: '"We will call you." → They said they ___ call us.'
     answers: [would]
@@ -20,11 +20,11 @@ exercises:
     prompt: '"I saw the film." → He told me he ___ the film.'
     options: [saw, had seen, has seen]
     answer: had seen
-    explanation: 'Past Simple сдвигается в Past Perfect: saw → had seen.'
+    explanation: 'Past Simple shifts to Past Perfect: saw → had seen.'
   - type: gap
     prompt: '"Where do you live?" → She asked me where I ___.'
     answers: [lived]
-    explanation: 'В косвенном вопросе прямой порядок слов и сдвиг времени: where I lived.'
+    explanation: 'In an indirect question, the word order is direct and the tense is shifted: where I lived.'
   - type: choice
     prompt: '"Can you help me?" → He asked if I ___ help him.'
     options: [can, could, will]
@@ -33,12 +33,12 @@ exercises:
   - type: gap
     prompt: '"Don''t be late." → The teacher told us ___ be late.'
     answers: ['not to']
-    explanation: 'Отрицательная просьба: told + кому + not to + глагол.'
+    explanation: 'Negative request: told + whom + not to + verb.'
 ---
 
-## Сдвиг времён
+## Shift of Tenses
 
-Если глагол-вводка стоит в прошлом (**said**, **told**, **asked**), время в пересказе обычно «сдвигается назад».
+If the introductory verb is in the past (**said**, **told**, **asked**), the tense in the reported speech usually 'shifts back'.
 
 - am / is → **was**
 - do / does → **did**
@@ -48,15 +48,15 @@ exercises:
 
 > "I like it," she said. → She said that she liked it.
 
-## Said или told
+## Said or Told
 
-После **told** обязательно указывают, кому сказали: **He told me…**, а после **said** — нет: **He said that…**
+After **told** it is necessary to specify to whom the speaker spoke: **He told me…**, whereas after **said** it is not required: **He said that…**
 
-## Вопросы и просьбы
+## Questions and Requests
 
-В косвенных вопросах прямой порядок слов, а вместо да/нет-вопроса используют **if** или **whether**.
+In indirect questions, the word order is direct, and instead of yes/no questions, **if** or **whether** is used.
 
 > She asked me where I worked.
 > He asked if I was ready.
 
-Просьбы и приказы передают через инфинитив: **She told me to wait.** **He told us not to touch it.**
+Requests and commands are reported through the infinitive: **She told me to wait.** **He told us not to touch it.**

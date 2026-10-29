@@ -1,0 +1,1 @@
+ALTER TABLE "identity"."user_settings" ALTER COLUMN "native_language" SET DEFAULT 'en';

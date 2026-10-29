@@ -1,32 +1,32 @@
-# ADR-0002: Технологический стек и выбор версий
+# ADR-0002: Technology Stack and Version Selection
 
-- Статус: принято
-- Дата: 2026-10-26
+- Status: accepted
+- Date: 2026-10-26
 
-## Контекст
+## Context
 
-Нужны актуальные стабильные и **совместимые между собой** версии. Перед фиксацией проверены peer-зависимости в npm registry.
+Up-to-date stable and **compatible with each other** versions are needed. Peer dependencies in npm registry were checked before fixing.
 
-## Решение
+## Solution
 
-| Компонент        | Версия                                                          | Почему                                                                                                                                                           |
-| ---------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js          | 24 LTS (Krypton)                                                | Active LTS; требуется Vitest 5 и NestJS 12                                                                                                                       |
-| pnpm / Turborepo | 12 / 2                                                          | Workspaces, кэш задач, `turbo prune` для Docker                                                                                                                  |
-| TypeScript       | **6.0**                                                         | TypeScript 7 (нативный компилятор) пока не поддерживается `typescript-eslint` (`<6.1`) и `@nestjs/swagger` (`^5.5 \|\| ^6`). Переход — отдельной задачей         |
-| NestJS           | 12 (ESM-only)                                                   | Актуальная стабильная ветка; Fastify-адаптер                                                                                                                     |
-| Валидация        | Zod 4 + собственный `ZodValidationPipe`                         | `nestjs-zod` не поддерживает NestJS 12. Пайп занимает ~20 строк; JSON Schema для OpenAPI строится через `z.toJSONSchema()`. Те же схемы используются во frontend |
-| ORM              | Drizzle ORM 0.45 + drizzle-kit 0.31                             | Drizzle 1.0 пока в beta. SQL-миграции генерируются и хранятся в git                                                                                              |
-| БД               | PostgreSQL 18, образ `pgvector/pgvector`                        | pgvector доступен без смены образа                                                                                                                               |
-| Очереди          | BullMQ 6 + Valkey 9                                             | Open-source форк Redis (BSD)                                                                                                                                     |
-| Frontend         | Next.js 16, React 19, Tailwind 4, TanStack Query 5              | Кэширование запросов, состояния загрузки и ошибок без самописного кода                                                                                           |
-| FSRS             | `ts-fsrs` 5 (MIT)                                               | Эталонная реализация FSRS для JS/TS                                                                                                                              |
-| Пароли           | `@node-rs/argon2` (Argon2id)                                    | Готовые бинарные сборки, без node-gyp                                                                                                                            |
-| AI-сервис        | Python 3.14, FastAPI, Pydantic 2, httpx                         | Стандарт экосистемы ML                                                                                                                                           |
-| Тесты            | Vitest 5 (+ SWC для метаданных декораторов), Playwright, Pytest |                                                                                                                                                                  |
-| Линтер           | ESLint 9 + typescript-eslint 8                                  | ESLint 10 вышел, но `eslint-config-next` 16 тянет плагины react, jsx-a11y и import, которые официально поддерживают только ESLint ≤ 9                            |
+| Component        | Version                                                      | Why                                                                                                                                                                          |
+| ---------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js          | 24 LTS (Krypton)                                             | Active LTS; requires Vitest 5 and NestJS 12                                                                                                                                  |
+| pnpm / Turborepo | 12 / 2                                                       | Workspaces, task cache, `turbo prune` for Docker                                                                                                                             |
+| TypeScript       | **6.0**                                                      | TypeScript 7 (native compiler) is not supported by `typescript-eslint` (`<6.1`) and `@nestjs/swagger` (`^5.5 \|\| ^6`). Migration is a separate task                         |
+| NestJS           | 12 (ESM-only)                                                | Current stable branch; Fastify adapter                                                                                                                                       |
+| Validation       | Zod 4 + own `ZodValidationPipe`                              | `nestjs-zod` does not support NestJS 12. The pipe takes up ~20 lines; JSON Schema for OpenAPI is built through `z.toJSONSchema()`. The same schemas are used in the frontend |
+| ORM              | Drizzle ORM 0.45 + drizzle-kit 0.31                          | Drizzle 1.0 is currently in beta. SQL migrations are generated and stored in git                                                                                             |
+| DB               | PostgreSQL 18, image `pgvector/pgvector`                     | pgvector is available without changing the image                                                                                                                             |
+| Queues           | BullMQ 6 + Valkey 9                                          | Open-source fork of Redis (BSD)                                                                                                                                              |
+| Frontend         | Next.js 16, React 19, Tailwind 4, TanStack Query 5           | Caching requests, loading states and errors without custom code                                                                                                              |
+| FSRS             | `ts-fsrs` 5 (MIT)                                            | Reference implementation of FSRS for JS/TS                                                                                                                                   |
+| Passwords        | `@node-rs/argon2` (Argon2id)                                 | Ready binary builds, without node-gyp                                                                                                                                        |
+| AI-service       | Python 3.14, FastAPI, Pydantic 2, httpx                      | Standard ML ecosystem                                                                                                                                                        |
+| Tests            | Vitest 5 (+ SWC for metadata decorators), Playwright, Pytest |                                                                                                                                                                              |
+| Linter           | ESLint 9 + typescript-eslint 8                               | ESLint 10 has been released, but `eslint-config-next` 16 pulls plugins react, jsx-a11y and import, which officially support only ESLint ≤ 9                                  |
 
-## Последствия
+## Consequences
 
-- NestJS 12 работает только в ESM: относительные импорты в `apps/api` пишутся с расширением `.js` (`module: NodeNext`).
-- Vitest не генерирует метаданные декораторов через esbuild, поэтому в тестах API используется `unplugin-swc`.
+- NestJS 12 works only in ESM: relative imports in `apps/api` are written with the `.js` extension (`module: NodeNext`).
+- Vitest does not generate metadata for decorators through esbuild, so `unplugin-swc` is used in API tests.

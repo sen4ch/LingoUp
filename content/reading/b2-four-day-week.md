@@ -11,32 +11,26 @@ glossary:
   - term: productivity
     partOfSpeech: noun
     definition: the amount of useful work done in a certain amount of time
-    translation: производительность
     example: Shorter meetings improved the team's productivity.
   - term: burnout
     partOfSpeech: noun
     definition: extreme tiredness caused by working too hard for too long
-    translation: эмоциональное выгорание
     example: Long hours are a common cause of burnout.
   - term: trial
     partOfSpeech: noun
     definition: a period of testing something to see if it works
-    translation: испытание, пробный период
     example: The company ran a six-month trial.
   - term: workload
     partOfSpeech: noun
     definition: the amount of work a person has to do
-    translation: рабочая нагрузка
     example: Her workload doubled after the merger.
   - term: trade-off
     partOfSpeech: noun
     definition: a situation where you accept something bad to get something good
-    translation: компромисс
     example: There is always a trade-off between speed and quality.
   - term: in the long run
     partOfSpeech: idiom
     definition: over a long period of time in the future
-    translation: в долгосрочной перспективе
     example: Investing in training pays off in the long run.
 ---
 

@@ -18,15 +18,15 @@ import { ME_QUERY_KEY, useRequireUser } from '@/lib/auth';
 import { describeError } from '@/lib/errors';
 
 const LANGUAGES = [
-  { value: 'ru', label: 'Русский' },
-  { value: 'uk', label: 'Українська' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'uk', label: 'Ukrainian' },
   { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'fr', label: 'Français' },
-  { value: 'pt', label: 'Português' },
-  { value: 'tr', label: 'Türkçe' },
-  { value: 'zh', label: '中文' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'de', label: 'German' },
+  { value: 'fr', label: 'French' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'tr', label: 'Turkish' },
+  { value: 'zh', label: 'Chinese' },
 ];
 
 export default function ProfilePage() {

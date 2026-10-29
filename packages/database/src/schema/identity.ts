@@ -47,7 +47,7 @@ export const userSettings = identitySchema.table(
     userId: uuid('user_id')
       .primaryKey()
       .references(() => users.id, { onDelete: 'cascade' }),
-    nativeLanguage: text('native_language').notNull().default('ru'),
+    nativeLanguage: text('native_language').notNull().default('en'),
     targetLevel: text('target_level').notNull().default('B1'),
     dailyGoalMinutes: smallint('daily_goal_minutes').notNull().default(15),
     /** Explicit consent to send user content to external AI providers. Off by default. */

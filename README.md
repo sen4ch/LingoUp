@@ -1,131 +1,133 @@
-# Open English Learning Platform
+﻿# LingoUp
 
-> Рабочее название. Репозиторий: `LingoUp`.
+An open, self-hosted platform for learning English at CEFR levels A1–C2. Reading, grammar, vocabulary and spaced repetition work without AI. Optional models add personalized texts, exercises, voice conversations and listening lessons through Ollama or an OpenAI-compatible service.
 
-Открытая self-hosted платформа для изучения английского языка: чтение, словарь с интервальными повторениями, а в перспективе — аудирование, разговорная практика, письмо, грамматика, тестирование уровня и AI-репетитор. Уровни сложности соответствуют CEFR (A1–C2). Базовый функционал работает **без AI**, а AI-модели подключаются как опциональные адаптеры (Ollama, vLLM, любой OpenAI-совместимый API).
+The interface, bundled learning materials and project documentation are in English. You can choose a native language for AI vocabulary translations in your profile.
 
-## Статус
+## Features
 
-Реализован первый вертикальный срез **Interactive Reading + Personal Vocabulary**:
+- **Reading:** six original demo texts, level filters, and word or phrase selection with mouse, touch or keyboard.
+- **Vocabulary:** contextual word cards, a built-in glossary, optional AI explanations, saved examples, search, pictures and pronunciation.
+- **Review:** FSRS scheduling, persistent review history, keyboard controls and safe retry of ratings.
+- **Grammar:** ten topics across A1–C2, explanations, examples, exercises and saved progress.
+- **My texts:** private AI texts using all your saved words or selected words; vocabulary gap exercises with a fallback to saved examples.
+- **Speaking:** voice calls with an English-only AI teacher, local speech recognition, pause and interrupt controls, and conversation context.
+- **Listening:** measured 3–5 minute audio with level-appropriate questions and feedback; a separate section for films and series through publisher videos, YouTube links or local files with subtitles.
+- **Profile:** progress, 30-day activity, settings, personal data export and account deletion.
 
-- библиотека текстов с фильтром по уровню A1–C2 (6 оригинальных демо-текстов);
-- интерактивное чтение: выделение слова или фразы мышью, касанием или с клавиатуры;
-- контекстная карточка: глоссарий текста (без AI), иначе — объяснение через AI Gateway (по умолчанию `MockAIProvider`);
-- персональный словарь с контекстом, поиском и пагинацией;
-- повторения по алгоритму **FSRS** с историей в PostgreSQL и идемпотентной отправкой оценок;
-- профиль: прогресс, активность за 30 дней, настройки, экспорт и удаление персональных данных.
+AI features need a configured provider. `MockAIProvider` produces explicitly labeled demonstration output. Speaking also needs speech recognition and an English voice; listening narration uses local Piper. See [operations](docs/operations.md) for setup and limits.
 
-| Библиотека                                          | Карточка слова                                               | Повторение (FSRS)                               |
-| --------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------- |
-| ![Библиотека текстов](docs/screenshots/library.png) | ![Карточка слова при чтении](docs/screenshots/word-card.png) | ![Повторение слов](docs/screenshots/review.png) |
+| Library                                       | Word card                                                  | FSRS review                                       |
+| --------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| ![Text library](docs/screenshots/library.png) | ![Word card while reading](docs/screenshots/word-card.png) | ![Vocabulary review](docs/screenshots/review.png) |
 
-На телефоне карточка открывается снизу: [скриншот](docs/screenshots/mobile-word-card.png).
+On phones, word cards open as a bottom sheet: [mobile screenshot](docs/screenshots/mobile-word-card.png).
 
-Что ещё не реализовано — в [ROADMAP.md](ROADMAP.md) и [docs/architecture/tech-debt.md](docs/architecture/tech-debt.md).
+See the [roadmap](ROADMAP.md) and [known limitations](docs/architecture/tech-debt.md) for unfinished work.
 
-## Быстрый старт (Docker)
+## Quick start with Docker
 
-Нужен только Docker с Compose v2 (Docker Desktop на Windows/macOS или Docker Engine на Linux). Платные сервисы и GPU не нужны.
+Install Docker with Compose v2: Docker Desktop on Windows/macOS or Docker Engine on Linux. Paid services and a GPU are optional.
 
 ```bash
-git clone https://github.com/sen4ch/LingoUp.git && cd LingoUp
+git clone https://github.com/sen4ch/LingoUp.git
+cd LingoUp
 
-# 1. Секреты: создаёт .env со случайными паролями (нужен Node.js любой версии ≥ 18)
+# Create .env with random secrets; requires Node.js 18 or later.
 node scripts/init-env.mjs
-#    без Node.js: cp .env.example .env и замените каждое значение change-me-… на случайную
-#    строку (например, openssl rand -hex 24); одинаковые плейсхолдеры — одинаковыми значениями
 
-# 2. Запуск (первая сборка образов занимает несколько минут)
+# Build and start the stack. The first build takes several minutes.
 docker compose up -d --build --wait
 ```
 
-Откройте http://localhost:3000. При первом запуске сервис `migrate` применит миграции и импортирует демо-тексты. Сервисы не запустятся в production-режиме, если в `.env` остались плейсхолдеры `change-me`.
+Without Node.js, copy `.env.example` to `.env` and replace every `change-me-…` value with a random secret, for example from `openssl rand -hex 24`. Use the same value wherever the same placeholder appears. Production services reject unchanged placeholders.
 
-| Адрес                              | Что там                              |
+Open http://localhost:3000. The `migrate` service applies database migrations and imports demo content before application services start.
+
+| Address                            | Purpose                              |
 | ---------------------------------- | ------------------------------------ |
-| http://localhost:3000              | Веб-приложение                       |
-| http://localhost:4000/docs         | Swagger UI (API)                     |
-| http://localhost:4000/health/ready | Готовность API (PostgreSQL + Valkey) |
+| http://localhost:3000              | Web application                      |
+| http://localhost:4000/docs         | Swagger UI                           |
+| http://localhost:4000/health/ready | API readiness, PostgreSQL and Valkey |
 
-Опциональные профили:
+Optional profiles:
 
 ```bash
-docker compose --profile ai up -d        # + apps/ai-service (по умолчанию тоже mock)
-docker compose --profile ollama up -d    # + локальный Ollama; затем AI_PROVIDER=ai-service, AI_BACKEND=ollama
+docker compose --profile ai up -d      # Python AI service; its default backend is also mock
+docker compose --profile ollama up -d  # Adds local Ollama
 ```
 
-Как подключить настоящую модель, описано в [docs/operations.md](docs/operations.md#подключение-ai).
+To use a real local model, configure `AI_PROVIDER=ai-service` and `AI_BACKEND=ollama`, download the model and set its name. Full instructions, including host-installed Ollama, are in [operations](docs/operations.md).
 
-## Локальная разработка
+## Local development
 
-Требования: **Node.js 24 LTS** (см. `.nvmrc`), **pnpm 12.15.0** (закреплён в `packageManager`), Docker.
+Requirements: **Node.js 24 LTS** (`.nvmrc`), **pnpm 12.15.0** (`packageManager`) and Docker.
 
 ```bash
-npm install --global pnpm@12.15.0       # или: corepack enable (если corepack есть в вашем Node.js)
-pnpm setup:env                          # создаёт .env со случайными секретами
-docker compose up -d postgres valkey    # инфраструктура
+npm install --global pnpm@12.15.0
+pnpm setup:env
+docker compose up -d postgres valkey
 pnpm install
-pnpm build                              # собрать внутренние пакеты
-pnpm db:migrate                         # миграции
-pnpm content:import                     # демо-тексты
-pnpm dev                                # web :3000, api :4000, worker
+pnpm build
+pnpm db:migrate
+pnpm content:import
+pnpm dev
 ```
 
-Подробнее, в том числе про тесты, — в [docs/development.md](docs/development.md).
+This starts the web app on port 3000, the API on port 4000 and the background worker. See [development](docs/development.md) for test setup and contribution workflows.
 
-## Основные команды
+## Commands
 
-| Команда                                | Что делает                                   |
-| -------------------------------------- | -------------------------------------------- |
-| `pnpm dev`                             | Запуск web, api и worker в режиме разработки |
-| `pnpm build`                           | Сборка всех пакетов и приложений (Turborepo) |
-| `pnpm lint` / `pnpm typecheck`         | ESLint и проверка типов                      |
-| `pnpm test`                            | Unit-тесты и архитектурные тесты             |
-| `pnpm test:integration`                | Интеграционные тесты на PostgreSQL и Valkey  |
-| `pnpm test:e2e`                        | Playwright E2E против запущенного стека      |
-| `pnpm smoke:api`                       | Smoke-тест API всего сценария                |
-| `pnpm db:generate` / `pnpm db:migrate` | Генерация и применение миграций              |
-| `pnpm content:import`                  | Идемпотентный импорт текстов из `content/`   |
-| `pnpm openapi:export`                  | Экспорт OpenAPI в `docs/api/openapi.json`    |
+| Command                                | Purpose                                               |
+| -------------------------------------- | ----------------------------------------------------- |
+| `pnpm dev`                             | Start development applications                        |
+| `pnpm build`                           | Build all packages and applications through Turborepo |
+| `pnpm lint` / `pnpm typecheck`         | Run ESLint and TypeScript checks                      |
+| `pnpm test`                            | Unit and architecture tests                           |
+| `pnpm test:integration`                | Integration tests with PostgreSQL and Valkey          |
+| `pnpm test:e2e`                        | Playwright tests against the running stack            |
+| `pnpm smoke:api`                       | End-to-end API smoke test                             |
+| `pnpm db:generate` / `pnpm db:migrate` | Generate and apply migrations                         |
+| `pnpm content:import`                  | Idempotently import bundled texts and grammar         |
+| `pnpm openapi:export`                  | Export `docs/api/openapi.json`                        |
 
-## Структура
+## Repository layout
 
 ```text
 apps/
-  web/          Next.js 16 — интерфейс, прокси /api → API
-  api/          NestJS 12 + Fastify — модульный монолит (REST, OpenAPI)
-  worker/       BullMQ — outbox relay и обработчики событий
-  ai-service/   Python FastAPI — адаптеры LLM (mock / Ollama / OpenAI-совместимый)
+  web/              Next.js 16 UI and same-origin API proxy
+  api/              NestJS 12 + Fastify modular REST API
+  worker/           BullMQ outbox relay and event handlers
+  ai-service/       FastAPI model adapters, recognition and narration
 packages/
-  contracts/        Zod-схемы API и версионированные контракты событий
-  database/         Drizzle-схемы (схема PostgreSQL на модуль), миграции
-  learning-engine/  FSRS и обработка текста (без I/O)
-  ai-sdk/           Контракты AI-задач и клиент ai-service
-  ui/               Дизайн-система (Tailwind 4)
-  shared/           Конфигурация окружения, правила логирования
-content/        Учебные тексты (отдельная лицензия)
-infra/          Dockerfile-ы; monitoring/ зарезервирован
-docs/           Архитектура, ADR, API, эксплуатация
+  contracts/        Zod API schemas and versioned event contracts
+  database/         Drizzle schemas and migrations
+  learning-engine/  Pure FSRS and text-processing logic
+  ai-sdk/           AI task contracts and service client
+  ui/               Tailwind 4 design system
+  shared/           Environment configuration and logging rules
+content/            Separately licensed learning materials
+infra/              Dockerfiles and reserved monitoring configuration
+docs/               Architecture, ADRs, API and operations
 ```
 
-## Документация
+## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — архитектура, модули, события, безопасность, диаграммы
-- [docs/adr/](docs/adr/README.md) — архитектурные решения
-- [docs/development.md](docs/development.md) — разработка и тестирование
-- [docs/operations.md](docs/operations.md) — деплой, секреты, бэкапы, восстановление, AI
-- [docs/api/README.md](docs/api/README.md) — API и OpenAPI
-- [docs/architecture/tech-debt.md](docs/architecture/tech-debt.md) — технический долг и ограничения
-- [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [Architecture](ARCHITECTURE.md): module boundaries, events, security and diagrams.
+- [Architecture decisions](docs/adr/README.md).
+- [Development and testing](docs/development.md).
+- [Operations](docs/operations.md): deployment, secrets, backups, recovery and AI.
+- [API reference](docs/api/README.md) and [OpenAPI](docs/api/openapi.json).
+- [Technical debt](docs/architecture/tech-debt.md).
+- [Contributing](CONTRIBUTING.md), [security](SECURITY.md) and [code of conduct](CODE_OF_CONDUCT.md).
+- [Learning content format and licensing](content/README.md).
 
-## Лицензия
+## License
 
-Исходный код распространяется по лицензии **GNU Affero General Public License v3.0** (`AGPL-3.0-only`), полный текст — в [LICENSE](LICENSE). Обоснование — в [ADR-0007](docs/adr/0007-license-proposal.md).
+Source code is licensed under **GNU Affero General Public License v3.0** (`AGPL-3.0-only`); see [LICENSE](LICENSE) and [ADR-0007](docs/adr/0007-license-proposal.md).
 
-Если вы разворачиваете **изменённую** версию платформы и даёте к ней доступ по сети, AGPL требует предоставить пользователям исходный код этой версии. Для этого в интерфейсе есть ссылка «Исходный код»; укажите в `SOURCE_CODE_URL` адрес своего репозитория.
+If you deploy a modified version for users over a network, AGPL requires access to the corresponding source code. Set `SOURCE_CODE_URL` to your repository so the application's **Source code** link points to your version.
 
-Что лицензируется отдельно:
+Learning content is licensed separately in each file. Human-authored or substantially human-edited content uses CC BY 4.0 under project policy; fully AI-generated demo materials use CC0-1.0 without claiming human authorship or exclusive rights. See [content/README.md](content/README.md).
 
-- **Учебный контент** (`content/`) — лицензия указана в каждом файле: CC BY 4.0 для контента, на который у проекта есть права; полностью AI-сгенерированные демо-тексты — CC0-1.0, без заявления авторских прав. См. [content/README.md](content/README.md).
-- **Зависимости** — по своим лицензиям (MIT, Apache-2.0, BSD, ISC, MPL-2.0, LGPL-3.0 у libvips в `sharp` и у `edge-tts` в ai-service); все совместимы с AGPL-3.0.
-- **AI-модели** в репозиторий не входят; лицензию выбранной модели (например, в Ollama) проверяйте отдельно.
+Dependencies retain their own licenses. These include MIT, Apache-2.0, BSD, ISC, MPL-2.0, LGPL-3.0 for libvips in `sharp` and `edge-tts`, and GPL-3.0 for Piper. Model weights are not included in this repository; check each model and voice license separately.

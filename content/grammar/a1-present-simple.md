@@ -1,8 +1,8 @@
 ---
 slug: a1-present-simple
-title: 'Present Simple: привычки и факты'
+title: 'Present Simple: habits and facts'
 level: A1
-summary: 'Настоящее простое время: окончание -s у he/she/it, вспомогательные do и does.'
+summary: 'The present simple: -s with he/she/it, and the helping verbs do and does.'
 author: AI-generated for the LingoUp project (no human author)
 provenance: ai-generated
 license: CC0-1.0
@@ -11,49 +11,49 @@ exercises:
     prompt: 'She ___ coffee every morning.'
     options: [drink, drinks, drinking]
     answer: drinks
-    explanation: 'С he / she / it к глаголу добавляется -s.'
+    explanation: 'Add -s to the verb with he / she / it.'
   - type: choice
     prompt: 'We ___ in a small town.'
     options: [live, lives, living]
     answer: live
-    explanation: 'С we глагол без окончания.'
+    explanation: 'Use the base form of the verb with we.'
   - type: gap
     prompt: 'He ___ (not / like) cold weather.'
     answers: ["doesn't like", 'does not like']
-    explanation: "Отрицание с he / she / it: doesn't + глагол без -s."
+    explanation: "With he / she / it, use doesn't + the verb without -s."
   - type: gap
     prompt: '___ you speak English?'
     answers: [do]
-    explanation: 'Вопрос с I / you / we / they строится с Do.'
+    explanation: 'Use Do to ask a question with I / you / we / they.'
   - type: gap
     prompt: 'My brother ___ (watch) TV in the evening.'
     answers: [watches]
-    explanation: 'После -ch добавляется -es: watch → watches.'
+    explanation: 'Add -es after -ch: watch → watches.'
   - type: choice
     prompt: '___ your mother work in a hospital?'
     options: [Do, Does, Is]
     answer: Does
-    explanation: 'С he / she / it в вопросе используется Does, а глагол остаётся без -s.'
+    explanation: 'Use Does in a question with he / she / it, and keep the main verb without -s.'
 ---
 
-## Когда используется
+## When to use it
 
-Present Simple описывает **привычки**, **регулярные действия** и **факты**.
+The present simple describes **habits**, **regular actions** and **facts**.
 
 > I get up at seven every day.
 > Water boils at 100 degrees.
 
-## Окончание -s
+## Adding -s
 
-С **he**, **she**, **it** к глаголу добавляется **-s**: **she works**, **it rains**. После -s, -sh, -ch, -x, -o добавляется **-es**: **he watches**, **she goes**.
+With **he**, **she** and **it**, add **-s** to the verb: **she works**, **it rains**. After -s, -sh, -ch, -x and -o, add **-es**: **he watches**, **she goes**.
 
-## Отрицание и вопрос
+## Negatives and questions
 
-Нужен вспомогательный глагол **do** или **does** (для he/she/it). Основной глагол при этом без окончания.
+Use the helping verb **do**, or **does** with he/she/it. Keep the main verb in its base form.
 
 - I **don't** like tea. — **Do** you like tea?
 - She **doesn't** like tea. — **Does** she like tea?
 
 > He doesn't work on Sundays.
 
-Частые слова-подсказки: **always**, **usually**, **often**, **sometimes**, **never**, **every day**.
+Common time expressions include **always**, **usually**, **often**, **sometimes**, **never** and **every day**.

@@ -11,32 +11,26 @@ glossary:
   - term: stall
     partOfSpeech: noun
     definition: a table or small shop in a market where things are sold
-    translation: прилавок, палатка
     example: The fruit stall sells apples and pears.
   - term: crowded
     partOfSpeech: adjective
     definition: full of people
-    translation: многолюдный
     example: The market is crowded on Saturdays.
   - term: fresh
     partOfSpeech: adjective
     definition: recently picked or made, not old
-    translation: свежий
     example: These tomatoes are very fresh.
   - term: bargain
     partOfSpeech: noun
     definition: something you buy for less than its usual price
-    translation: выгодная покупка
     example: Three melons for five euros is a bargain.
   - term: change
     partOfSpeech: noun
     definition: the money you get back when you pay more than the price
-    translation: сдача
     example: Here is your change.
   - term: carry
     partOfSpeech: verb
     definition: to hold something and take it somewhere
-    translation: нести
     example: Can you carry this bag for me?
 ---
 

@@ -11,32 +11,26 @@ glossary:
   - term: counterintuitive
     partOfSpeech: adjective
     definition: different from what you would naturally expect
-    translation: противоречащий интуиции
     example: It is counterintuitive, but resting can make you faster.
   - term: retention
     partOfSpeech: noun
     definition: the ability to keep information in your memory
-    translation: запоминание, удержание в памяти
     example: Regular testing improves long-term retention.
   - term: cram
     partOfSpeech: verb
     definition: to study a lot of material in a very short time, usually just before an exam
-    translation: зубрить в последний момент
     example: He crammed all night before the test.
   - term: retrieve
     partOfSpeech: verb
     definition: to find and bring back information, for example from memory
-    translation: извлекать
     example: She struggled to retrieve the word she needed.
   - term: diminishing returns
     partOfSpeech: phrase
     definition: a situation where extra effort produces less and less benefit
-    translation: убывающая отдача
     example: After two hours, studying gives diminishing returns.
   - term: by the same token
     partOfSpeech: idiom
     definition: for the same reason; in a similar way
-    translation: по той же причине
     example: By the same token, small habits can have large effects.
 ---
 

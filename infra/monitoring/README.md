@@ -1,4 +1,4 @@
 # Monitoring
 
-Зарезервировано под конфигурацию Prometheus и Grafana (этап 1 в [ROADMAP.md](../../ROADMAP.md)).
-Сейчас доступны структурированные JSON-логи и health checks (см. [docs/operations.md](../../docs/operations.md)).
+Reserved for Prometheus and Grafana configuration (stage 1 in [ROADMAP.md](../../ROADMAP.md)).
+Structured JSON logs and health checks are currently available (see [docs/operations.md](../../docs/operations.md)).

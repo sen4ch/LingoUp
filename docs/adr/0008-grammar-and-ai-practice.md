@@ -1,61 +1,61 @@
-# ADR-0008: Модуль Grammar, личные AI-тексты и AI-упражнения по словарю
+# ADR-0008: Grammar Module, Personal AI Texts and AI Dictionary Exercises
 
-- Статус: принято
-- Дата: 2026-10-27
+- Status: Accepted
+- Date: 2026-10-27
 
-## Контекст
+## Context
 
-После среза «чтение + словарь» нужны:
+After the 'Reading + Dictionary' slice, the following are needed:
 
-1. Грамматика по уровням CEFR: правило с примерами и упражнения с автоматической проверкой.
-2. Тексты для чтения, составленные AI из слов, которые учит пользователь.
-3. Упражнения по словарю: предложения с пропуском, которые пишет AI.
+1. Grammar by CEFR levels: rule with examples and exercises with automatic checking.
+2. Reading texts composed by AI from words the user is learning.
+3. Dictionary exercises: sentences with gaps written by AI.
 
-Для текстов пользователь выбирает все слова словаря или отмечает нужные вручную (минимум 3). Для упражнений слова подбирает система: сначала те, что пора повторять по FSRS.
+For texts, the user selects all words from the dictionary or manually marks the needed ones (minimum 3). For exercises, the system selects the words: first those that are due for repetition according to FSRS.
 
-## Решение
+## Solution
 
-### Grammar — отдельный модуль со своей схемой
+### Grammar — a separate module with its own schema
 
-- Схема `grammar`: `topics` (правило как структурированные блоки `jsonb`), `exercises` (`choice` | `gap`, допустимые ответы), `attempts` (история ответов пользователя).
-- Темы — Markdown-файлы в `content/grammar/` с YAML-frontmatter; импорт идемпотентный, по хешу содержимого, как у текстов. Правило хранится не как HTML, а как блоки (`heading`, `paragraph`, `list`, `example`) с выделением `**…**`. Web рендерит их React-элементами, поэтому санитайзер HTML не нужен.
-- Правила и упражнения публичны; правильные ответы клиенту **не отдаются**. Проверка — `POST /v1/grammar/exercises/:id/attempts`, ответ нормализуется (регистр, пробелы, апострофы).
-- Каждая попытка публикует `ExerciseCompleted` через outbox; Progress считает `exercisesDone`.
+- Schema `grammar`: `topics` (rule as structured blocks `jsonb`), `exercises` (`choice` | `gap`, allowed answers), `attempts` (user's attempt history).
+- Topics — Markdown files in `content/grammar/` with YAML-frontmatter; import is idempotent, by content hash, like texts. The rule is stored not as HTML, but as blocks (`heading`, `paragraph`, `list`, `example`) with emphasis `**…**`. Web renders them as React elements, so an HTML sanitizer is not needed.
+- Rules and exercises are public; correct answers are **not sent** to the client. Checking — `POST /v1/grammar/exercises/:id/attempts`, response is normalized (case, spaces, apostrophes).
+- Each attempt publishes `ExerciseCompleted` through outbox; Progress counts `exercisesDone`.
 
-### Личные AI-тексты — в модуле Content
+### Personal AI Texts — in the Content module
 
-- Сгенерированный текст — это обычный текст для читалки, поэтому он хранится в `content.texts` с `owner_user_id`. Публичный каталог исключает такие тексты, а по slug их видит только владелец (для остальных — 404, а не 403, чтобы не раскрывать существование).
-- Генерацию оркестрирует Learning (`TextGenerationService`): слова берёт у Vocabulary, уровень — из настроек Identity, вызывает AI Gateway и сохраняет текст через публичный `PrivateTextsService` модуля Content. Модуль Content ничего не знает об AI.
-- `provenance = ai-generated`, лицензия `CC0-1.0`, автор — «AI-generated for you (no human author)»: у AI-текста нет автора-человека и исключительных прав (см. `content/README.md`).
-- Слова, которые модель не использовала (с учётом обычных форм: improve → improved), возвращаются в `missingTerms` и показываются пользователю.
+- Generated text is regular text for a screen reader, so it is stored in `content.texts` with `owner_user_id`. Public directory excludes such texts, and only the owner can see them by slug (others get 404, not 403, to avoid revealing existence).
+- Generation is orchestrated by Learning (`TextGenerationService`): words are taken from Vocabulary, level is taken from Identity settings, AI Gateway is called, and the text is saved through the public `PrivateTextsService` module of Content. The Content module knows nothing about AI.
+  `provenance = ai-generated`, license `CC0-1.0`, author — «AI-generated for you (no human author)»: AI-generated text has no human author and no copyright (see `content/README.md`).
+- Words that the model did not use (taking into account common forms: improve → improved), are returned in `missingTerms` and shown to the user.
 
-### AI-упражнения по словарю — в модуле Vocabulary
+### AI Vocabulary Exercises — in the Vocabulary module
 
-- `POST /v1/vocabulary/practice` подбирает до 8 слов (минимум 3), просит AI написать предложения с пропуском `___` и проверяет каждое (пропуск ровно один, слово не осталось в тексте). Невалидные предложения отбрасываются.
-- Если AI недоступен или отключён, упражнение строится из сохранённых предложений-контекстов слов (`source: "context"`). Ошибка — только если нет ни того, ни другого.
-- Это самопроверка: правильный ответ приходит вместе с упражнением, итог отправляется в `POST /v1/vocabulary/practice/complete` и публикует `ExerciseCompleted`. Подделка результата влияет только на собственную статистику пользователя.
-- ai-service сам вставляет пропуск, если модель оставила слово в предложении, и отбрасывает только негодные элементы, а не весь набор: малые локальные модели регулярно забывают про `___`.
+- `POST /v1/vocabulary/practice` selects up to 8 words (minimum 3), asks AI to write sentences with a missing `___`, and checks each one (exactly one blank, the word is not left in the text). Invalid sentences are discarded.
+- If AI is unavailable or disabled, the exercise is built from saved sentence-contexts of words (`source: "context"`). An error occurs only if neither is available.
+- This is self-check: the correct answer comes with the exercise, and the result is sent to `POST /v1/vocabulary/practice/complete` and publishes `ExerciseCompleted`. Faking the result only affects the user's own statistics.
+- ai-service automatically inserts the blank if the model leaves a word in the sentence, and discards only the invalid items, not the entire set: small local models often forget about `___`.
 
-### Синхронная генерация
+### Synchronous Generation
 
-Генерация выполняется в HTTP-запросе, а не в фоновой задаче:
+Generation is performed in an HTTP request, not in a background task:
 
-- для генерации отдельный таймаут `AI_GENERATION_TIMEOUT_MS` (по умолчанию 120 с) вместо интерактивного `AI_TIMEOUT_MS`; прокси web ждёт эти маршруты до 150 с;
-- отдельные rate limit: 10 текстов и 20 упражнений в минуту на пользователя, плюс общая дневная квота AI;
-- генерирующие задачи не повторяются при ошибке (неидемпотентны).
+- for generation, an individual timeout `AI_GENERATION_TIMEOUT_MS` (default 120 seconds) instead of interactive `AI_TIMEOUT_MS`; the web proxy waits for these routes up to 150 seconds;
+- individual rate limit: 10 texts and 20 exercises per minute per user, plus a daily AI quota;
+- generation tasks are not retried on error (non-idempotent).
 
-На qwen3:8b через локальный Ollama текст создаётся за 4–6 с, упражнение — за ~4 с, поэтому очередь и опрос статуса пока не оправданы.
+On qwen3:8b through local Ollama, text is created in 4–6 seconds, exercise — in ~4 seconds, so the queue and status polling are not yet justified.
 
-## Альтернативы
+## Alternatives
 
-- **Генерация в worker через BullMQ** с опросом статуса или SSE. Правильно для медленных моделей и большой нагрузки, но требует хранить статус задачи и усложняет UI. Отложено (см. tech-debt).
-- **Грамматика внутри Content.** Упражнения с проверкой и история попыток — другая модель данных и другой жизненный цикл, чем у текстов; отдельный модуль проще удалить или вынести.
-- **Личные тексты в отдельной схеме Learning.** Пришлось бы дублировать читалку, токенизацию и сохранение слов из текста.
+- **Generation in worker via BullMQ** with status polling or SSE. Correct for slow models and high load, but requires storing the task status and complicates the UI. Deferred (see tech-debt).
+- **Grammar inside Content.** Exercises with checking and attempt history — another data model and lifecycle than texts; a separate module is simpler to remove or extract.
+- **Personal texts in a separate Learning schema.** The reader, tokenization, and saving words from the text would have to be duplicated.
 
-## Последствия
+## Consequences
 
-- Новый модуль `grammar` и схема `grammar`; миграция `0001_grammar-and-private-texts`.
-- `content.texts` получил `provenance`, `owner_user_id` (FK на `identity.users`, каскадное удаление) и `focus_terms`; формат хеша контента — `v2`, поэтому при первом импорте после обновления все тексты помечаются как обновлённые.
-- `ExerciseCompleted` теперь публикуется (Grammar и Vocabulary), `progress.daily_activity.exercises_done`.
-- Экспорт персональных данных включает разделы `grammar` и `privateTexts`.
-- Долгий HTTP-запрос держит соединение; при росте нагрузки генерацию нужно перенести в worker.
+- A new `grammar` module and `grammar` schema; migration `0001_grammar-and-private-texts`.
+- `content.texts` has received `provenance`, `owner_user_id` (FK to `identity.users`, cascading deletion) and `focus_terms`; content format hash — `v2`, so upon first import after an update, all texts are marked as updated.
+- `ExerciseCompleted` is now published (Grammar and Vocabulary), `progress.daily_activity.exercises_done`.
+- Export of personal data includes sections `grammar` and `privateTexts`.
+- A long HTTP request holds the connection; when load increases, generation needs to be moved to a worker.
