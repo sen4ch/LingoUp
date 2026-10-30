@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ProgressSummary } from '@lingoup/contracts';
+import { LearningSkillSchema, type LearningSkill, type ProgressSummary } from '@lingoup/contracts';
 import type { Database } from '@lingoup/database';
-import { dailyActivity } from '@lingoup/database/schema/progress';
-import { and, asc, eq, gte, max, sum } from 'drizzle-orm';
+import { dailyActivity, skillRewards } from '@lingoup/database/schema/progress';
+import { and, asc, eq, gte, max, sum, count, sql } from 'drizzle-orm';
+import { UserSettingsQuery } from '../../identity/index.js';
+import { learningDevelopment } from '../domain/development.js';
 import {
   DATABASE,
   PersonalDataRegistry,
@@ -21,8 +23,36 @@ export class ProgressService implements PersonalDataExporter {
     @Inject(DATABASE) private readonly db: Database,
     private readonly vocabularyStats: VocabularyStatsQuery,
     personalData: PersonalDataRegistry,
+    private readonly settings: UserSettingsQuery,
   ) {
     personalData.register(this);
+  }
+
+  async development(userId: string, now = new Date()) {
+    const since = new Date(`${now.toISOString().slice(0, 10)}T00:00:00.000Z`);
+    const [settings, rows] = await Promise.all([
+      this.settings.getForUser(userId),
+      this.db
+        .select({
+          skill: skillRewards.skill,
+          total: count(),
+          today:
+            sql<number>`count(*) filter (where ${skillRewards.earnedAt} >= ${since.toISOString()}::timestamptz)`.mapWith(
+              Number,
+            ),
+        })
+        .from(skillRewards)
+        .where(eq(skillRewards.userId, userId))
+        .groupBy(skillRewards.skill),
+    ]);
+    const totals: Partial<Record<LearningSkill, number>> = {};
+    const today: Partial<Record<LearningSkill, number>> = {};
+    for (const row of rows) {
+      const skill = LearningSkillSchema.parse(row.skill);
+      totals[skill] = row.total;
+      today[skill] = row.today;
+    }
+    return learningDevelopment(settings.dailyGoalMinutes, settings.targetLevel, totals, today, now);
   }
 
   async summary(userId: string, now = new Date()): Promise<ProgressSummary> {
@@ -71,6 +101,9 @@ export class ProgressService implements PersonalDataExporter {
       .orderBy(asc(dailyActivity.day));
     return {
       dailyActivity: rows.map(({ userId: _userId, updatedAt: _updatedAt, ...row }) => row),
+      skillRewards: (
+        await this.db.select().from(skillRewards).where(eq(skillRewards.userId, userId))
+      ).map(({ userId: _userId, ...row }) => row),
     };
   }
 }

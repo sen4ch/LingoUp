@@ -84,6 +84,9 @@ export class GrammarRepository {
         id: exercises.id,
         answers: exercises.answers,
         explanation: exercises.explanation,
+        prompt: exercises.prompt,
+        topicSlug: topics.slug,
+        topicTitle: topics.title,
       })
       .from(exercises)
       .innerJoin(topics, eq(topics.id, exercises.topicId))

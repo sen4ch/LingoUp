@@ -11,6 +11,8 @@ import type { AIProvider, DataLocality } from '../application/ai-provider.js';
 export const MOCK_PROVIDER_NAME = 'mock';
 
 const SUPPORTED: readonly AiTaskType[] = [
+  'exam-assessment',
+  'writing-assessment',
   'speaking-tutor',
   'listening-generation',
   'word-explanation',
@@ -49,6 +51,21 @@ export class MockAIProvider implements AIProvider {
 
   private output(task: ImplementedAiTaskType, input: unknown): unknown {
     switch (task) {
+      case 'exam-assessment': {
+        const review = { band: 0, feedback: 'Demo only. Configure a real AI provider for an assessment.' };
+        return { writingTask1: review, writingTask2: review, speakingLanguage: review };
+      }
+      case 'writing-assessment': {
+        const { level, topic, messages } = input as AiTaskInput<'writing-assessment'>;
+        return {
+          subject: `Practice email: ${topic}`,
+          reply: messages.length
+            ? 'Hi again,\n\nThank you for your email. What would you like to do next weekend? Tell me about your plans.\n\nBest,\nAlex'
+            : `Hi,\n\nLet's exchange emails about ${topic}. What do you enjoy doing in your free time?\n\nBest,\nAlex`,
+          feedback: `Demo only (${level}): no language model is configured, so your writing has not been assessed.`,
+          issues: [],
+        };
+      }
       case 'listening-generation': {
         const { level } = input as AiTaskInput<'listening-generation'>;
         return {

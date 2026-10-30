@@ -49,7 +49,26 @@ class SpeakingTutorInput(BaseModel):
     messages: list[SpeakingMessage] = Field(max_length=20)
 
 
+class SpeakingCorrection(BaseModel):
+    quote: str = Field(min_length=1, max_length=1000)
+    replacement: str = Field(max_length=1000)
+    category: Literal["word", "grammar", "suggestion"]
+    errorType: Literal[
+        "sentence_structure",
+        "word_order",
+        "verb_tense",
+        "agreement",
+        "articles",
+        "word_form",
+        "word_choice",
+        "naturalness",
+    ]  # noqa: N815
+    explanation: str = Field(min_length=1, max_length=600)
+    example: str | None = Field(default=None, min_length=1, max_length=600)
+
+
 class SpeakingTutorOutput(BaseModel):
+    corrections: list[SpeakingCorrection] = Field(default_factory=list, max_length=1)
     reply: str = Field(min_length=1, max_length=600)
 
     @field_validator("reply")

@@ -3,7 +3,7 @@ import type { DomainEvent } from '@lingoup/contracts/events';
 import { createDatabase, type DatabaseConnection } from '@lingoup/database';
 import { users } from '@lingoup/database/schema/identity';
 import { outboxEvents, processedEvents } from '@lingoup/database/schema/platform';
-import { dailyActivity } from '@lingoup/database/schema/progress';
+import { dailyActivity, skillRewards } from '@lingoup/database/schema/progress';
 import { requireTestDatabaseUrl } from '@lingoup/database/testing';
 import { Queue } from 'bullmq';
 import { eq } from 'drizzle-orm';
@@ -49,6 +49,49 @@ function wordSaved(userId: string, occurredAt = '2026-10-26T10:00:00.000Z'): Dom
 }
 
 describe('ProgressProjector', () => {
+  it('awards each practice once even when different events repeat the same completed result', async () => {
+    const userId = await createUser();
+    const projector = new ProgressProjector(connection.db);
+    const event: DomainEvent = {
+      id: randomUUID(),
+      type: 'PracticeCompleted',
+      version: 1,
+      occurredAt: '2026-10-30T10:00:00.000Z',
+      userId,
+      payload: { skill: 'listening', sourceKey: `listening:${randomUUID()}` },
+    };
+    await projector.handle(event);
+    await projector.handle(event);
+    await projector.handle({ ...event, id: randomUUID() });
+    const rewards = await connection.db
+      .select()
+      .from(skillRewards)
+      .where(eq(skillRewards.userId, userId));
+    expect(rewards).toHaveLength(1);
+    expect(rewards[0]?.skill).toBe('listening');
+    const [activity] = await connection.db
+      .select()
+      .from(dailyActivity)
+      .where(eq(dailyActivity.userId, userId));
+    expect(activity?.exercisesDone).toBe(1);
+  });
+  it('awards grammar only for the first correct result on an exercise', async () => {
+    const userId = await createUser();
+    const projector = new ProgressProjector(connection.db);
+    const exerciseId = randomUUID();
+    for (const correct of [false, true, true])
+      await projector.handle({
+        id: randomUUID(),
+        type: 'ExerciseCompleted',
+        version: 1,
+        occurredAt: '2026-10-30T10:00:00.000Z',
+        userId,
+        payload: { exerciseId, attemptId: randomUUID(), correct, score: correct ? 1 : 0 },
+      });
+    expect(
+      await connection.db.select().from(skillRewards).where(eq(skillRewards.userId, userId)),
+    ).toHaveLength(1);
+  });
   it('projects each event exactly once, even when delivered twice', async () => {
     const userId = await createUser();
     const projector = new ProgressProjector(connection.db);

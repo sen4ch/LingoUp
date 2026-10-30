@@ -29,6 +29,34 @@
       "when": 1793218145753,
       "tag": "0003_english-default",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793356982916,
+      "tag": "0004_skill-rewards",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793389274335,
+      "tag": "0005_mistake-journal",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793392211145,
+      "tag": "0006_reading-checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793393253956,
+      "tag": "0007_weekly-study-time",
+      "breakpoints": true
     }
   ]
 }

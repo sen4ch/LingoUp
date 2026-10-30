@@ -8,6 +8,8 @@ export const en = {
     vocabulary: 'Vocabulary',
     review: 'Review',
     speaking: 'Speaking',
+    writing: 'Writing',
+    exams: 'Exams',
     listening: 'Listening',
     profile: 'Profile',
     login: 'Log in',

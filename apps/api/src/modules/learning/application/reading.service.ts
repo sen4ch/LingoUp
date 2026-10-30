@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { ReadingCompletion, ReadingCompletionsResponse } from '@lingoup/contracts';
-import type { Database } from '@lingoup/database';
+import type { Database, DbExecutor } from '@lingoup/database';
 import { textCompletions } from '@lingoup/database/schema/learning';
 import { and, desc, eq } from 'drizzle-orm';
 import {
@@ -26,10 +26,14 @@ export class ReadingService implements PersonalDataExporter {
   }
 
   /** Marks a text as read. Idempotent: the event is emitted only the first time. */
-  async complete(userId: string, slug: string): Promise<ReadingCompletion> {
+  async complete(
+    userId: string,
+    slug: string,
+    transaction?: DbExecutor,
+  ): Promise<ReadingCompletion> {
     const text = await this.content.findTextRef(slug, userId);
     if (!text) throw notFound('Text');
-    return this.db.transaction(async (tx) => {
+    const save = async (tx: DbExecutor): Promise<ReadingCompletion> => {
       const [inserted] = await tx
         .insert(textCompletions)
         .values({ userId, textId: text.id, textSlug: text.slug })
@@ -49,7 +53,8 @@ export class ReadingService implements PersonalDataExporter {
         .from(textCompletions)
         .where(and(eq(textCompletions.userId, userId), eq(textCompletions.textId, text.id)));
       return { textSlug: text.slug, completedAt: existing!.completedAt.toISOString() };
-    });
+    };
+    return transaction ? save(transaction) : this.db.transaction(save);
   }
 
   async completions(userId: string): Promise<ReadingCompletionsResponse> {

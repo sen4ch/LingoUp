@@ -8,6 +8,7 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from .config import Settings
+from .exams import ExamInput, ExamOutput, exam_messages
 from .listening import ListeningInput, ListeningOutput
 from .listening import generate_listening as create_listening
 from .prompts import (
@@ -21,6 +22,12 @@ from .prompts import (
     speaking_messages,
     word_explanation_messages,
 )
+from .reading_check import (
+    ReadingCheckInput,
+    ReadingCheckOutput,
+    reading_check_messages,
+    validate_reading_check,
+)
 from .schemas import (
     GAP,
     ExerciseGenerationInput,
@@ -33,6 +40,16 @@ from .schemas import (
     WordExplanationInput,
     WordExplanationOutput,
 )
+from .writing import (
+    CompleteWritingReview,
+    WritingEmail,
+    WritingInput,
+    WritingOutput,
+    protect_ambiguous_intent,
+    validate_writing_review,
+    writing_messages,
+    writing_review_messages,
+)
 
 
 class ProviderError(Exception):
@@ -40,9 +57,15 @@ class ProviderError(Exception):
 
 
 class Provider(Protocol):
+    async def reading_check(self, task: ReadingCheckInput) -> ReadingCheckOutput: ...
+
     name: str
     model: str
     data_locality: Literal["local", "external"]
+
+    async def assess_exam(self, task: ExamInput) -> ExamOutput: ...
+
+    async def writing_turn(self, task: WritingInput) -> WritingOutput: ...
 
     async def explain_word(self, task: WordExplanationInput) -> WordExplanationOutput: ...
 
@@ -110,9 +133,27 @@ def parse_exercises(raw: str) -> ExerciseGenerationOutput:
 class MockProvider:
     """Deterministic placeholder; output is explicitly labelled as such."""
 
+    async def reading_check(self, task: ReadingCheckInput) -> ReadingCheckOutput:
+        raise ProviderError("A language model is required for new reading questions")
+
     name = "mock"
     model = "mock-v1"
     data_locality: Literal["local", "external"] = "local"
+
+    async def assess_exam(self, task: ExamInput) -> ExamOutput:
+        review = {"band": 0, "feedback": "Demo only. Configure an AI backend for real assessment."}
+        return ExamOutput(writingTask1=review, writingTask2=review, speakingLanguage=review)
+
+    async def writing_turn(self, task: WritingInput) -> WritingOutput:
+        return WritingOutput(
+            subject=f"Practice email: {task.topic}",
+            reply=(
+                "Hi,\n\nWhat would you like to do this weekend? "
+                "Tell me about your plans.\n\nBest,\nAlex"
+            ),
+            feedback="Demo only: your writing has not been assessed. Configure a real AI backend.",
+            issues=[],
+        )
 
     async def generate_listening(self, task: ListeningInput) -> ListeningOutput:
         from .listening import question_count
@@ -194,9 +235,63 @@ class MockProvider:
 class LlmProvider:
     """Tasks on top of a backend that turns chat messages into JSON matching a schema."""
 
+    async def reading_check(self, task: ReadingCheckInput) -> ReadingCheckOutput:
+        raw = await self.complete_json(
+            reading_check_messages(task), ReadingCheckOutput.model_json_schema(), 0.2
+        )
+        try:
+            return validate_reading_check(task, parse_output(raw, ReadingCheckOutput))
+        except ValueError as error:
+            raise ProviderError("Reading questions failed validation") from error
+
     name: str
     model: str
     data_locality: Literal["local", "external"]
+
+    async def assess_exam(self, task: ExamInput) -> ExamOutput:
+        raw = await self.complete_json(exam_messages(task), ExamOutput.model_json_schema(), 0.1)
+        return parse_output(raw, ExamOutput)
+
+    async def writing_turn(self, task: WritingInput) -> WritingOutput:
+        review = None
+        if task.messages:
+            raw_review = await self.complete_json(
+                writing_review_messages(task), CompleteWritingReview.model_json_schema(), 0.1
+            )
+            review = validate_writing_review(
+                task,
+                protect_ambiguous_intent(task, parse_output(raw_review, CompleteWritingReview)),
+            )
+            ambiguities = [issue for issue in review.issues if issue.errorType == "ambiguity"]
+            if ambiguities:
+                # Clarify intent before continuing; do not let another generation assume a reading.
+                questions = [
+                    f'When you wrote "{issue.quote}", did you mean '
+                    + " or ".join(f'"{option.replacement}"' for option in issue.alternatives)
+                    + "?"
+                    for issue in ambiguities[:3]
+                ]
+                return WritingOutput(
+                    subject="A quick clarification",
+                    reply="Hi,\n\nThank you for your email. "
+                    + " ".join(questions)
+                    + "\n\nBest,\nAlex",
+                    feedback=review.feedback,
+                    issues=review.issues,
+                    correctedText=None,
+                    needsClarification=True,
+                )
+        raw = await self.complete_json(
+            writing_messages(task, review), WritingEmail.model_json_schema(), 0.4
+        )
+        email = parse_output(raw, WritingEmail)
+        return WritingOutput(
+            subject=email.subject,
+            reply=email.reply,
+            feedback=review.feedback if review else "Reply to Alex's questions in your own words.",
+            issues=review.issues if review else [],
+            correctedText=review.correctedText if review else None,
+        )
 
     async def complete_json(
         self, messages: Messages, schema: dict[str, Any], temperature: float

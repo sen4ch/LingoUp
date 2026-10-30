@@ -20,6 +20,7 @@ interface RequestOptions<T> {
   /** Response schema; responses are validated so contract drift fails loudly. */
   schema?: z.ZodType<T>;
   signal?: AbortSignal;
+  keepalive?: boolean;
 }
 
 /**
@@ -45,6 +46,7 @@ export async function api<T = void>(path: string, options: RequestOptions<T> = {
             ? options.body
             : JSON.stringify(options.body),
       ...(options.signal ? { signal: options.signal } : {}),
+      ...(options.keepalive ? { keepalive: true } : {}),
     });
   } catch (error) {
     if (options.signal?.aborted) throw error;

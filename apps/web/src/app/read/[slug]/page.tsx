@@ -4,6 +4,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Reader } from '@/components/reader/reader';
+import { ReadingComprehension } from '@/components/reader/reading-comprehension';
+import { ContinueLearning } from '@/components/continue-learning';
+import { PracticeTimer } from '@/components/practice-timer';
 import { t } from '@/i18n';
 import { serverApi, ServerApiError } from '@/lib/server-api';
 
@@ -56,7 +59,10 @@ export default async function ReadPage({ params }: { params: Promise<{ slug: str
           </p>
         ) : null}
       </header>
+      <PracticeTimer skill="reading" />
       <Reader text={text} />
+      <ReadingComprehension key={text.id} slug={text.slug} />
+      <ContinueLearning />
       <footer className="border-t border-border pt-4 text-xs text-muted">
         {t.reader.licence(text.author, text.license)}
       </footer>

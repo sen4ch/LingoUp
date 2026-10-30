@@ -21,7 +21,11 @@ export function MarkAsRead({ slug }: { slug: string }) {
         method: 'POST',
         schema: ReadingCompletionSchema,
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: COMPLETIONS_QUERY_KEY }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: COMPLETIONS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: ['learning', 'next-practice'] }),
+      ]),
   });
 
   if (!hydrated || !user) return null;

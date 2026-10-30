@@ -88,6 +88,15 @@ export const SKILLS = [
 ] as const;
 export const SkillSchema = z.enum(SKILLS);
 
+export const PracticeCompletedV1 = defineEvent(
+  'PracticeCompleted',
+  1,
+  z.object({
+    skill: SkillSchema,
+    sourceKey: z.string().min(1).max(160),
+  }),
+);
+
 export const AssessmentCompletedV1 = defineEvent(
   'AssessmentCompleted',
   1,
@@ -127,6 +136,7 @@ export const DomainEventSchema = z.discriminatedUnion('type', [
   LessonCompletedV1,
   LessonStartedV1,
   ExerciseCompletedV1,
+  PracticeCompletedV1,
   AssessmentCompletedV1,
   SkillLevelUpdatedV1,
   LearningPlanUpdatedV1,

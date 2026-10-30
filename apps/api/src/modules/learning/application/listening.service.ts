@@ -10,6 +10,7 @@ import type { Redis } from 'ioredis';
 import { DomainError, notFound, VALKEY } from '../../../platform/index.js';
 import { AiGateway, ListeningAudioGateway, MOCK_PROVIDER_NAME } from '../../ai-gateway/index.js';
 import { UserSettingsQuery } from '../../identity/index.js';
+import { PracticeEvents } from './practice-events.service.js';
 
 const TTL = 24 * 60 * 60;
 interface StoredLesson {
@@ -24,6 +25,7 @@ export class ListeningService {
     private readonly audio: ListeningAudioGateway,
     private readonly settings: UserSettingsQuery,
     @Inject(VALKEY) private readonly cache: Redis,
+    private readonly practice: PracticeEvents,
   ) {}
   private key(userId: string, id: string) {
     return `listening:v1:${userId}:${id}`;
@@ -84,8 +86,11 @@ export class ListeningService {
       explanation: question.explanation,
       evidence: question.evidence,
     }));
+    const correct = results.filter((result) => result.correct).length;
+    if (!stored.lesson.isMock && correct / results.length >= 0.6)
+      await this.practice.complete(userId, 'listening', `listening:${id}`);
     return {
-      correct: results.filter((result) => result.correct).length,
+      correct,
       total: results.length,
       transcript: content.script,
       results,

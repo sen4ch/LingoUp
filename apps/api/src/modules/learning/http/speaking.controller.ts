@@ -12,6 +12,8 @@ import type { FastifyRequest } from 'fastify';
 import { DomainError, ZodBody, ZodResponse } from '../../../platform/index.js';
 import { AiGateway, MOCK_PROVIDER_NAME, RecognitionGateway } from '../../ai-gateway/index.js';
 import { CurrentUser, UserSettingsQuery, type AuthenticatedUser } from '../../identity/index.js';
+import { PracticeEvents } from '../application/practice-events.service.js';
+import { MistakeJournal } from '../../progress/index.js';
 
 @ApiTags('learning')
 @Controller('v1/learning/speaking')
@@ -20,6 +22,8 @@ export class SpeakingController {
     private readonly ai: AiGateway,
     private readonly recognition: RecognitionGateway,
     private readonly settings: UserSettingsQuery,
+    private readonly practice: PracticeEvents,
+    private readonly journal: MistakeJournal,
   ) {}
 
   @Post('turn')
@@ -40,9 +44,27 @@ export class SpeakingController {
       throw new DomainError('AI_UNAVAILABLE', 'The teacher is unavailable', {
         aiStatus: result.status,
       });
+    const isMock = result.result.provider === MOCK_PROVIDER_NAME;
+    const latest = body.messages.at(-1);
+    if (!isMock && latest?.role === 'user')
+      await this.journal.record(user.id, {
+        source: 'speaking',
+        sourceKey: JSON.stringify(body.messages),
+        text: latest.content,
+        context: body.topic,
+        sourceHref: '/speaking',
+        issues: result.result.output.corrections,
+      });
+    if (!isMock && body.messages.filter((message) => message.role === 'user').length >= 3) {
+      await this.practice.complete(
+        user.id,
+        'speaking',
+        this.practice.dailyKey('speaking', body.topic + JSON.stringify(body.messages.slice(0, 2))),
+      );
+    }
     return {
       reply: result.result.output.reply,
-      isMock: result.result.provider === MOCK_PROVIDER_NAME,
+      isMock,
     };
   }
 

@@ -3,6 +3,7 @@ import { Badge, Card, EmptyState, LevelBadge } from '@lingoup/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CompletionMark } from '@/components/completion-mark';
+import { ContinueLearning } from '@/components/continue-learning';
 import { LevelFilter } from '@/components/level-filter';
 import { MyTextsTeaser } from '@/components/my-texts-teaser';
 import { t } from '@/i18n';
@@ -31,6 +32,7 @@ export default async function LibraryPage({
       </header>
 
       <MyTextsTeaser />
+      <ContinueLearning />
       <LevelFilter basePath="/library" active={level} />
 
       {items.length === 0 ? (

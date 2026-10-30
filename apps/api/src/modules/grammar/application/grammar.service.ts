@@ -15,6 +15,7 @@ import {
 } from '../../../platform/index.js';
 import { isAcceptedAnswer } from '../domain/grammar-document.js';
 import { GrammarRepository } from '../infrastructure/grammar.repository.js';
+import { MistakeJournal } from '../../progress/index.js';
 
 @Injectable()
 export class GrammarService implements PersonalDataExporter {
@@ -24,6 +25,7 @@ export class GrammarService implements PersonalDataExporter {
     @Inject(DATABASE) private readonly db: Database,
     private readonly repository: GrammarRepository,
     private readonly outbox: OutboxWriter,
+    private readonly journal: MistakeJournal,
     personalData: PersonalDataRegistry,
   ) {
     personalData.register(this);
@@ -49,6 +51,29 @@ export class GrammarService implements PersonalDataExporter {
     if (!exercise) throw notFound('Exercise');
     const correct = isAcceptedAnswer(answer, exercise.answers);
     await this.db.transaction(async (tx) => {
+      if (!correct)
+        await this.journal.record(
+          userId,
+          {
+            source: 'grammar',
+            sourceKey: `${exercise.id}:${answer.trim().toLowerCase()}`,
+            text: answer,
+            context: `${exercise.topicTitle}: ${exercise.prompt}`,
+            sourceHref: `/grammar/${exercise.topicSlug}`,
+            issues: [
+              {
+                quote: answer,
+                replacement: exercise.answers[0] ?? '',
+                category: 'grammar',
+                errorType: 'grammar_rule',
+                explanation:
+                  exercise.explanation ??
+                  'Compare your answer with the accepted form and review the grammar rule.',
+              },
+            ],
+          },
+          tx,
+        );
       const attemptId = await this.repository.insertAttempt(tx, {
         userId,
         exerciseId,

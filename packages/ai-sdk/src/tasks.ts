@@ -4,18 +4,20 @@ import { z } from 'zod';
  * AI task catalogue. Every task has a typed input and a structured output schema;
  * provider responses are always validated against the output schema.
  *
- * Implemented: word-explanation, reading-text-generation, exercise-generation, speaking-tutor.
+ * Implemented tasks are registered in AI_TASKS below.
  * The others are declared so routing, quotas and provider capabilities can be designed
  * around the full list; providers report them as unsupported until implemented.
  */
 export const AI_TASK_TYPES = [
   'word-explanation',
   'reading-text-generation',
+  'reading-comprehension',
   'exercise-generation',
   'speaking-tutor',
   'listening-generation',
   'grammar-explanation',
   'writing-assessment',
+  'exam-assessment',
   'speech-recognition',
   'speech-synthesis',
   'learning-recommendation',
@@ -122,6 +124,28 @@ export const SpeakingTutorInputSchema = z.object({
     .max(20),
 });
 export const SpeakingTutorOutputSchema = z.object({
+  corrections: z
+    .array(
+      z.object({
+        quote: z.string().min(1).max(1000),
+        replacement: z.string().max(1000),
+        category: z.enum(['word', 'grammar', 'suggestion']),
+        errorType: z.enum([
+          'sentence_structure',
+          'word_order',
+          'verb_tense',
+          'agreement',
+          'articles',
+          'word_form',
+          'word_choice',
+          'naturalness',
+        ]),
+        explanation: z.string().min(1).max(600),
+        example: z.string().min(1).max(600).nullable().optional(),
+      }),
+    )
+    .max(1)
+    .default([]),
   reply: z
     .string()
     .min(1)
@@ -137,6 +161,112 @@ export type AiTaskDuration = 'interactive' | 'generation';
 
 /** Registry of implemented tasks: input and output schemas plus execution policy. */
 export const AI_TASKS = {
+  'reading-comprehension': {
+    input: z.object({ level: CefrLevel, text: z.string().min(1).max(20000) }),
+    output: z.object({
+      questions: z
+        .array(
+          z.object({
+            question: z.string().min(1).max(400),
+            options: z.array(z.string().min(1).max(300)).length(4),
+            answerIndex: z.number().int().min(0).max(3),
+            explanation: z.string().min(1).max(800),
+            evidence: z.string().min(1).max(1000),
+          }),
+        )
+        .min(3)
+        .max(5),
+    }),
+    idempotent: false,
+    duration: 'generation' as AiTaskDuration,
+  },
+  'exam-assessment': {
+    input: z.object({
+      writingTasks: z.array(z.string().max(2000)).length(2),
+      writing: z.array(z.string().min(1).max(6000)).length(2),
+      speakingTasks: z.array(z.string().max(2000)).length(3),
+      speaking: z.array(z.string().min(1).max(1000)).length(3),
+    }),
+    output: z.object({
+      writingTask1: z.object({
+        band: z.number().min(0).max(9),
+        feedback: z.string().min(1).max(1500),
+      }),
+      writingTask2: z.object({
+        band: z.number().min(0).max(9),
+        feedback: z.string().min(1).max(1500),
+      }),
+      speakingLanguage: z.object({
+        band: z.number().min(0).max(9),
+        feedback: z.string().min(1).max(1500),
+      }),
+    }),
+    idempotent: false,
+    duration: 'generation' as AiTaskDuration,
+  },
+  'writing-assessment': {
+    input: z.object({
+      level: CefrLevel,
+      topic: z.string().min(1).max(80),
+      messages: z
+        .array(
+          z.object({
+            role: z.enum(['user', 'assistant']),
+            content: z.string().min(1).max(4000),
+          }),
+        )
+        .max(20),
+    }),
+    output: z.object({
+      subject: z.string().min(1).max(120),
+      reply: z.string().min(1).max(4000),
+      feedback: z.string().min(1).max(1000),
+      issues: z
+        .array(
+          z.object({
+            quote: z.string().min(1).max(4000),
+            occurrence: z.number().int().min(0).max(4000),
+            start: z.number().int().min(0).max(8000).nullable().optional(),
+            end: z.number().int().min(0).max(8000).nullable().optional(),
+            category: z.enum(['word', 'grammar', 'suggestion']),
+            errorType: z
+              .enum([
+                'sentence_structure',
+                'word_order',
+                'sentence_connection',
+                'verb_tense',
+                'punctuation',
+                'agreement',
+                'articles',
+                'word_form',
+                'spelling',
+                'word_choice',
+                'naturalness',
+                'ambiguity',
+              ])
+              .nullable()
+              .optional(),
+            replacement: z.string().max(4000),
+            explanation: z.string().min(1).max(600),
+            example: z.string().min(1).max(600).nullable().optional(),
+            alternatives: z
+              .array(
+                z.object({
+                  replacement: z.string().min(1).max(4000),
+                  meaning: z.string().min(1).max(600),
+                }),
+              )
+              .max(3)
+              .optional(),
+          }),
+        )
+        .max(50),
+      correctedText: z.string().min(1).max(6000).nullable().optional(),
+      needsClarification: z.boolean().optional(),
+    }),
+    idempotent: false,
+    duration: 'generation' as AiTaskDuration,
+  },
   'listening-generation': {
     input: ListeningGenerationInputSchema,
     output: ListeningGenerationOutputSchema,

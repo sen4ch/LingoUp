@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { SiteHeader } from '@/components/site-header';
+import { PracticeTimerRuntime, PracticeSectionTimer } from '@/components/practice-timer';
 import { t } from '@/i18n';
 import { Providers } from './providers';
 import './globals.css';
@@ -38,7 +39,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <Providers>
           <SiteHeader />
+          <PracticeTimerRuntime />
           <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-10">
+            <PracticeSectionTimer />
             {children}
           </main>
           <footer className="mx-auto w-full max-w-5xl border-t border-border px-4 py-6 text-xs text-muted">

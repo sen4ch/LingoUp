@@ -23,6 +23,7 @@ const HOP_BY_HOP = new Set([
 const TIMEOUT_MS = 30_000;
 /** AI generation runs synchronously and may take minutes on a local model (AI_GENERATION_TIMEOUT_MS). */
 const LONG_RUNNING_PATHS = new Set([
+  'v1/learning/writing/turn',
   'v1/learning/generated-texts',
   'v1/vocabulary/practice',
   'v1/learning/speaking/transcribe',
@@ -54,7 +55,7 @@ async function proxy(
       signal: AbortSignal.timeout(
         path.join('/') === 'v1/learning/listening'
           ? 300_000
-          : LONG_RUNNING_PATHS.has(path.join('/'))
+          : LONG_RUNNING_PATHS.has(path.join('/')) || path.join('/').startsWith('v1/learning/exams/')
             ? LONG_TIMEOUT_MS
             : TIMEOUT_MS,
       ),

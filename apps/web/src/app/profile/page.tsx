@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import {
   CEFR_LEVELS,
   ProgressSummarySchema,
@@ -12,6 +14,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState, type SyntheticEvent } from 'react';
 import { ActivityChart } from '@/components/activity-chart';
+import { LearningDashboard } from '@/components/learning-dashboard';
+import { WeeklyReport } from '@/components/weekly-report';
+import { ContinueLearning } from '@/components/continue-learning';
 import { t } from '@/i18n';
 import { api } from '@/lib/api-client';
 import { ME_QUERY_KEY, useRequireUser } from '@/lib/auth';
@@ -44,10 +49,20 @@ export default function ProfilePage() {
     <div className="flex flex-col gap-8">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">{t.profile.title}</h1>
+        <Link
+          href="/mistakes"
+          className="mt-2 inline-block text-sm font-semibold text-primary underline"
+        >
+          Review your mistake journal
+        </Link>
         <p className="text-muted">
           {user.displayName} · {user.email}
         </p>
       </header>
+
+      <ContinueLearning />
+      <LearningDashboard settings={user.settings} userId={user.id} />
+      <WeeklyReport userId={user.id} />
 
       <section aria-labelledby="stats" className="flex flex-col gap-4">
         <h2 id="stats" className="text-xl font-semibold">
@@ -101,7 +116,8 @@ function SettingsForm({ settings }: { settings: UserSettings }) {
   });
   const onSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    save.mutate(draft);
+    const { dailyGoalMinutes: _dailyGoal, ...patch } = draft;
+    save.mutate(patch);
   };
 
   return (
@@ -132,14 +148,6 @@ function SettingsForm({ settings }: { settings: UserSettings }) {
             onChange={(e) =>
               setDraft({ ...draft, targetLevel: e.target.value as UserSettings['targetLevel'] })
             }
-          />
-          <TextField
-            label={t.profile.dailyGoal}
-            type="number"
-            min={5}
-            max={240}
-            value={draft.dailyGoalMinutes}
-            onChange={(e) => setDraft({ ...draft, dailyGoalMinutes: Number(e.target.value) })}
           />
           <div className="flex flex-col gap-1 sm:col-span-3">
             <label className="flex items-start gap-3 text-sm font-medium">

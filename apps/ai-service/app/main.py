@@ -9,8 +9,10 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
 from .config import Settings
+from .exams import ExamInput
 from .listening import ListeningAudioInput, ListeningInput, narration
 from .providers import Provider, ProviderError, create_provider
+from .reading_check import ReadingCheckInput
 from .recognition import Recognizer
 from .schemas import (
     ExerciseGenerationInput,
@@ -29,6 +31,7 @@ from .speech import (
     edge_synthesize,
     synthesize_with_timeout,
 )
+from .writing import WritingInput
 
 logger = logging.getLogger("ai-service")
 
@@ -92,7 +95,13 @@ def create_app(
             1_000_000
             if request.url.path == "/v1/speaking/transcribe"
             else 64_000
-            if request.url.path == "/v1/tasks/speaking-tutor"
+            if request.url.path
+            in {
+                "/v1/tasks/speaking-tutor",
+                "/v1/tasks/writing-assessment",
+                "/v1/tasks/exam-assessment",
+                "/v1/tasks/reading-comprehension",
+            }
             else settings.max_body_bytes
         ):
             return JSONResponse({"detail": "Request body too large"}, status_code=413)
@@ -123,6 +132,14 @@ def create_app(
             raise HTTPException(status_code=502, detail="AI backend failed") from error
         return TaskResponse(provider=active.name, model=active.model, output=output)
 
+    @app.post("/v1/tasks/reading-comprehension", dependencies=[Depends(require_token)])
+    async def reading_comprehension(task: ReadingCheckInput) -> dict:
+        try:
+            output = await active.reading_check(task)
+        except ProviderError as error:
+            raise HTTPException(status_code=502, detail="Reading questions unavailable") from error
+        return {"provider": active.name, "model": active.model, "output": output.model_dump()}
+
     @app.post("/v1/tasks/reading-text-generation", dependencies=[Depends(require_token)])
     async def reading_text_generation(task: ReadingTextGenerationInput) -> ReadingTextResponse:
         try:
@@ -149,6 +166,22 @@ def create_app(
             logger.warning("speech-synthesis failed: %s", error)
             raise HTTPException(status_code=502, detail="Speech backend failed") from error
         return Response(content=audio, media_type="audio/mpeg")
+
+    @app.post("/v1/tasks/exam-assessment", dependencies=[Depends(require_token)])
+    async def exam_assessment(task: ExamInput) -> dict:
+        try:
+            output = await active.assess_exam(task)
+        except ProviderError as error:
+            raise HTTPException(status_code=502, detail="Exam assessment failed") from error
+        return {"provider": active.name, "model": active.model, "output": output.model_dump()}
+
+    @app.post("/v1/tasks/writing-assessment", dependencies=[Depends(require_token)])
+    async def writing_assessment(task: WritingInput) -> dict:
+        try:
+            output = await active.writing_turn(task)
+        except ProviderError as error:
+            raise HTTPException(status_code=502, detail="Writing assessment failed") from error
+        return {"provider": active.name, "model": active.model, "output": output.model_dump()}
 
     @app.post("/v1/tasks/speaking-tutor", dependencies=[Depends(require_token)])
     async def speaking_tutor(task: SpeakingTutorInput) -> dict:

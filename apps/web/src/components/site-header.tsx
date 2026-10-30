@@ -30,6 +30,9 @@ export function SiteHeader() {
           { href: '/vocabulary', label: t.nav.vocabulary },
           { href: '/review', label: t.nav.review, count: due?.totalDue },
           { href: '/speaking', label: t.nav.speaking },
+          { href: '/writing', label: t.nav.writing },
+          { href: '/mistakes', label: 'Mistakes' },
+          { href: '/exams', label: t.nav.exams },
           { href: '/listening', label: t.nav.listening },
         ]
       : []),

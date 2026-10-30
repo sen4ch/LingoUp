@@ -41,6 +41,27 @@ def test_speaking_preserves_chat_roles_and_only_opens_an_empty_conversation() ->
     assert "Begin the call" in initial[-2]["content"]
 
 
+def test_speaking_has_separate_bounded_journal_corrections() -> None:
+    assert SpeakingTutorOutput(reply="Hello! How are you?").corrections == []
+    correction = {
+        "quote": "I go",
+        "replacement": "I went",
+        "category": "grammar",
+        "errorType": "verb_tense",
+        "explanation": "Use the past simple with yesterday.",
+        "example": "Yesterday I went to the park.",
+    }
+    output = SpeakingTutorOutput(
+        reply="You went to the park. What did you see?", corrections=[correction]
+    )
+    assert output.corrections[0].quote == "I go"
+    with pytest.raises(ValueError):
+        SpeakingTutorOutput(reply="Hello!", corrections=[correction, correction])
+    prompt = speaking_messages(SpeakingTutorInput(level="A2", topic="Free time", messages=[]))
+    assert "EXACT substring" in prompt[0]["content"]
+    assert "Never infer pronunciation, spelling or punctuation" in prompt[0]["content"]
+
+
 def wav(seconds: int = 1, rate: int = 16000) -> bytes:
     buffer = io.BytesIO()
     with wave.open(buffer, "wb") as audio:

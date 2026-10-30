@@ -1,7 +1,7 @@
 import type { DomainEvent } from '@lingoup/contracts/events';
 import { isPgError, PG_ERROR, type Database } from '@lingoup/database';
 import { processedEvents } from '@lingoup/database/schema/platform';
-import { dailyActivity } from '@lingoup/database/schema/progress';
+import { dailyActivity, skillRewards } from '@lingoup/database/schema/progress';
 import { sql } from 'drizzle-orm';
 import type { EventHandler } from './event-handler.js';
 
@@ -12,6 +12,7 @@ const COUNTER_BY_EVENT: Partial<Record<DomainEvent['type'], Counter>> = {
   VocabularyReviewCompleted: 'reviewsDone',
   LessonCompleted: 'textsCompleted',
   ExerciseCompleted: 'exercisesDone',
+  PracticeCompleted: 'exercisesDone',
 };
 
 /**
@@ -42,6 +43,17 @@ export class ProgressProjector implements EventHandler {
           .returning({ eventId: processedEvents.eventId });
         if (claimed.length === 0) return; // Already projected.
 
+        const reward = rewardForEvent(event);
+        if (reward) {
+          const inserted = await tx
+            .insert(skillRewards)
+            .values({ userId, ...reward, earnedAt: new Date(event.occurredAt) })
+            .onConflictDoNothing()
+            .returning({ skill: skillRewards.skill });
+          // Duplicate practice submissions should not inflate daily activity either.
+          if (event.type === 'PracticeCompleted' && inserted.length === 0) return;
+        }
+
         await tx
           .insert(dailyActivity)
           .values({ userId, day, [counter]: 1 })
@@ -55,5 +67,29 @@ export class ProgressProjector implements EventHandler {
       if (isPgError(error, PG_ERROR.foreignKeyViolation)) return;
       throw error;
     }
+  }
+}
+
+export function rewardForEvent(event: DomainEvent): { skill: string; sourceKey: string } | null {
+  switch (event.type) {
+    case 'LessonCompleted':
+      return { skill: 'reading', sourceKey: event.payload.textId };
+    case 'WordSaved':
+      return { skill: 'vocabulary', sourceKey: `save:${event.payload.wordId}` };
+    case 'VocabularyReviewCompleted':
+      return event.payload.rating === 'again'
+        ? null
+        : {
+            skill: 'vocabulary',
+            sourceKey: `review:${event.payload.cardId}:${event.occurredAt.slice(0, 10)}`,
+          };
+    case 'ExerciseCompleted':
+      return event.payload.correct
+        ? { skill: 'grammar', sourceKey: `exercise:${event.payload.exerciseId}` }
+        : null;
+    case 'PracticeCompleted':
+      return event.payload;
+    default:
+      return null;
   }
 }

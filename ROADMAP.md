@@ -34,7 +34,8 @@ Development follows vertical slices: each stage delivers a complete user workflo
 - [x] Publisher-hosted films and series, YouTube links and local videos with SRT/VTT subtitles.
 - [ ] Long-term listening history and richer media discovery.
 - [ ] Streaming teacher responses and lower-latency voice interaction.
-- [ ] Writing assessment with explanations.
+- [x] Level-aware email writing practice with highlighted errors and explanations.
+- [ ] Saved writing exchanges and long-term writing progress.
 
 ## MVP hardening
 

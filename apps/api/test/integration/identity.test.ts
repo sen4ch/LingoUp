@@ -166,8 +166,11 @@ describe('identity', () => {
       'account',
       'grammar',
       'learning',
+      'mistakes',
       'privateTexts',
       'progress',
+      'readingChecks',
+      'studyTime',
       'vocabulary',
     ]);
     expect(exported.body.sections.vocabulary.words[0].term).toBe('resilient');

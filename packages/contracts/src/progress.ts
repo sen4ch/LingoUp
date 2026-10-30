@@ -1,5 +1,46 @@
 import { z } from 'zod';
-import { IsoDateTimeSchema } from './common.js';
+import { IsoDateTimeSchema, CefrLevelSchema } from './common.js';
+
+export const LEARNING_SKILLS = [
+  'reading',
+  'listening',
+  'speaking',
+  'writing',
+  'grammar',
+  'vocabulary',
+] as const;
+export const LearningSkillSchema = z.enum(LEARNING_SKILLS);
+export const GameLevelSchema = z.object({
+  xp: z.number().int().nonnegative(),
+  level: z.number().int().positive(),
+  levelXp: z.number().int().nonnegative(),
+  nextLevelXp: z.number().int().positive(),
+});
+export const LearningDevelopmentSchema = z.object({
+  generatedAt: IsoDateTimeSchema,
+  day: z.iso.date(),
+  overall: GameLevelSchema,
+  skills: z.array(
+    GameLevelSchema.extend({ skill: LearningSkillSchema, todayXp: z.number().int().nonnegative() }),
+  ),
+  plan: z.object({
+    dailyMinutes: z.number().int().min(5).max(240),
+    cefrLevel: CefrLevelSchema,
+    activities: z.array(
+      z.object({
+        skill: LearningSkillSchema,
+        title: z.string(),
+        instruction: z.string(),
+        href: z.string(),
+        minutes: z.number().int().positive(),
+        target: z.number().int().positive(),
+        completed: z.number().int().nonnegative(),
+      }),
+    ),
+  }),
+});
+export type LearningDevelopment = z.infer<typeof LearningDevelopmentSchema>;
+export type LearningSkill = z.infer<typeof LearningSkillSchema>;
 
 export const DailyActivitySchema = z.object({
   day: z.iso.date(),

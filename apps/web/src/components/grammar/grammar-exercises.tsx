@@ -132,6 +132,11 @@ function ExerciseCard({ exercise, number }: { exercise: GrammarExercise; number:
         >
           {result.correct ? null : <p>{t.grammar.correctAnswer(result.correctAnswer)}</p>}
           {result.explanation ? <p className="text-muted">{result.explanation}</p> : null}
+          {!result.correct ? (
+            <Link href="/mistakes" className="mt-2 inline-block text-sm underline">
+              Saved to your mistake journal
+            </Link>
+          ) : null}
         </Alert>
       ) : null}
       {submit.isError ? <Alert tone="danger">{describeError(submit.error)}</Alert> : null}
