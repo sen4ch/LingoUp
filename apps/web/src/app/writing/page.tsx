@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CEFR_LEVELS,
   WritingTurnResponseSchema,
@@ -13,6 +13,8 @@ import { api, ApiRequestError } from '@/lib/api-client';
 import { useRequireUser } from '@/lib/auth';
 import { writingContext } from '@/lib/writing';
 import { WritingFeedback } from '@/components/writing-feedback';
+import { VocabularyIcon as Icon } from '@/components/vocabulary-icon';
+import { PracticeTimer } from '@/components/practice-timer';
 import { t } from '@/i18n';
 
 interface Email extends WritingMessage {
@@ -34,6 +36,10 @@ export default function WritingPage() {
   const pending = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [mock, setMock] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'email' | 'reply' | 'feedback'>('email');
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const workspace = useRef<HTMLDivElement>(null);
+  const editor = useRef<HTMLTextAreaElement>(null);
   const selectedLevel = level || user?.settings.targetLevel || 'A1';
   const wordCount = draft.trim() ? draft.trim().split(/\s+/).length : 0;
   const target = {
@@ -44,18 +50,63 @@ export default function WritingPage() {
     C1: '160–200',
     C2: '180–240',
   }[selectedLevel];
+  const latestEmail = emails.at(-1);
+  const latestReply = emails.findLast((email) => email.role === 'user');
+  const history = emails.length > 2 ? emails.slice(0, -2) : [];
 
+  useEffect(() => {
+    const root = workspace.current;
+    const panel = root?.querySelector<HTMLElement>('.writing-layout');
+    if (!root || !panel) return;
+    const fit = () => {
+      root.style.setProperty(
+        '--writing-nav-height',
+        `${document.querySelector('.site-header')?.getBoundingClientRect().height ?? 72}px`,
+      );
+      root.style.setProperty(
+        '--writing-panel-height',
+        `${Math.max(220, (window.visualViewport?.height ?? innerHeight) - panel.getBoundingClientRect().top - window.scrollY - 16)}px`,
+      );
+    };
+    const observer = new ResizeObserver(fit);
+    for (const element of [
+      document.querySelector('.site-header'),
+      root.querySelector('.writing-heading'),
+      root.querySelector('.writing-setup-panel'),
+      root.querySelector('.writing-mobile-tabs'),
+    ])
+      if (element) observer.observe(element);
+    fit();
+    window.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
+  }, [user?.id, emails.length, error, mock]);
+
+  function selectView(view: 'email' | 'reply' | 'feedback') {
+    setMobileTab(view);
+    if (window.matchMedia('(max-width: 767px)').matches)
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  }
+
+  function compose() {
+    if (window.matchMedia('(max-width: 767px)').matches) selectView('reply');
+    requestAnimationFrame(() => editor.current?.focus({ preventScroll: true }));
+  }
   async function send() {
     if (!user || pending.current || (emails.length > 0 && !draft.trim())) return;
     pending.current = true;
     setBusy(true);
     setError(null);
-    const history: WritingMessage[] = emails.map(({ role, content }) => ({ role, content }));
-    if (emails.length) history.push({ role: 'user', content: draft });
+    const context: WritingMessage[] = emails.map(({ role, content }) => ({ role, content }));
+    if (emails.length) context.push({ role: 'user', content: draft });
     try {
       const response = await api('/v1/learning/writing/turn', {
         method: 'POST',
-        body: { level: selectedLevel, topic, messages: writingContext(history) },
+        body: { level: selectedLevel, topic, messages: writingContext(context) },
         schema: WritingTurnResponseSchema,
       });
       const next: Email[] = [...emails];
@@ -79,6 +130,14 @@ export default function WritingPage() {
       setEmails(next);
       setDraft('');
       setMock(response.isMock);
+      selectView(emails.length ? 'feedback' : 'email');
+      requestAnimationFrame(() =>
+        workspace.current
+          ?.querySelector<HTMLElement>(
+            emails.length ? '.writing-feedback-heading h2' : '.writing-email-content h2',
+          )
+          ?.focus({ preventScroll: true }),
+      );
     } catch (failure) {
       const status =
         failure instanceof ApiRequestError
@@ -94,65 +153,101 @@ export default function WritingPage() {
       setBusy(false);
     }
   }
+  function newExchange() {
+    if (draft.trim() && !window.confirm('Discard your draft and start a new exchange?')) return;
+    setEmails([]);
+    setDraft('');
+    setMock(false);
+    setError(null);
+    selectView('email');
+  }
+  function feedback(email: Email) {
+    return (
+      <WritingFeedback
+        key={email.subject}
+        id={email.subject}
+        text={email.content}
+        level={email.level ?? selectedLevel}
+        issues={email.issues ?? []}
+        feedback={email.feedback ?? ''}
+        correctedText={email.correctedText}
+        needsClarification={email.needsClarification}
+      />
+    );
+  }
 
   if (isLoading || !user) return <Skeleton className="h-80" />;
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold tracking-wide text-primary uppercase">
-          Your English pen pal
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">Writing</h1>
-        <p className="text-muted">
-          A letter for your level. A reply in your own words. Get feedback and keep the conversation
-          going.
-        </p>
-      </header>
-      <Card className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-          <SelectField
-            label="CEFR level"
-            value={selectedLevel}
-            disabled={busy || emails.length > 0}
-            options={CEFR_LEVELS.map((value) => ({ value, label: value }))}
-            onChange={(event) => setLevel(event.target.value as CefrLevel)}
-          />
-          <TextField
-            label="Email topic"
-            value={topic}
-            maxLength={80}
-            disabled={busy || emails.length > 0}
-            onChange={(event) => setTopic(event.target.value)}
-          />
+    <div ref={workspace} className="writing-workspace" data-started={emails.length > 0}>
+      <header className="writing-heading">
+        <div>
+          <p className="eyebrow">
+            <Icon name="edit" width="13" height="13" /> FIND YOUR WORDS. MAKE THEM YOURS.
+          </p>
+          <h1>
+            Writing<span className="text-primary">.</span>
+          </h1>
+          <p>A letter for your level. A reply in your own words.</p>
         </div>
-        <p className="text-sm text-muted">
-          Practice inside LingoUp. Aim for {target} words per reply. This exchange stays open until
-          you leave or refresh this page.
-        </p>
+        <span className="writing-penpal-badge">
+          <span className="status-dot" /> Your English pen pal
+        </span>
+      </header>
+      <Card className="writing-setup-panel">
         {!emails.length ? (
-          <Button onClick={() => void send()} disabled={busy || !topic.trim()}>
-            {busy ? 'Preparing your email…' : 'Receive an email'}
-          </Button>
+          <>
+            <div className="writing-setup-fields">
+              <SelectField
+                label="CEFR level"
+                value={selectedLevel}
+                disabled={busy}
+                options={CEFR_LEVELS.map((value) => ({ value, label: value }))}
+                onChange={(event) => setLevel(event.target.value as CefrLevel)}
+              />
+              <TextField
+                label="Email topic"
+                value={topic}
+                maxLength={80}
+                disabled={busy}
+                onChange={(event) => setTopic(event.target.value)}
+              />
+              <Button onClick={() => void send()} loading={busy} disabled={!topic.trim()}>
+                <Icon name="mail" width="16" height="16" />
+                {busy ? 'Preparing your email…' : 'Receive an email'}
+              </Button>
+            </div>
+            <div
+              className="writing-topic-suggestions"
+              role="group"
+              aria-label="Suggested email topics"
+            >
+              <span>A LITTLE INSPIRATION</span>
+              {['Everyday life', 'Travel', 'Work & study', 'Weekend plans'].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={busy}
+                  aria-pressed={topic === value}
+                  onClick={() => setTopic(value)}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </>
         ) : (
-          <Button
-            variant="secondary"
-            disabled={busy}
-            onClick={() => {
-              if (draft.trim() && !window.confirm('Discard your draft and start a new exchange?'))
-                return;
-              setEmails([]);
-              setDraft('');
-              setMock(false);
-              setError(null);
-            }}
-          >
-            New exchange
-          </Button>
+          <div className="writing-session-summary">
+            <div>
+              <span className="writing-level-badge">{selectedLevel}</span>
+              <span>{topic}</span>
+              <span>Aim for {target} words per reply</span>
+            </div>
+            <Button variant="secondary" size="sm" disabled={busy} onClick={newExchange}>
+              <Icon name="plus" width="13" height="13" />
+              New exchange
+            </Button>
+          </div>
         )}
-        <p className="text-xs text-muted">
-          Emails are sent to your configured AI provider for feedback. Avoid sharing personal
-          information. External AI uses the data-sharing setting in your profile.
-        </p>
       </Card>
       {mock ? (
         <Alert tone="warning">
@@ -161,92 +256,239 @@ export default function WritingPage() {
         </Alert>
       ) : null}
       {error ? <Alert tone="danger">{error}</Alert> : null}
-      <section aria-label="Email exchange" className="space-y-5" aria-busy={busy}>
-        {emails.map((email, index) => (
-          <Card key={index} className="space-y-4">
-            <div className="border-b border-border pb-3">
-              <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-                {email.role === 'assistant' ? 'Inbox · Alex → You' : 'Sent · You → Alex'}
-              </p>
-              <h2 className="mt-1 text-lg font-semibold">
-                {email.role === 'assistant' ? email.subject : `Re: ${emails[index - 1]?.subject}`}
-              </h2>
-            </div>
-            {email.role === 'user' ? (
-              <WritingFeedback
-                id={email.subject}
-                text={email.content}
-                level={email.level ?? selectedLevel}
-                issues={email.issues ?? []}
-                feedback={email.feedback ?? ''}
-                correctedText={email.correctedText}
-                needsClarification={email.needsClarification}
-              />
-            ) : (
+      <div className="writing-mobile-tabs" role="group" aria-label="Writing workspace view">
+        <button
+          type="button"
+          aria-pressed={mobileTab === 'email'}
+          onClick={() => selectView('email')}
+        >
+          <Icon name="mail" width="14" height="14" />
+          Email
+        </button>
+        <button
+          type="button"
+          disabled={!emails.length}
+          aria-pressed={mobileTab === 'reply'}
+          onClick={compose}
+        >
+          <Icon name="edit" width="14" height="14" />
+          Write
+        </button>
+        <button
+          type="button"
+          disabled={!latestReply}
+          aria-pressed={mobileTab === 'feedback'}
+          onClick={() => selectView('feedback')}
+        >
+          <Icon name="check" width="14" height="14" />
+          Feedback
+        </button>
+      </div>
+      <div className="writing-layout" data-mobile-tab={mobileTab}>
+        <section className="writing-reading-column" aria-label="Email exchange" aria-busy={busy}>
+          <Card className="writing-inbox-panel">
+            <header className="writing-panel-heading">
+              <div>
+                <span className="writing-avatar">A</span>
+                <div>
+                  <h2>Alex</h2>
+                  <p>Your English pen pal</p>
+                </div>
+              </div>
+              <span className="writing-inbox-label">
+                <Icon name="mail" width="13" height="13" />
+                {latestEmail ? 'INBOX' : 'A LETTER IS A GOOD BEGINNING'}
+              </span>
+            </header>
+            {latestEmail ? (
               <>
-                <p lang="en" className="leading-8 whitespace-pre-wrap break-words">
-                  {email.content}
-                </p>
-                {email.feedback ? (
-                  <p className="rounded-xl bg-surface-muted p-4 text-sm">{email.feedback}</p>
-                ) : null}
+                <div className="writing-email-content">
+                  <p className="eyebrow">A NOTE FOR YOU</p>
+                  <h2 tabIndex={-1}>{latestEmail.subject}</h2>
+                  <p lang="en" className="writing-email-text">
+                    {latestEmail.content}
+                  </p>
+                  {latestEmail.feedback ? (
+                    <p className="writing-email-prompt">
+                      <Icon name="spark" width="14" height="14" />
+                      {latestEmail.feedback}
+                    </p>
+                  ) : null}
+                </div>
+                <footer className="writing-inbox-footer">
+                  <span>One reply. A little more confidence.</span>
+                  <button type="button" onClick={compose}>
+                    Write a reply
+                    <Icon name="arrow" width="14" height="14" />
+                  </button>
+                </footer>
               </>
+            ) : (
+              <div className="writing-inbox-empty">
+                <div className="writing-letter-art" aria-hidden="true">
+                  <span>
+                    <Icon name="mail" width="27" height="27" />
+                  </span>
+                  <div>
+                    <span>Dear you,</span>
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                </div>
+                <h2>
+                  Good things start
+                  <br />
+                  with a few words.
+                </h2>
+                <p>
+                  Choose a topic and receive a letter from Alex. Read it, write back, and let your
+                  English grow.
+                </p>
+                <span>
+                  <Icon name="check" width="12" height="12" /> Real practice. Room to make mistakes.
+                </span>
+              </div>
             )}
           </Card>
-        ))}
-      </section>
-      {emails.length ? (
-        <Card>
+          {latestReply ? (
+            <Card className="writing-feedback-latest">
+              <div className="writing-feedback-heading">
+                <p className="eyebrow">
+                  <Icon name="spark" width="13" height="13" /> A LITTLE CLARITY FOR YOUR NEXT REPLY
+                </p>
+                <h2 tabIndex={-1}>
+                  Your words, with feedback<span className="text-primary">.</span>
+                </h2>
+              </div>
+              {feedback(latestReply)}
+            </Card>
+          ) : null}
+          {history.length ? (
+            <details className="writing-history">
+              <summary>
+                <Icon name="cards" width="14" height="14" />
+                Earlier in this exchange <span>{history.length}</span>
+                <Icon name="chevron" width="13" height="13" />
+              </summary>
+              <div>
+                {history.map((email, index) => (
+                  <Card key={index} className="writing-history-email">
+                    <p className="eyebrow">
+                      {email.role === 'assistant' ? 'INBOX · ALEX → YOU' : 'SENT · YOU → ALEX'}
+                    </p>
+                    <h3>
+                      {email.role === 'assistant'
+                        ? email.subject
+                        : `Re: ${emails[index - 1]?.subject}`}
+                    </h3>
+                    {email.role === 'user' ? (
+                      feedback(email)
+                    ) : (
+                      <p lang="en" className="writing-email-text">
+                        {email.content}
+                      </p>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </details>
+          ) : null}
+        </section>
+        <Card className="writing-composer">
           <form
-            className="space-y-4"
+            aria-label="Write your reply"
             onSubmit={(event) => {
               event.preventDefault();
               void send();
             }}
           >
-            <h2 className="text-lg font-semibold">Reply to Alex</h2>
-            <label htmlFor="writing-reply" className="block text-sm font-medium">
+            <header>
+              <div>
+                <p className="eyebrow">
+                  <Icon name="edit" width="12" height="12" /> YOUR SIDE OF THE CONVERSATION
+                </p>
+                <h2>
+                  Reply to Alex<span className="text-primary">.</span>
+                </h2>
+              </div>
+              <span>{selectedLevel}</span>
+            </header>
+            <label htmlFor="writing-reply" className="sr-only">
               Your email
             </label>
             <textarea
+              ref={editor}
               id="writing-reply"
               lang="en"
               value={draft}
               maxLength={4000}
               rows={9}
-              disabled={busy}
+              disabled={busy || !emails.length}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder={'Hi Alex,\n\n…\n\nBest,'}
+              placeholder={
+                emails.length
+                  ? 'Hi Alex,\n\nTell me a little about yourself…\n\nBest,'
+                  : 'Your reply starts here.\n\nReceive an email to begin your exchange with Alex.'
+              }
               aria-describedby="writing-hint"
-              className="w-full resize-y rounded-xl border border-border bg-bg p-4 text-base leading-relaxed focus:outline-2 focus:outline-primary"
             />
-            <div
-              id="writing-hint"
-              className="flex flex-wrap justify-between gap-2 text-sm text-muted"
-            >
+            <div id="writing-hint" className="writing-draft-meta">
               <span>
-                {wordCount} words · {draft.length}/4000 characters
+                {wordCount} words <span>· {draft.length}/4000 characters</span>
               </span>
-              <span>
-                <span className="rounded bg-red-100 px-1 text-red-900">Red: word errors</span>{' '}
-                <span className="rounded bg-yellow-100 px-1 text-yellow-950">Yellow: grammar</span>{' '}
-                <span className="rounded bg-blue-100 px-1 text-blue-950">Blue: suggestions</span>
-              </span>
+              <span>Aim for {target}</span>
             </div>
-            <p className="text-xs text-muted">
-              Corrections appear after sending. Select a highlighted phrase to read its explanation.
+            <progress
+              aria-label="Reply length guide"
+              value={Math.min(wordCount, Number(target.split('–')[1]))}
+              max={Number(target.split('–')[1])}
+            />
+            <p className="writing-composer-hint">
+              Make it yours. Corrections appear after sending, and you can select any highlighted
+              phrase to learn more.
             </p>
-            <Button type="submit" disabled={busy || !draft.trim()}>
-              {busy ? 'Checking and replying…' : 'Send & get feedback'}
+            <Button type="submit" loading={busy} disabled={!emails.length || !draft.trim()}>
+              <span>{busy ? 'Checking and replying…' : 'Send & get feedback'}</span>
+              <Icon name="arrow" width="16" height="16" />
             </Button>
-            <p role="status" className="text-sm text-muted">
+            <p role="status" className="writing-send-status">
               {busy
                 ? 'Reviewing your sentences and preparing a reply. This may take a minute.'
                 : ''}
             </p>
           </form>
         </Card>
-      ) : null}
+      </div>
+      <details
+        className="writing-session-tools"
+        onToggle={(event) => setToolsOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <Icon name="settings" width="14" height="14" />
+          Focus timer & practice information
+          <Icon name="chevron" width="13" height="13" />
+        </summary>
+        {toolsOpen ? (
+          <div className="writing-tools-content">
+            <div className="grammar-focus">
+              <PracticeTimer skill="writing" />
+            </div>
+            <div>
+              <h2>A little space to write.</h2>
+              <p>
+                This exchange stays open until you leave or refresh the page. Emails are sent to
+                your configured AI provider for feedback. External AI uses the data-sharing setting
+                in your profile.
+              </p>
+              <p>
+                Avoid sharing personal information. A failed request keeps your current draft, so
+                you can try again.
+              </p>
+            </div>
+          </div>
+        ) : null}
+      </details>
     </div>
   );
 }

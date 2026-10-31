@@ -88,13 +88,13 @@ export function WritingFeedback({
       </p>
       <section
         aria-label={`Writing feedback ${level}`}
-        className="space-y-4 rounded-xl bg-surface-muted p-4"
+        className="writing-feedback-panel space-y-4 rounded-xl bg-surface-muted p-4"
       >
         <h3 className="font-semibold">Writing feedback — {level}</h3>
         <p className="text-sm">{feedback}</p>
         {correctedText ? (
           <section
-            className="space-y-2 rounded-lg border border-border bg-surface p-4"
+            className="writing-corrected-text space-y-2 rounded-lg border border-border bg-surface p-4"
             aria-label="Corrected text"
           >
             <h4 className="font-semibold">Corrected text</h4>
@@ -114,7 +114,8 @@ export function WritingFeedback({
               hidden={!expanded && index >= limit}
               id={correctionId(index)}
               tabIndex={-1}
-              className="scroll-mt-32 rounded-lg border border-border bg-surface p-4 text-sm"
+              className="writing-correction scroll-mt-32 rounded-lg border border-border bg-surface p-4 text-sm"
+              data-category={issue.category}
             >
               <h4 className="font-semibold">
                 <span className={`rounded px-1 ${highlight(issue.category)}`}>

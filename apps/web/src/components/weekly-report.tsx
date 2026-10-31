@@ -216,7 +216,7 @@ export function WeeklyReport({ userId }: { userId: string }) {
             <p className="text-sm text-muted">{data.nextGoal.reason}</p>
             <Link
               href={data.nextGoal.href}
-              className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
+              className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-fg"
             >
               {data.nextGoal.action}
             </Link>

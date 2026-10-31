@@ -4,6 +4,44 @@ import { IsoDateTimeSchema, pageOf, PageQuerySchema, UuidSchema } from './common
 
 export const MAX_TERM_WORDS = 6;
 
+export const WORD_CATEGORIES = [
+  'clothes',
+  'food',
+  'travel',
+  'work',
+  'home',
+  'shopping',
+  'people',
+  'nature',
+  'health',
+  'education',
+  'technology',
+  'daily-life',
+  'other',
+] as const;
+export const WordCategorySchema = z.enum(WORD_CATEGORIES);
+export type WordCategory = z.infer<typeof WordCategorySchema>;
+export const WORD_CATEGORY_LABELS: Record<WordCategory, string> = {
+  clothes: 'Clothes',
+  food: 'Food & drink',
+  travel: 'Travel',
+  work: 'Work',
+  home: 'Home',
+  shopping: 'Shopping',
+  people: 'People & feelings',
+  nature: 'Nature',
+  health: 'Health',
+  education: 'Education',
+  technology: 'Technology',
+  'daily-life': 'Daily life',
+  other: 'Other',
+};
+export const WordCategoryCountsSchema = z.object({
+  items: z.array(z.object({ category: WordCategorySchema, count: z.number().int().nonnegative() })),
+  total: z.number().int().nonnegative(),
+});
+export type WordCategoryCounts = z.infer<typeof WordCategoryCountsSchema>;
+
 /** A word or a short phrase. */
 export const TermSchema = z
   .string()
@@ -66,6 +104,8 @@ export type LookupResponse = z.infer<typeof LookupResponseSchema>;
 
 export const SaveWordRequestSchema = z.object({
   term: TermSchema,
+  /** Omitted or null: use automatic classification. */
+  category: WordCategorySchema.nullable().optional(),
   definition: optionalText(500),
   translation: optionalText(200),
   contextSentence: optionalText(600),
@@ -75,6 +115,7 @@ export const SaveWordRequestSchema = z.object({
 export type SaveWordRequest = z.infer<typeof SaveWordRequestSchema>;
 
 export const UpdateWordRequestSchema = SaveWordRequestSchema.pick({
+  category: true,
   definition: true,
   translation: true,
   contextSentence: true,
@@ -109,6 +150,7 @@ export const WordSchema = z.object({
   id: UuidSchema,
   term: z.string(),
   normalizedTerm: z.string(),
+  category: WordCategorySchema.default('other'),
   definition: z.string().nullable(),
   translation: z.string().nullable(),
   contextSentence: z.string().nullable(),
@@ -127,6 +169,7 @@ export const WordSchema = z.object({
 export type Word = z.infer<typeof WordSchema>;
 
 export const ListWordsQuerySchema = PageQuerySchema.extend({
+  category: WordCategorySchema.optional(),
   q: z.string().trim().min(1).max(80).optional(),
 });
 export type ListWordsQuery = z.infer<typeof ListWordsQuerySchema>;

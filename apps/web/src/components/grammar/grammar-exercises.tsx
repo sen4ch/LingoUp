@@ -63,10 +63,13 @@ function ExerciseCard({ exercise, number }: { exercise: GrammarExercise; number:
   };
 
   return (
-    <Card className="flex flex-col gap-4">
-      <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-        {t.grammar.exerciseLabel(number)}
-      </p>
+    <Card className="grammar-exercise-card flex flex-col gap-4">
+      <div className="grammar-exercise-topline">
+        <p className="text-xs font-semibold tracking-wide text-muted uppercase">
+          {t.grammar.exerciseLabel(number)}
+        </p>
+        <span>{exercise.kind === 'choice' ? 'Choose an answer' : 'Fill in the gap'}</span>
+      </div>
       <Prompt
         prompt={exercise.prompt}
         filled={result ? (result.correct ? answer : undefined) : undefined}

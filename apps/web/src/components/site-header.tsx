@@ -39,16 +39,28 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-bg/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-        <Link href="/library" className="text-lg font-bold tracking-tight text-primary">
+    <header className="site-header sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 px-5 py-4 sm:px-8">
+        <Link
+          href="/"
+          className="brand flex items-center gap-2.5 text-xl font-semibold tracking-tight text-text"
+        >
+          <svg aria-hidden="true" viewBox="0 0 32 32" className="size-8 text-primary" fill="none">
+            <path
+              d="M5 23V9l10 5v14L5 23Zm12 5V14l10-5v14l-10 5Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <path d="m8 5 8 4 8-4M16 2v7" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
           {t.appName}
         </Link>
         <nav
           aria-label={t.nav.main}
-          className="order-3 w-full overflow-x-auto sm:order-none sm:w-auto"
+          className="site-nav order-3 w-full overflow-x-auto lg:order-none lg:w-auto lg:flex-1"
         >
-          <ul className="flex flex-wrap gap-0.5 sm:gap-1">
+          <ul className="flex gap-0.5 lg:justify-center">
             {links.map((link) => {
               const active = pathname.startsWith(link.href);
               return (
@@ -57,13 +69,15 @@ export function SiteHeader() {
                     href={link.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-sm whitespace-nowrap sm:gap-1.5 sm:px-3',
-                      active ? 'bg-surface-muted font-semibold' : 'text-muted hover:text-text',
+                      'inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm whitespace-nowrap transition-colors',
+                      active
+                        ? 'bg-primary/10 font-medium text-primary'
+                        : 'text-muted hover:text-text',
                     )}
                   >
                     {link.label}
                     {link.count ? (
-                      <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-white">
+                      <span className="rounded-full bg-accent px-1.5 text-xs font-bold text-primary-fg">
                         {link.count}
                       </span>
                     ) : null}

@@ -70,7 +70,7 @@ export function ExamAudio({ examId, part }: { examId: string; part: number }) {
     resource.current = null;
   }
   return (
-    <div className="space-y-2 rounded-xl bg-surface-muted p-4">
+    <div className="exams-audio space-y-2">
       <p className="text-sm font-medium">Part {part + 1}</p>
       {source ? (
         <audio

@@ -173,7 +173,7 @@ export default function ListeningPage() {
             aria-selected={section === value}
             aria-controls={`panel-${value}`}
             onClick={() => setSection(value)}
-            className={`rounded-lg border px-3 py-4 font-semibold ${section === value ? 'border-primary bg-primary text-white' : 'border-border bg-surface hover:bg-surface-muted'}`}
+            className={`rounded-lg border px-3 py-4 font-semibold ${section === value ? 'border-primary bg-primary text-primary-fg' : 'border-border bg-surface hover:bg-surface-muted'}`}
           >
             {value === 'practice' ? t.listening.practice : t.listening.films}
           </button>

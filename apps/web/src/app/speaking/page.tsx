@@ -7,6 +7,8 @@ import { t } from '@/i18n';
 import { useRequireUser } from '@/lib/auth';
 import { ApiRequestError } from '@/lib/api-client';
 import { SpeakingCall, type CallState } from '@/lib/speaking-call';
+import { VocabularyIcon as Icon } from '@/components/vocabulary-icon';
+import { PracticeTimer } from '@/components/practice-timer';
 
 function callError(error: unknown): string {
   if (
@@ -36,11 +38,12 @@ export default function SpeakingPage() {
   const [messages, setMessages] = useState<SpeakingMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [mock, setMock] = useState(false);
-  const latest = useRef<HTMLDivElement>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const latest = useRef<HTMLOListElement>(null);
   const active = state !== 'idle';
   useEffect(() => () => call.current?.end(), []);
   useEffect(() => {
-    latest.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (latest.current) latest.current.scrollTop = latest.current.scrollHeight;
   }, [messages]);
 
   const start = () => {
@@ -64,105 +67,235 @@ export default function SpeakingPage() {
 
   if (isLoading || !user) return <Skeleton className="h-80" />;
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <p className="text-sm font-semibold tracking-wide text-primary uppercase">
-          English only · AI teacher
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">{t.speaking.title}</h1>
-        <p className="text-muted">{t.speaking.intro}</p>
-      </header>
-      <Card className="flex flex-col gap-5">
-        <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
-          <SelectField
-            label={t.speaking.level}
-            value={level || user.settings.targetLevel}
-            disabled={active}
-            onChange={(event) => setLevel(event.target.value as CefrLevel)}
-            options={CEFR_LEVELS.map((value) => ({ value, label: value }))}
-          />
-          <TextField
-            label={t.speaking.topic}
-            placeholder={t.speaking.topicPlaceholder}
-            value={topic}
-            maxLength={80}
-            disabled={active}
-            onChange={(event) => setTopic(event.target.value)}
-          />
-        </div>
-        <div className="flex flex-col items-center gap-4 rounded-xl bg-surface-muted px-4 py-8 text-center">
-          <div
-            aria-hidden="true"
-            className={`flex size-24 items-center justify-center rounded-full border-4 border-primary/20 bg-surface text-4xl ${state === 'speaking' || state === 'listening' ? 'motion-safe:animate-pulse' : ''}`}
-          >
-            {state === 'listening' ? '🎙' : '☎'}
-          </div>
-          <p role="status" aria-live="polite" className="text-lg font-semibold">
-            {t.speaking.states[state]}
+    <div className="speaking-workspace" data-call-state={state}>
+      <header className="speaking-heading">
+        <div>
+          <p className="eyebrow">
+            <Icon name="mic" width="13" height="13" /> FIND YOUR VOICE. ONE CONVERSATION AT A TIME.
           </p>
-          <p className="max-w-lg text-sm text-muted">{t.speaking.howItWorks}</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {!active ? (
-              <Button size="lg" onClick={start}>
-                {t.speaking.start}
-              </Button>
-            ) : (
-              <>
-                {state === 'listening' ? (
-                  <Button variant="secondary" onClick={() => call.current?.send()}>
-                    {t.speaking.send}
-                  </Button>
-                ) : null}
-                {state === 'speaking' ? (
-                  <Button variant="secondary" onClick={() => call.current?.interrupt()}>
-                    {t.speaking.interrupt}
-                  </Button>
-                ) : null}
-                {state !== 'connecting' ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      state === 'paused' ? call.current?.resume() : call.current?.pause()
-                    }
-                  >
-                    {state === 'paused' ? t.speaking.resume : t.speaking.pause}
-                  </Button>
-                ) : null}
-                <Button variant="danger-ghost" onClick={() => call.current?.end()}>
-                  {t.speaking.end}
-                </Button>
-              </>
-            )}
-          </div>
+          <h1>
+            Speaking<span className="text-primary">.</span>
+          </h1>
+          <p>A little less overthinking. A little more conversation.</p>
         </div>
-        <p className="text-xs text-muted">{t.speaking.privacy}</p>
-        {error ? <Alert tone="danger">{error}</Alert> : null}
-        {mock ? <Alert tone="warning">{t.speaking.mock}</Alert> : null}
-      </Card>
-      {messages.length ? (
-        <section className="flex flex-col gap-3" aria-label={t.speaking.transcript}>
-          <h2 className="text-xl font-semibold">{t.speaking.transcript}</h2>
-          <ol className="flex max-h-[28rem] flex-col gap-3 overflow-y-auto pr-1">
-            {messages.map((message, index) => (
-              <li
-                key={index}
-                className={`max-w-[90%] rounded-xl border border-border px-4 py-3 ${message.role === 'assistant' ? 'self-start bg-surface' : 'self-end bg-surface-muted'}`}
+        <span className="speaking-language-badge">
+          <span className="status-dot" /> English-speaking AI teacher
+        </span>
+      </header>
+      <div className="speaking-layout">
+        <div className="speaking-main">
+          <Card className="speaking-console">
+            <div className="speaking-setup">
+              <SelectField
+                label={t.speaking.level}
+                value={level || user.settings.targetLevel}
+                disabled={active}
+                onChange={(event) => setLevel(event.target.value as CefrLevel)}
+                options={CEFR_LEVELS.map((value) => ({ value, label: value }))}
+              />
+              <TextField
+                label={t.speaking.topic}
+                placeholder={t.speaking.topicPlaceholder}
+                value={topic}
+                maxLength={80}
+                disabled={active}
+                onChange={(event) => setTopic(event.target.value)}
+              />
+            </div>
+            {!active ? (
+              <div
+                className="speaking-topic-suggestions"
+                role="group"
+                aria-label="Suggested conversation topics"
               >
-                <p className="mb-1 text-xs font-semibold text-muted">
-                  {message.role === 'assistant' ? t.speaking.teacher : t.speaking.you}
-                </p>
-                <p
-                  lang={message.role === 'assistant' ? 'en' : undefined}
-                  className="leading-relaxed whitespace-pre-wrap"
-                >
-                  {message.content}
-                </p>
-              </li>
-            ))}
-          </ol>
-          <div ref={latest} />
+                <span>TRY A TOPIC</span>
+                {['Everyday life', 'Travel', 'Work & study', 'Food & culture'].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={topic === value || (!topic && value === 'Everyday life')}
+                    onClick={() => setTopic(value)}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="speaking-current-topic">
+                <span className="status-dot" />
+                {level || user.settings.targetLevel} · {topic.trim() || 'Everyday life'}
+              </p>
+            )}
+            <section className="speaking-call-stage" aria-label="Voice call">
+              <div className="speaking-orb-scene" aria-hidden="true">
+                <span className="speaking-orbit orbit-outer" />
+                <span className="speaking-orbit orbit-inner" />
+                <div className="speaking-orb">
+                  <Icon
+                    name={state === 'paused' ? 'pause' : state === 'idle' ? 'phone' : 'mic'}
+                    width="35"
+                    height="35"
+                  />
+                </div>
+                <span className="speaking-orb-caption">
+                  {state === 'idle'
+                    ? 'YOUR ENGLISH, OUT LOUD'
+                    : state === 'listening'
+                      ? 'THE FLOOR IS YOURS'
+                      : state === 'speaking'
+                        ? 'LISTEN. THEN MAKE IT YOURS.'
+                        : state === 'paused'
+                          ? 'TAKE A MOMENT'
+                          : 'ONE MOMENT'}
+                </span>
+              </div>
+              <p role="status" aria-live="polite" className="speaking-call-status">
+                {t.speaking.states[state]}
+              </p>
+              <p className="speaking-call-hint">
+                {state === 'idle'
+                  ? 'Choose a topic, take a breath, and say hello. Your teacher will guide the conversation.'
+                  : state === 'listening'
+                    ? 'Speak naturally. A short pause sends your turn automatically.'
+                    : state === 'speaking'
+                      ? 'Listen to your teacher, or interrupt when you are ready to respond.'
+                      : state === 'paused'
+                        ? 'Your microphone is off. Continue whenever you feel ready.'
+                        : 'Your teacher is getting the next part of the conversation ready.'}
+              </p>
+              <div className="speaking-call-controls">
+                {!active ? (
+                  <Button size="lg" onClick={start}>
+                    <Icon name="phone" width="18" height="18" />
+                    {t.speaking.start}
+                    <Icon name="arrow" width="17" height="17" />
+                  </Button>
+                ) : (
+                  <>
+                    {state === 'listening' ? (
+                      <Button variant="secondary" onClick={() => call.current?.send()}>
+                        <Icon name="check" width="16" height="16" />
+                        {t.speaking.send}
+                      </Button>
+                    ) : null}
+                    {state === 'speaking' ? (
+                      <Button variant="secondary" onClick={() => call.current?.interrupt()}>
+                        <Icon name="mic" width="16" height="16" />
+                        {t.speaking.interrupt}
+                      </Button>
+                    ) : null}
+                    {state !== 'connecting' ? (
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          state === 'paused' ? call.current?.resume() : call.current?.pause()
+                        }
+                      >
+                        <Icon name={state === 'paused' ? 'play' : 'pause'} width="16" height="16" />
+                        {state === 'paused' ? t.speaking.resume : t.speaking.pause}
+                      </Button>
+                    ) : null}
+                    <Button variant="danger-outline" onClick={() => call.current?.end()}>
+                      <Icon name="phone" width="16" height="16" />
+                      {t.speaking.end}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </section>
+            <p className="speaking-mic-note">
+              <Icon name="mic" width="12" height="12" />
+              {active
+                ? 'Your microphone follows the call status above.'
+                : 'Microphone access starts only when you call.'}
+            </p>
+            {error ? <Alert tone="danger">{error}</Alert> : null}
+            {mock ? <Alert tone="warning">{t.speaking.mock}</Alert> : null}
+          </Card>
+          <details
+            className="speaking-session-tools"
+            onToggle={(event) => setToolsOpen(event.currentTarget.open)}
+          >
+            <summary>
+              <Icon name="settings" width="14" height="14" />
+              Focus timer & call information
+              <Icon name="chevron" width="13" height="13" />
+            </summary>
+            {toolsOpen ? (
+              <div className="speaking-tools-content">
+                <div className="grammar-focus">
+                  <PracticeTimer skill="speaking" />
+                </div>
+                <div>
+                  <h2>A little space to practise.</h2>
+                  <p>{t.speaking.howItWorks}</p>
+                  <p>{t.speaking.privacy}</p>
+                </div>
+              </div>
+            ) : null}
+          </details>
+        </div>
+        <section className="speaking-conversation" aria-label={t.speaking.transcript}>
+          <header>
+            <div>
+              <Icon name="cards" width="17" height="17" />
+              <h2>{t.speaking.transcript}</h2>
+            </div>
+            <span>{messages.length ? `${messages.length} messages` : 'YOUR PRACTICE SPACE'}</span>
+          </header>
+          {messages.length ? (
+            <ol
+              ref={latest}
+              className="speaking-messages"
+              aria-live="polite"
+              aria-relevant="additions"
+            >
+              {messages.map((message, index) => (
+                <li key={index} className={`speaking-message speaking-message-${message.role}`}>
+                  <p className="speaking-message-author">
+                    {message.role === 'assistant' ? t.speaking.teacher : t.speaking.you}
+                  </p>
+                  <p
+                    lang={message.role === 'assistant' ? 'en' : undefined}
+                    className="speaking-message-text"
+                  >
+                    {message.content}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="speaking-conversation-empty">
+              <div aria-hidden="true">
+                <span>Hello.</span>
+                <span>
+                  Let’s talk<span className="text-primary"> ↗</span>
+                </span>
+              </div>
+              <h3>
+                Good conversations
+                <br />
+                start with a hello.
+              </h3>
+              <p>Your words and your teacher’s replies will appear here as you talk.</p>
+              <span>
+                <Icon name="check" width="12" height="12" /> Make mistakes. Find your words. Keep
+                going.
+              </span>
+            </div>
+          )}
+          <footer>
+            <span className={active ? 'status-dot' : 'speaking-idle-dot'} />
+            <span>
+              {active
+                ? 'Conversation in progress'
+                : messages.length
+                  ? 'Call ended · Your conversation stays here until the next call'
+                  : 'Ready when you are'}
+            </span>
+          </footer>
         </section>
-      ) : null}
+      </div>
     </div>
   );
 }

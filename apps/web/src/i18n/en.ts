@@ -90,7 +90,7 @@ export const en = {
     title: 'My vocabulary',
     search: 'Search vocabulary',
     searchPlaceholder: 'Start typing a word…',
-    empty: 'Your vocabulary is empty. Open a text in the library and save your first words.',
+    empty: 'Your vocabulary is empty. Add a word above or save words while reading a text.',
     notFound: 'No words found.',
     loadMore: 'Load more',
     dueNow: 'Due for review',

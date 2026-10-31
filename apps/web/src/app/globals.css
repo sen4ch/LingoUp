@@ -1,8 +1,384 @@
 @import 'tailwindcss';
 @import '@lingoup/ui/styles.css';
+@import './vocabulary.css';
+@import './grammar.css';
+@import './review.css';
+@import './speaking.css';
+@import './writing.css';
+@import './mistakes.css';
+@import './exams.css';
 
 /* Scan the design-system sources for utility classes. */
 @source '../../../../packages/ui/src';
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 140px;
+  }
+  body {
+    background-image: radial-gradient(ellipse at 80% 0%, #14201955, transparent 42%);
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .site-main > :not(.library-page) {
+    animation: page-enter 350ms ease-out;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary);
+    font-family: monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    line-height: 1.6;
+  }
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 12px #6aff9566;
+  }
+  .home-hero {
+    display: grid;
+    grid-template-columns: 1.12fr 1fr;
+    gap: 20px 36px;
+    padding-top: 26px;
+  }
+  .hero-copy {
+    padding: 12px 0 24px;
+  }
+  .hero-copy h1 {
+    margin: 24px 0;
+    font-size: clamp(44px, 5.1vw, 72px);
+    font-weight: 500;
+    line-height: 1.06;
+    letter-spacing: -0.055em;
+  }
+  .hero-copy h1 > span {
+    color: var(--primary);
+  }
+  .hero-description {
+    max-width: 420px;
+    margin-bottom: 28px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .hero-note {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .hero-note > span {
+    color: var(--primary);
+  }
+  .learning-visual {
+    position: relative;
+    min-height: 380px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background:
+      radial-gradient(ellipse at 50% 50%, #213d2a88, transparent 65%),
+      repeating-linear-gradient(0deg, transparent 0 35px, #6aff9509 35px 36px),
+      repeating-linear-gradient(90deg, transparent 0 35px, #6aff9509 35px 36px), #0e110f;
+  }
+  .visual-topline,
+  .visual-bottomline {
+    position: absolute;
+    right: 20px;
+    left: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: #838f86;
+    font-family: monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+  .visual-topline {
+    top: 20px;
+  }
+  .visual-bottomline {
+    bottom: 20px;
+  }
+  .orbit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    border: 1px solid #6aff9530;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .orbit-one {
+    width: 360px;
+    height: 210px;
+    transform: translate(-50%, -50%) rotate(-35deg);
+  }
+  .orbit-two {
+    width: 360px;
+    height: 210px;
+    transform: translate(-50%, -50%) rotate(35deg);
+  }
+  .orbit-three {
+    width: 270px;
+    height: 270px;
+    border-style: dashed;
+    border-color: #6aff951f;
+  }
+  .orbit-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: 200px;
+    height: 200px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    border: 1px solid #6aff9560;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #263f2c, #0e1912 80%);
+    box-shadow:
+      12px 14px 0 #080e0b,
+      13px 15px 0 #6aff9530,
+      0 0 80px #6aff9510;
+  }
+  .orbit-core > span:first-child {
+    color: #c0d5c5;
+    font-size: 13px;
+  }
+  .orbit-core > span:last-child {
+    color: #91aa98;
+    font-family: monospace;
+    font-size: 7px;
+    letter-spacing: 0.1em;
+  }
+  .orbit-core strong {
+    color: var(--primary);
+    font-size: 74px;
+    font-weight: 400;
+    letter-spacing: -0.08em;
+    line-height: 1;
+  }
+  .orbit-core strong > span {
+    margin-left: 6px;
+    font-size: 33px;
+    vertical-align: top;
+  }
+  .floating-word {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 11px 16px;
+    border: 1px solid #3e5445;
+    border-radius: 5px;
+    background: #121b15;
+    font-family: monospace;
+    font-size: 11px;
+    box-shadow: 0 8px 24px #0005;
+  }
+  .word-hello {
+    top: 24%;
+    right: 8%;
+    transform: rotate(5deg);
+  }
+  .word-hello > span {
+    color: var(--primary);
+  }
+  .word-world {
+    bottom: 20%;
+    left: 4%;
+    transform: rotate(-4deg);
+  }
+  .hero-metrics {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 18px;
+    padding: 26px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-metrics > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 30px;
+    border-left: 1px solid var(--border);
+  }
+  .hero-metrics > div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .hero-metrics strong {
+    font-size: 25px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+  .hero-metrics span {
+    color: var(--muted);
+    font-family: monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+  .library-section-heading {
+    margin-top: 32px;
+    padding-top: 6px;
+  }
+  .reading-card {
+    overflow: hidden;
+    padding: 20px;
+    background: linear-gradient(145deg, #161a17, #101210);
+  }
+  .reading-card-art {
+    position: relative;
+    height: 130px;
+    overflow: hidden;
+    margin: -20px -20px 2px;
+    border-bottom: 1px solid var(--border);
+    background: repeating-linear-gradient(135deg, transparent 0 20px, #6aff9509 20px 21px), #142219;
+  }
+  .art-label {
+    position: absolute;
+    top: 13px;
+    left: 18px;
+    color: #95aa9b;
+    font-family: monospace;
+    font-size: 8px;
+    letter-spacing: 0.14em;
+  }
+  .art-symbol {
+    position: absolute;
+    top: 15px;
+    right: 28px;
+    color: #6aff9577;
+    font-size: 100px;
+    font-weight: 300;
+    letter-spacing: -0.1em;
+    line-height: 1.2;
+  }
+  .art-index {
+    position: absolute;
+    bottom: 15px;
+    left: 18px;
+    color: #a2b8a9;
+    font-family: monospace;
+    font-size: 11px;
+  }
+  .art-1 {
+    background-color: #172125;
+  }
+  .art-1 .art-symbol {
+    color: #9cc5ff88;
+    transform: rotate(-10deg);
+  }
+  .art-2 {
+    background-color: #24201a;
+  }
+  .art-2 .art-symbol {
+    color: #eac88288;
+  }
+  .art-3 {
+    background-color: #211c27;
+  }
+  .art-3 .art-symbol {
+    color: #d1b2ff88;
+    font-size: 78px;
+    top: 30px;
+  }
+  .site-footer {
+    margin-top: 56px;
+  }
+  @media (max-width: 1023px) {
+    .home-hero {
+      gap: 20px;
+    }
+    .hero-copy h1 {
+      font-size: 52px;
+    }
+    .learning-visual {
+      min-height: 360px;
+    }
+    .site-nav {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+  }
+  @media (max-width: 639px) {
+    .home-hero {
+      grid-template-columns: 1fr;
+      padding-top: 0;
+    }
+    .hero-copy {
+      padding-bottom: 4px;
+    }
+    .hero-copy h1 {
+      margin: 20px 0;
+      font-size: clamp(40px, 10.5vw, 60px);
+    }
+    .hero-description {
+      font-size: 14px;
+    }
+    .learning-visual {
+      min-height: 310px;
+      margin-top: 10px;
+    }
+    .hero-metrics {
+      margin-top: 4px;
+      padding: 20px 0;
+    }
+    .hero-metrics > div {
+      padding-left: 12px;
+    }
+    .hero-metrics strong {
+      font-size: 19px;
+    }
+    .hero-metrics span {
+      max-width: 85px;
+      font-size: 8px;
+      line-height: 1.7;
+    }
+    .library-section-heading {
+      margin-top: 16px;
+    }
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 @layer components {
   /* Word under the keyboard reading cursor and the current lookup selection. */

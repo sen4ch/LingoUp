@@ -98,8 +98,16 @@ test('voice call transcribes a turn, answers in English, pauses and releases the
   });
   await page.goto('/speaking');
   await expect(page.getByRole('link', { name: 'Speaking', exact: true })).toBeVisible();
+  await page
+    .getByRole('group', { name: 'Suggested conversation topics' })
+    .getByRole('button', { name: 'Travel', exact: true })
+    .click();
+  await expect(page.getByLabel('What shall we talk about?')).toHaveValue('Travel');
+  await expect(page.getByRole('button', { name: 'Call the teacher' })).toBeInViewport({ ratio: 1 });
   await page.getByRole('button', { name: 'Call the teacher' }).click();
   await expect(page.locator('p[role=status]')).toHaveText('Listening to you');
+  await expect(page.getByLabel('What shall we talk about?')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'End call' })).toBeInViewport({ ratio: 1 });
   await page.getByRole('button', { name: 'Mute microphone' }).click();
   await expect(page.locator('p[role=status]')).toHaveText('Microphone muted');
   expect(await page.evaluate(() => (window as any).testStream.getAudioTracks()[0].enabled)).toBe(
@@ -121,4 +129,5 @@ test('voice call transcribes a turn, answers in English, pauses and releases the
   expect(await page.evaluate(() => (window as any).testStream.getAudioTracks()[0].readyState)).toBe(
     'ended',
   );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

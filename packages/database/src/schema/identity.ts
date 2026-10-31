@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, pgSchema, smallint, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, index, jsonb, pgSchema, smallint, text, uuid } from 'drizzle-orm/pg-core';
 import { CEFR_LEVEL_CHECK, createdAt, primaryId, timestamptz, updatedAt } from './_columns.js';
 
 /** Owned by the Identity module. Other schemas may reference `identity.users(id)` only. */
@@ -52,6 +52,15 @@ export const userSettings = identitySchema.table(
     dailyGoalMinutes: smallint('daily_goal_minutes').notNull().default(15),
     /** Explicit consent to send user content to external AI providers. Off by default. */
     aiDataSharing: boolean('ai_data_sharing').notNull().default(false),
+    reviewTemplate: jsonb('review_template')
+      .$type<{
+        front: 'term' | 'translation';
+        showDefinition: boolean;
+        showContext: boolean;
+        showImage: boolean;
+      }>()
+      .notNull()
+      .default({ front: 'term', showDefinition: true, showContext: true, showImage: true }),
     updatedAt: updatedAt(),
   },
   (t) => [

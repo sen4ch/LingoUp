@@ -57,6 +57,20 @@
       "when": 1793393253956,
       "tag": "0007_weekly-study-time",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793480205023,
+      "tag": "0008_review-template",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793483983533,
+      "tag": "0009_word-categories",
+      "breakpoints": true
     }
   ]
 }

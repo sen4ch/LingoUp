@@ -14,6 +14,7 @@ export function toUserSettings(row: SettingsRow): UserSettings {
     targetLevel: row.targetLevel as UserSettings['targetLevel'],
     dailyGoalMinutes: row.dailyGoalMinutes,
     aiDataSharing: row.aiDataSharing,
+    reviewTemplate: row.reviewTemplate,
   };
 }
 

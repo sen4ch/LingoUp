@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MistakeEntrySchema, MistakeListSchema, type MistakeEntry } from '@lingoup/contracts';
-import { Alert, Button, Card, EmptyState, SelectField, Skeleton } from '@lingoup/ui';
+import { Alert, Button, Card, SelectField, Skeleton } from '@lingoup/ui';
 import { api } from '@/lib/api-client';
 import { useRequireUser } from '@/lib/auth';
 import { describeError } from '@/lib/errors';
+import { VocabularyIcon as Icon } from '@/components/vocabulary-icon';
 
 export default function MistakesPage() {
   const { user, isLoading } = useRequireUser();
@@ -44,26 +45,67 @@ export default function MistakesPage() {
   if (isLoading || !user) return <Skeleton className="h-96" />;
   const items = journal.data?.pages.flatMap((page) => page.items) ?? [];
   const counts = journal.data?.pages[0]?.counts;
+  const total = counts ? counts.open + counts.resolved : 0;
+  const understood = total && counts ? Math.round((counts.resolved / total) * 100) : 0;
+  const filtered = source !== '' || category !== '' || status !== 'open';
+  function resetFilters() {
+    setSource('');
+    setCategory('');
+    setStatus('open');
+  }
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Mistake journal</h1>
-        <p className="max-w-3xl text-muted">
-          Learn from your Writing, Grammar and Speaking corrections. Review the rule, try the phrase
-          again, and mark it as understood when you are ready.
-        </p>
-        {counts ? (
-          <p className="text-sm font-medium">
-            {counts.open} to review · {counts.resolved} understood
+    <div className="mistakes-workspace">
+      <header className="mistakes-heading">
+        <div>
+          <p className="eyebrow">
+            <Icon name="spark" width="13" height="13" /> SMALL CORRECTIONS. STRONGER ENGLISH.
           </p>
-        ) : null}
-        <p className="text-xs text-muted">
-          New corrections are saved automatically. Demo AI feedback is excluded. Style suggestions
-          are labelled separately. Marking an entry as understood does not award XP.
-        </p>
+          <h1>
+            Mistake journal
+            <span aria-hidden="true" className="text-primary">
+              .
+            </span>
+          </h1>
+          <p>Notice the pattern. Understand the rule. Make your next attempt a little better.</p>
+          <p className="mistakes-counts" role="status">
+            {counts
+              ? `${counts.open} to review · ${counts.resolved} understood`
+              : 'Loading your journal…'}
+          </p>
+        </div>
+        <div
+          className="mistakes-progress"
+          style={{ '--understood': `${understood}%` } as CSSProperties}
+        >
+          <div
+            className="mistakes-progress-ring"
+            role="img"
+            aria-label={
+              counts
+                ? total
+                  ? `${understood}% of entries marked as understood`
+                  : 'No entries yet'
+                : 'Loading journal statistics'
+            }
+          >
+            <span>
+              {counts && total ? `${understood}%` : <Icon name="book" width="23" height="23" />}
+            </span>
+          </div>
+          <div>
+            <p className="eyebrow">YOUR LEARNING, IN FOCUS</p>
+            <h2>{counts && total ? 'One step clearer.' : 'Room to grow.'}</h2>
+            <p>
+              {counts
+                ? `${total} ${total === 1 ? 'entry' : 'entries'} in your journal`
+                : 'Your personal learning journal'}
+            </p>
+            <span>Progress through understanding.</span>
+          </div>
+        </div>
       </header>
-      <Card className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <Card className="mistakes-toolbar">
+        <div className="mistakes-filters">
           <SelectField
             label="Source"
             value={source}
@@ -97,15 +139,27 @@ export default function MistakesPage() {
             ]}
           />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={practice}
-            onChange={(event) => setPractice(event.target.checked)}
-            className="accent-primary"
-          />
-          Hide corrections to practise first
-        </label>
+        <div className="mistakes-toolbar-footer">
+          <label className="mistakes-practice-switch">
+            <input
+              type="checkbox"
+              checked={practice}
+              onChange={(event) => setPractice(event.target.checked)}
+            />
+            <span>Hide corrections to practise first</span>
+          </label>
+          <span>
+            {practice
+              ? 'Try it yourself, then reveal the answer.'
+              : 'Read, reflect, and try again.'}
+          </span>
+          {filtered ? (
+            <button type="button" onClick={resetFilters}>
+              <Icon name="close" width="12" height="12" />
+              Reset filters
+            </button>
+          ) : null}
+        </div>
       </Card>
       {update.isError ? <Alert tone="danger">{describeError(update.error)}</Alert> : null}
       {journal.isPending ? (
@@ -118,108 +172,222 @@ export default function MistakesPage() {
           </Button>
         </Alert>
       ) : items.length ? (
-        <ul className="space-y-4">
-          {items.map((entry) => (
-            <li key={entry.id}>
-              <Card className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold capitalize">{entry.source}</span>
-                    <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${entry.category === 'word' ? 'bg-red-100 text-red-900' : entry.category === 'grammar' ? 'bg-yellow-100 text-yellow-950' : 'bg-blue-100 text-blue-950'}`}
-                    >
-                      {entry.category === 'suggestion'
-                        ? 'Style suggestion'
-                        : entry.category === 'word'
-                          ? 'Word correction'
-                          : 'Grammar'}
-                    </span>
-                    {entry.errorType ? (
-                      <span className="text-muted capitalize">
-                        {entry.errorType.replaceAll('_', ' ')}
+        <>
+          <div className="mistakes-list-heading">
+            <p className="eyebrow">
+              <span className="status-dot" />
+              {status === 'open'
+                ? 'A LITTLE PRACTICE GOES A LONG WAY'
+                : status === 'resolved'
+                  ? 'LESSONS YOU HAVE TAKEN WITH YOU'
+                  : 'EVERY CORRECTION, ONE PLACE'}
+            </p>
+            <span>
+              {items.length}
+              {journal.hasNextPage ? '+' : ''} {items.length === 1 ? 'entry' : 'entries'} shown
+            </span>
+          </div>
+          <ul className="mistakes-list" aria-label="Journal entries">
+            {items.map((entry) => (
+              <li key={entry.id}>
+                <Card
+                  className="mistake-entry"
+                  data-category={entry.category}
+                  data-resolved={Boolean(entry.resolvedAt)}
+                >
+                  <header className="mistake-entry-header">
+                    <div>
+                      <span className="mistake-source">
+                        <Icon
+                          name={
+                            entry.source === 'writing'
+                              ? 'edit'
+                              : entry.source === 'speaking'
+                                ? 'mic'
+                                : 'book'
+                          }
+                          width="13"
+                          height="13"
+                        />
+                        {entry.source}
                       </span>
-                    ) : null}
-                  </div>
-                  <span className="text-xs text-muted">
-                    {entry.createdAt.slice(0, 10)} · {entry.resolvedAt ? 'Understood' : 'To review'}
-                  </span>
-                </div>
-                <p className="text-sm whitespace-pre-wrap text-muted">{entry.context}</p>
-                <div>
-                  <p className="mb-1 text-xs font-semibold text-muted">Your phrase</p>
-                  <p lang="en" className="font-reading text-lg whitespace-pre-wrap wrap-break-word">
-                    {entry.original}
-                  </p>
-                </div>
-                <details key={`${entry.id}:${practice}`} open={!practice} className="space-y-3">
-                  <summary className="cursor-pointer text-sm font-semibold text-primary">
-                    Correction and rule
-                  </summary>
-                  <div>
-                    <p className="mb-1 text-xs font-semibold text-muted">Corrected phrase</p>
-                    <p
-                      lang="en"
-                      className="font-reading text-lg whitespace-pre-wrap text-primary wrap-break-word"
-                    >
-                      {entry.corrected || '(Remove this fragment)'}
-                    </p>
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap">{entry.explanation}</p>
-                  {entry.example ? (
-                    <p className="text-sm">
-                      <strong>Example: </strong>
-                      {entry.example}
-                    </p>
-                  ) : null}
-                  {entry.alternatives.length ? (
-                    <div className="space-y-2 text-sm">
-                      <p className="font-semibold">Other possible meanings</p>
-                      {entry.alternatives.map((alternative, index) => (
-                        <p key={index}>
-                          <strong>{alternative.replacement}</strong> — {alternative.meaning}
-                        </p>
-                      ))}
+                      <span className="mistake-category">
+                        {entry.category === 'suggestion'
+                          ? 'Style suggestion'
+                          : entry.category === 'word'
+                            ? 'Word correction'
+                            : 'Grammar'}
+                      </span>
+                      {entry.errorType ? (
+                        <span className="mistake-type">{entry.errorType.replaceAll('_', ' ')}</span>
+                      ) : null}
                     </div>
+                    <span className="mistake-entry-status">
+                      {entry.resolvedAt ? (
+                        <Icon name="check" width="11" height="11" />
+                      ) : (
+                        <span className="mistake-status-dot" />
+                      )}
+                      {entry.resolvedAt ? 'Understood' : 'To review'}
+                      <time dateTime={entry.createdAt}>{entry.createdAt.slice(0, 10)}</time>
+                    </span>
+                  </header>
+                  <div className="mistake-comparison">
+                    <div className="mistake-original">
+                      <p className="eyebrow">YOUR PHRASE</p>
+                      <p lang="en">{entry.original}</p>
+                      <span>
+                        {entry.category === 'suggestion'
+                          ? 'A chance to make it sound more natural.'
+                          : 'A small detail worth another look.'}
+                      </span>
+                    </div>
+                    <details
+                      key={`${entry.id}:${practice}`}
+                      open={!practice}
+                      className="mistake-answer"
+                    >
+                      <summary>
+                        Correction and rule
+                        <Icon name="chevron" width="13" height="13" />
+                      </summary>
+                      <p className="mistake-reveal-hint">
+                        Try correcting the phrase, then reveal the answer.
+                      </p>
+                      <div className="mistake-answer-body">
+                        <p className="eyebrow">
+                          {entry.category === 'suggestion'
+                            ? 'OPTIONAL REWRITE'
+                            : 'CORRECTED PHRASE'}
+                        </p>
+                        <p lang="en" className="mistake-corrected">
+                          {entry.corrected || '(Remove this fragment)'}
+                        </p>
+                        <p className="mistake-explanation">{entry.explanation}</p>
+                        {entry.example ? (
+                          <p className="mistake-example">
+                            <span>EXAMPLE</span>
+                            <span lang="en">{entry.example}</span>
+                          </p>
+                        ) : null}
+                        {entry.alternatives.length ? (
+                          <div className="mistake-alternatives">
+                            <h3>Other possible meanings</h3>
+                            {entry.alternatives.map((alternative, index) => (
+                              <p key={index}>
+                                <strong lang="en">{alternative.replacement}</strong>
+                                <span>{alternative.meaning}</span>
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </details>
+                  </div>
+                  {entry.context ? (
+                    <details className="mistake-context">
+                      <summary>
+                        <Icon name="cards" width="12" height="12" />
+                        View original context
+                        <Icon name="chevron" width="12" height="12" />
+                      </summary>
+                      <p>{entry.context}</p>
+                    </details>
                   ) : null}
-                </details>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <Link className="text-sm text-primary underline" href={entry.sourceHref}>
-                    Practise {entry.source}
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant={entry.resolvedAt ? 'secondary' : 'primary'}
-                    disabled={update.isPending}
-                    onClick={() => update.mutate(entry)}
-                  >
-                    {entry.resolvedAt ? 'Review again' : 'Mark as understood'}
-                  </Button>
-                </div>
-              </Card>
-            </li>
-          ))}
-        </ul>
+                  <footer className="mistake-entry-footer">
+                    <Link href={entry.sourceHref}>
+                      Practise {entry.source}
+                      <Icon name="arrow" width="13" height="13" />
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant={entry.resolvedAt ? 'secondary' : 'primary'}
+                      disabled={update.isPending}
+                      loading={update.isPending && update.variables?.id === entry.id}
+                      onClick={() => update.mutate(entry)}
+                    >
+                      {entry.resolvedAt ? (
+                        <Icon name="clock" width="12" height="12" />
+                      ) : (
+                        <Icon name="check" width="12" height="12" />
+                      )}
+                      {entry.resolvedAt ? 'Review again' : 'Mark as understood'}
+                    </Button>
+                  </footer>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <EmptyState
-          title={
-            status === 'open' && !source && !category
-              ? 'No mistakes to review'
-              : 'No matching entries'
-          }
-        >
-          New corrections will appear here after checked grammar answers, assessed writing replies
-          or speaking turns. Try changing the filters to see other entries.
-        </EmptyState>
+        <Card className="mistakes-empty">
+          <div className="mistakes-empty-art" aria-hidden="true">
+            <Icon name={filtered ? 'search' : 'check'} width="30" height="30" />
+            <span />
+            <span />
+          </div>
+          <p className="eyebrow">
+            {filtered ? 'A DIFFERENT VIEW' : 'EVERY ATTEMPT TEACHES YOU SOMETHING'}
+          </p>
+          <h2>{filtered ? 'No matching entries' : 'No mistakes to review'}</h2>
+          <p>
+            {filtered
+              ? 'There are no corrections for these filters. Try another source, status, or correction type.'
+              : counts?.resolved
+                ? 'You have reviewed every open correction. Keep practising, or revisit what you have already learned.'
+                : 'Your checked Grammar, Writing and Speaking corrections will find a home here. Start a little practice and come back to reflect.'}
+          </p>
+          {filtered ? (
+            <Button variant="secondary" onClick={resetFilters}>
+              Reset filters
+            </Button>
+          ) : (
+            <div className="mistakes-empty-actions">
+              <Link href="/grammar">
+                <Icon name="book" width="14" height="14" />
+                Practise grammar
+                <Icon name="arrow" width="13" height="13" />
+              </Link>
+              <Link href="/writing">
+                <Icon name="edit" width="14" height="14" />
+                Try writing
+                <Icon name="arrow" width="13" height="13" />
+              </Link>
+              {counts?.resolved ? (
+                <button type="button" onClick={() => setStatus('resolved')}>
+                  View understood entries
+                  <Icon name="arrow" width="13" height="13" />
+                </button>
+              ) : null}
+            </div>
+          )}
+        </Card>
       )}
       {journal.hasNextPage ? (
-        <Button
-          variant="secondary"
-          loading={journal.isFetchingNextPage}
-          onClick={() => void journal.fetchNextPage()}
-        >
-          Load more
-        </Button>
+        <div className="mistakes-pagination">
+          <Button
+            variant="secondary"
+            loading={journal.isFetchingNextPage}
+            onClick={() => void journal.fetchNextPage()}
+          >
+            Load more
+            <Icon name="chevron" width="13" height="13" />
+          </Button>
+        </div>
       ) : null}
+      <details className="mistakes-about">
+        <summary>
+          <Icon name="spark" width="13" height="13" />
+          About your mistake journal
+          <Icon name="chevron" width="13" height="13" />
+        </summary>
+        <p>
+          New corrections are saved automatically from assessed Writing, checked Grammar answers,
+          and Speaking turns. Demo AI feedback is excluded. Style suggestions are labelled
+          separately. Mark an entry as understood when the correction makes sense to you. You can
+          reopen it any time. Marking entries as understood does not award XP.
+        </p>
+      </details>
     </div>
   );
 }

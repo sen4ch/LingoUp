@@ -135,6 +135,14 @@ export function PracticeSectionTimer() {
   const pathname = usePathname();
   const { data: user } = useCurrentUser();
   const skill = practiceSkillForPath(pathname);
+  if (
+    pathname === '/vocabulary' ||
+    pathname === '/review' ||
+    pathname === '/speaking' ||
+    pathname === '/writing' ||
+    pathname.startsWith('/grammar')
+  )
+    return null;
   if (!skill || skill === 'reading' || (!user && skill !== 'grammar')) return null;
   return (
     <div className="mb-6">

@@ -11,6 +11,8 @@ import {
   UpdateWordRequestSchema,
   WordPageSchema,
   WordSchema,
+  WordCategoryCountsSchema,
+  type WordCategoryCounts,
   type ListWordsQuery,
   type LookupRequest,
   type LookupResponse,
@@ -27,6 +29,12 @@ import { VocabularyService } from '../application/vocabulary.service.js';
 @Controller('v1/vocabulary')
 export class VocabularyController {
   constructor(private readonly vocabulary: VocabularyService) {}
+
+  @Get('categories')
+  @ZodResponse(200, WordCategoryCountsSchema)
+  categories(@CurrentUser() user: AuthenticatedUser): Promise<WordCategoryCounts> {
+    return this.vocabulary.categoryCounts(user.id);
+  }
 
   /** May call the AI gateway, so it has its own tighter rate limit. */
   @Post('lookup')

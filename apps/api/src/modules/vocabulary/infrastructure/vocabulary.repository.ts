@@ -1,5 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { CardState, UpdateWordRequest, Word, WordImage } from '@lingoup/contracts';
+import type {
+  CardState,
+  UpdateWordRequest,
+  Word,
+  WordImage,
+  WordCategory,
+} from '@lingoup/contracts';
 import type { Database, DbExecutor } from '@lingoup/database';
 import { cards, reviewLogs, wordImages, words } from '@lingoup/database/schema/vocabulary';
 import type { CardSchedule } from '@lingoup/learning-engine';
@@ -58,6 +64,7 @@ export function toWordDto(word: WordRow, card: CardRow, image: WordImage | null 
     id: word.id,
     term: word.term,
     normalizedTerm: word.normalizedTerm,
+    category: word.category as WordCategory,
     definition: word.definition,
     translation: word.translation,
     contextSentence: word.contextSentence,
@@ -116,7 +123,18 @@ export class VocabularyRepository {
     return row;
   }
 
-  async listWords(userId: string, options: { cursor?: string; limit: number; q?: string }) {
+  async categoryCounts(userId: string) {
+    return this.db
+      .select({ category: words.category, count: count() })
+      .from(words)
+      .where(eq(words.userId, userId))
+      .groupBy(words.category);
+  }
+
+  async listWords(
+    userId: string,
+    options: { cursor?: string; limit: number; q?: string; category?: WordCategory },
+  ) {
     return this.db
       .select({ word: words, card: cards, image: imageColumns })
       .from(words)
@@ -125,6 +143,7 @@ export class VocabularyRepository {
       .where(
         and(
           eq(words.userId, userId),
+          options.category ? eq(words.category, options.category) : undefined,
           options.cursor ? lt(words.id, options.cursor) : undefined,
           options.q
             ? ilike(words.normalizedTerm, `%${escapeLike(options.q.toLowerCase())}%`)
@@ -135,7 +154,11 @@ export class VocabularyRepository {
       .limit(options.limit);
   }
 
-  async updateWord(userId: string, wordId: string, patch: UpdateWordRequest): Promise<boolean> {
+  async updateWord(
+    userId: string,
+    wordId: string,
+    patch: Omit<UpdateWordRequest, 'category'> & { category?: WordCategory },
+  ): Promise<boolean> {
     // The patch comes from JSON, so present keys are set fields; an empty patch is a no-op.
     if (Object.keys(patch).length === 0) {
       return (await this.findWord(userId, wordId)) !== undefined;

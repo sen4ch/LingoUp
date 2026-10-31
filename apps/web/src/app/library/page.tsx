@@ -25,23 +25,36 @@ export default async function LibraryPage({
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">{t.library.title}</h1>
-        <p className="max-w-2xl text-muted">{t.library.intro}</p>
-      </header>
-
+    <div className="library-page flex flex-col gap-6">
       <MyTextsTeaser />
       <ContinueLearning />
+      <header
+        id="text-library"
+        className="library-section-heading flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <p className="eyebrow mb-3">// READ SOMETHING WORTH LEARNING</p>
+          <h1 className="text-3xl font-medium tracking-tight sm:text-4xl">
+            {t.library.title}
+            <span className="text-primary">.</span>
+          </h1>
+        </div>
+        <p className="max-w-md text-sm leading-relaxed text-muted">{t.library.intro}</p>
+      </header>
       <LevelFilter basePath="/library" active={level} />
 
       {items.length === 0 ? (
         <EmptyState title={t.library.empty} />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {items.map((text) => (
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((text, index) => (
             <li key={text.id}>
-              <Card className="relative flex h-full flex-col gap-3 transition-shadow focus-within:shadow-md hover:shadow-md">
+              <Card className="reading-card relative flex h-full flex-col gap-4 transition-colors hover:border-primary/50 focus-within:border-primary/50">
+                <div className={`reading-card-art art-${index % 4}`} aria-hidden="true">
+                  <span className="art-label">LINGOUP / READING</span>
+                  <span className="art-symbol">{['Aa', '↗', '“ ”', 'a—z'][index % 4]}</span>
+                  <span className="art-index">{String(index + 1).padStart(2, '0')}</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <LevelBadge level={text.level} />
                   <span className="text-xs text-muted">
@@ -49,7 +62,7 @@ export default async function LibraryPage({
                   </span>
                   <CompletionMark slug={text.slug} />
                 </div>
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-xl font-medium tracking-tight">
                   <Link
                     href={`/read/${text.slug}`}
                     className="after:absolute after:inset-0 hover:underline"
@@ -62,6 +75,13 @@ export default async function LibraryPage({
                   {text.topics.map((topic) => (
                     <Badge key={topic}>{topic}</Badge>
                   ))}
+                </div>
+                <div
+                  className="flex items-center justify-between border-t border-border pt-3 text-xs font-medium text-primary"
+                  aria-hidden="true"
+                >
+                  <span>Start reading</span>
+                  <span className="text-lg">↗</span>
                 </div>
               </Card>
             </li>

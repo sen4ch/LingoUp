@@ -12,6 +12,8 @@ import type {
 } from '@lingoup/contracts';
 import { isPgError, PG_ERROR, type Database } from '@lingoup/database';
 import { normalizeTerm, type SpacedRepetitionScheduler } from '@lingoup/learning-engine';
+import { WORD_CATEGORIES, type WordCategoryCounts } from '@lingoup/contracts';
+import { inferWordCategory } from '../domain/word-category.js';
 import {
   DATABASE,
   DomainError,
@@ -105,6 +107,7 @@ export class VocabularyService implements PersonalDataExporter {
             userId,
             term: request.term,
             normalizedTerm,
+            category: request.category ?? inferWordCategory(request.term),
             definition: request.definition ?? null,
             translation: request.translation ?? null,
             contextSentence: request.contextSentence ?? null,
@@ -138,6 +141,7 @@ export class VocabularyService implements PersonalDataExporter {
       limit: query.limit + 1,
       ...(query.cursor ? { cursor: query.cursor } : {}),
       ...(query.q ? { q: query.q } : {}),
+      ...(query.category ? { category: query.category } : {}),
     });
     const page = rows.slice(0, query.limit);
     return {
@@ -152,8 +156,26 @@ export class VocabularyService implements PersonalDataExporter {
     return toWordDto(row.word, row.card, toWordImage(row.image));
   }
 
+  async categoryCounts(userId: string): Promise<WordCategoryCounts> {
+    const rows = await this.repository.categoryCounts(userId);
+    const counts = new Map(rows.map((row) => [row.category, row.count]));
+    return {
+      items: WORD_CATEGORIES.map((category) => ({ category, count: counts.get(category) ?? 0 })),
+      total: rows.reduce((total, row) => total + row.count, 0),
+    };
+  }
+
   async updateWord(userId: string, wordId: string, patch: UpdateWordRequest): Promise<Word> {
-    if (!(await this.repository.updateWord(userId, wordId, patch))) throw notFound('Word');
+    const { category, ...fields } = patch;
+    const resolved =
+      category === null ? inferWordCategory((await this.getWord(userId, wordId)).term) : category;
+    if (
+      !(await this.repository.updateWord(userId, wordId, {
+        ...fields,
+        ...(resolved ? { category: resolved } : {}),
+      }))
+    )
+      throw notFound('Word');
     return this.getWord(userId, wordId);
   }
 

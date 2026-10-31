@@ -26,12 +26,27 @@ export const NATIVE_LANGUAGES = ['ru', 'uk', 'en', 'es', 'de', 'fr', 'pt', 'tr',
 export const NativeLanguageSchema = z.enum(NATIVE_LANGUAGES);
 export type NativeLanguage = z.infer<typeof NativeLanguageSchema>;
 
+export const ReviewTemplateSchema = z.object({
+  front: z.enum(['term', 'translation']),
+  showDefinition: z.boolean(),
+  showContext: z.boolean(),
+  showImage: z.boolean(),
+});
+export type ReviewTemplate = z.infer<typeof ReviewTemplateSchema>;
+export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
+  front: 'term',
+  showDefinition: true,
+  showContext: true,
+  showImage: true,
+};
+
 export const UserSettingsSchema = z.object({
   nativeLanguage: NativeLanguageSchema,
   targetLevel: CefrLevelSchema,
   dailyGoalMinutes: z.number().int().min(5).max(240),
   /** Explicit consent to send user content to external (third-party) AI providers. */
   aiDataSharing: z.boolean(),
+  reviewTemplate: ReviewTemplateSchema.optional(),
 });
 export type UserSettings = z.infer<typeof UserSettingsSchema>;
 

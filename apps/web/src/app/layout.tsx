@@ -21,10 +21,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f6f2' },
-    { media: '(prefers-color-scheme: dark)', color: '#141413' },
-  ],
+  themeColor: '#0c0c0c',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -40,16 +37,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Providers>
           <SiteHeader />
           <PracticeTimerRuntime />
-          <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-10">
+          <main
+            id="main"
+            className="site-main mx-auto w-full max-w-7xl flex-1 px-5 py-8 sm:px-8 sm:py-12"
+          >
             <PracticeSectionTimer />
             {children}
           </main>
-          <footer className="mx-auto w-full max-w-5xl border-t border-border px-4 py-6 text-xs text-muted">
-            {/* AGPL-3.0 §13: users interacting over a network must be offered the source code. */}
-            {t.footer.license}{' '}
-            <a href={SOURCE_CODE_URL} className="underline hover:text-text" rel="noopener">
-              {t.footer.source}
-            </a>
+          <footer className="site-footer mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 border-t border-border px-5 py-7 text-xs text-muted sm:px-8">
+            <span className="font-mono tracking-widest uppercase">
+              LingoUp <span className="text-primary">↗</span> Keep moving forward.
+            </span>
+            <span>
+              {/* AGPL-3.0 §13: users interacting over a network must be offered the source code. */}
+              {t.footer.license}{' '}
+              <a href={SOURCE_CODE_URL} className="underline hover:text-text" rel="noopener">
+                {t.footer.source}
+              </a>
+            </span>
           </footer>
         </Providers>
       </body>

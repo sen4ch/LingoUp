@@ -14,6 +14,8 @@ test('grammar: public rule, exercises checked after login, progress on the list'
   page,
 }) => {
   await page.goto('/grammar?level=A1');
+  await expect(page.locator('body')).not.toContainText(/[\u0400-\u04ff]/);
+  await page.getByLabel('Search grammar topics').fill('to be');
   await page.getByRole('link', { name: 'The verb to be: am, is, are' }).click();
   await expect(page.getByRole('heading', { level: 1, name: /The verb to be/ })).toBeVisible();
   await expect(page.getByText('Log in to check your answers')).toBeVisible();
@@ -32,6 +34,13 @@ test('grammar: public rule, exercises checked after login, progress on the list'
 
   await page.goto('/grammar?level=A1');
   await expect(page.getByText('Correct: 1 of 6')).toBeVisible();
+  await page.getByRole('button', { name: /^In progress/ }).click();
+  await expect(page.getByRole('link', { name: 'The verb to be: am, is, are' })).toBeVisible();
+  await page.getByRole('button', { name: /^Completed/ }).click();
+  await expect(page.getByRole('link', { name: 'The verb to be: am, is, are' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Show all lessons' }).click();
+  await expect(page.getByRole('link', { name: 'The verb to be: am, is, are' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test('AI text from my words and a vocabulary exercise', async ({ page, request }) => {

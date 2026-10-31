@@ -17,7 +17,7 @@ function Spans({ spans }: { spans: TextSpan[] }) {
 
 export function RuleBlocks({ blocks }: { blocks: GrammarBlock[] }) {
   return (
-    <div className="flex flex-col gap-4 leading-relaxed">
+    <div className="grammar-rule-blocks flex flex-col gap-4 leading-relaxed">
       {blocks.map((block, index) => {
         switch (block.type) {
           case 'heading':

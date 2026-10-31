@@ -1,5 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function openReply(page: Page) {
+  const write = page.getByRole('button', { name: 'Write', exact: true });
+  if (await write.isVisible()) await write.click();
+}
 
 test('email writing follows the profile level, highlights corrections and preserves failed drafts', async ({
   page,
@@ -94,6 +99,10 @@ test('email writing follows the profile level, highlights corrections and preser
   await expect(page.getByLabel('CEFR level')).toHaveValue('A2');
   await page.getByRole('button', { name: 'Receive an email' }).click();
   await expect(page.getByRole('heading', { name: 'Weekend plans', exact: true })).toBeVisible();
+  await openReply(page);
+  await expect(page.getByRole('button', { name: 'Send & get feedback' })).toBeInViewport({
+    ratio: 1,
+  });
   await page.getByLabel('Your email', { exact: true }).fill('helllo, I is happy. I wont go.');
   await page.getByRole('button', { name: 'Send & get feedback' }).click();
   await expect(page.getByRole('link', { name: 'helllo', exact: true })).toHaveClass(/bg-red-100/);
@@ -110,13 +119,32 @@ test('email writing follows the profile level, highlights corrections and preser
   await page.getByRole('link', { name: 'I wont go', exact: true }).click();
   await expect(page.getByText('I want to go', { exact: true })).toBeVisible();
   await expect(page.getByText("I won't go", { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Feedback', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.getByRole('button', { name: 'Email', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Weekend plans', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Feedback', exact: true }).click();
+  await expect(
+    page.getByRole('region', { name: 'Writing feedback A2', exact: true }),
+  ).toBeVisible();
   fail = true;
+  await openReply(page);
   await page.getByLabel('Your email', { exact: true }).fill('Please keep my draft.');
   await page.getByRole('button', { name: 'Send & get feedback' }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Could not send your email.' }),
   ).toContainText('Your draft is still here');
   await expect(page.getByLabel('Your email', { exact: true })).toHaveValue('Please keep my draft.');
+  await page.getByRole('button', { name: 'New exchange' }).click();
+  // The confirmation must protect a draft when starting another exchange.
+  await expect(page.getByLabel('Your email', { exact: true })).toHaveValue('Please keep my draft.');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'New exchange' }).click();
+  await expect(page.getByRole('button', { name: 'Receive an email' })).toBeVisible();
+  await expect(page.getByLabel('Your email', { exact: true })).toHaveValue('');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test('A1 shows three explanations but keeps the complete correction and expands hidden links', async ({
@@ -167,6 +195,7 @@ test('A1 shows three explanations but keeps the complete correction and expands 
   );
   await page.goto('/writing');
   await page.getByRole('button', { name: 'Receive an email' }).click();
+  await openReply(page);
   await page.getByLabel('Your email', { exact: true }).fill(source);
   await page.getByRole('button', { name: 'Send & get feedback' }).click();
   await expect(page.getByRole('region', { name: 'Corrected text', exact: true })).toContainText(

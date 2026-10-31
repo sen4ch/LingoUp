@@ -1,0 +1,1 @@
+ALTER TABLE "identity"."user_settings" ADD COLUMN "review_template" jsonb DEFAULT '{"front":"term","showDefinition":true,"showContext":true,"showImage":true}'::jsonb NOT NULL;

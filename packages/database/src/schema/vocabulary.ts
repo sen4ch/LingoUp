@@ -28,6 +28,7 @@ export const words = vocabularySchema.table(
       .references(() => users.id, { onDelete: 'cascade' }),
     term: text('term').notNull(),
     normalizedTerm: text('normalized_term').notNull(),
+    category: text('category').notNull().default('other'),
     definition: text('definition'),
     translation: text('translation'),
     contextSentence: text('context_sentence'),
@@ -42,6 +43,11 @@ export const words = vocabularySchema.table(
     uniqueIndex('words_user_term_key').on(t.userId, t.normalizedTerm),
     // Keyset pagination: newest first within a user.
     index('words_user_id_id_idx').on(t.userId, t.id.desc()),
+    index('words_user_category_id_idx').on(t.userId, t.category, t.id.desc()),
+    check(
+      'words_category',
+      sql`${t.category} IN ('clothes', 'food', 'travel', 'work', 'home', 'shopping', 'people', 'nature', 'health', 'education', 'technology', 'daily-life', 'other')`,
+    ),
   ],
 );
 
