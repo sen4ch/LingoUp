@@ -22,5 +22,7 @@ FROM node:24-trixie-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=builder --chown=node:node /out/worker ./
+COPY infra/docker/load-bootstrap.cjs ./load-bootstrap.cjs
+ENV NODE_OPTIONS="--require=/app/load-bootstrap.cjs"
 USER node
 CMD ["node", "--enable-source-maps", "dist/main.js"]

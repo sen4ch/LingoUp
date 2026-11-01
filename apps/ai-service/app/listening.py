@@ -233,24 +233,39 @@ def audio_duration(data: bytes) -> float:
         return sum(frame.samples / frame.sample_rate for frame in audio.decode(stream))
 
 
-@lru_cache(maxsize=1)
-def piper_voice() -> Any:
+@lru_cache(maxsize=2)
+def piper_voice(quality: str = "medium") -> Any:
     from huggingface_hub import hf_hub_download
+    from huggingface_hub.errors import LocalEntryNotFoundError
+    import onnxruntime
     from piper import PiperVoice
 
-    model = "en/en_US/lessac/medium/en_US-lessac-medium.onnx"
+    if quality not in {"medium", "high"}:
+        raise SpeechError("Unsupported local voice quality")
+    model = f"en/en_US/ljspeech/{quality}/en_US-ljspeech-{quality}.onnx"
     root = os.getenv("PIPER_MODEL_DIR", "/models/piper")
-    path = hf_hub_download("rhasspy/piper-voices", model, cache_dir=root)
-    config = hf_hub_download("rhasspy/piper-voices", model + ".json", cache_dir=root)
+
+    def cached_file(filename: str) -> str:
+        try:
+            return hf_hub_download(
+                "rhasspy/piper-voices", filename, cache_dir=root, local_files_only=True
+            )
+        except LocalEntryNotFoundError:
+            return hf_hub_download("rhasspy/piper-voices", filename, cache_dir=root)
+
+    path = cached_file(model)
+    config = cached_file(model + ".json")
+    onnxruntime.disable_telemetry_events()
     return PiperVoice.load(path, config_path=config)
 
 
-def synthesize_local(text: str, scale: float) -> bytes:
+def synthesize_local(text: str, scale: float, quality: str = "medium") -> bytes:
     from piper import SynthesisConfig
 
     output = io.BytesIO()
+    voice = piper_voice(quality)
     with wave.open(output, "wb") as wav:
-        piper_voice().synthesize_wav(text, wav, syn_config=SynthesisConfig(length_scale=scale))
+        voice.synthesize_wav(text, wav, syn_config=SynthesisConfig(length_scale=scale))
     return output.getvalue()
 
 
@@ -294,14 +309,22 @@ def combine_audio(parts: list[bytes]) -> bytes:
 _voice_lock = threading.Lock()
 
 
-def render_narration(task: ListeningAudioInput) -> tuple[bytes, float]:
+def render_narration(task: ListeningAudioInput, quality: str = "medium") -> tuple[bytes, float]:
     with _voice_lock:
         scale = {"A1": 1.15, "A2": 1.1, "B1": 1.0, "B2": 0.98, "C1": 0.95, "C2": 0.9}[task.level]
-        wav = synthesize_local(task.text, scale)
+        wav = (
+            synthesize_local(task.text, scale)
+            if quality == "medium"
+            else synthesize_local(task.text, scale, quality)
+        )
         duration = wav_duration(wav)
         if not 180 <= duration <= 300:
             scale = max(0.5, min(2.0, scale * 240 / max(1, duration)))
-            wav = synthesize_local(task.text, scale)
+            wav = (
+                synthesize_local(task.text, scale)
+                if quality == "medium"
+                else synthesize_local(task.text, scale, quality)
+            )
         data = combine_audio([wav])
         duration = audio_duration(data)
         if not 180 <= duration <= 300 or not data or len(data) > 4 * 1024 * 1024:
@@ -309,10 +332,10 @@ def render_narration(task: ListeningAudioInput) -> tuple[bytes, float]:
         return data, duration
 
 
-async def narration(task: ListeningAudioInput) -> tuple[bytes, float]:
+async def narration(task: ListeningAudioInput, quality: str = "medium") -> tuple[bytes, float]:
     try:
         async with asyncio.timeout(120):
-            return await asyncio.to_thread(render_narration, task)
+            return await asyncio.to_thread(render_narration, task, quality)
     except SpeechError:
         raise
     except Exception as error:

@@ -334,6 +334,7 @@ class OllamaProvider(LlmProvider):
         self.model = settings.ollama_model
         self._think = settings.ollama_think
         self._keep_alive = settings.ollama_keep_alive
+        self._context_tokens = 4096 if settings.installation_revision else None
         self._client = httpx.AsyncClient(
             base_url=settings.ollama_url, timeout=settings.request_timeout_seconds
         )
@@ -341,7 +342,12 @@ class OllamaProvider(LlmProvider):
     async def warm_up(self) -> None:
         """Loads the model into memory; a request without a prompt only loads it."""
         response = await self._client.post(
-            "/api/generate", json={"model": self.model, "keep_alive": self._keep_alive}
+            "/api/generate",
+            json={
+                "model": self.model,
+                "keep_alive": self._keep_alive,
+                **({"options": {"num_ctx": self._context_tokens}} if self._context_tokens else {}),
+            },
         )
         response.raise_for_status()
 
@@ -357,7 +363,10 @@ class OllamaProvider(LlmProvider):
                     "format": schema,
                     "stream": False,
                     "keep_alive": self._keep_alive,
-                    "options": {"temperature": temperature},
+                    "options": {
+                        "temperature": temperature,
+                        **({"num_ctx": self._context_tokens} if self._context_tokens else {}),
+                    },
                     **({} if self._think is None else {"think": self._think}),
                 },
             )
@@ -416,6 +425,73 @@ class OpenAICompatibleProvider(LlmProvider):
         await self._client.aclose()
 
 
+class AnthropicProvider(LlmProvider):
+    """Native Messages API: Claude does not accept OpenAI json_object mode."""
+
+    name = "anthropic"
+    data_locality: Literal["local", "external"] = "external"
+
+    def __init__(self, settings: Settings) -> None:
+        self.model = settings.openai_compatible_model
+        key = settings.openai_compatible_api_key.get_secret_value()
+        if not key or not self.model or not settings.openai_compatible_base_url:
+            raise ValueError("Claude requires an API key, model and base URL")
+        self._client = httpx.AsyncClient(
+            base_url=settings.openai_compatible_base_url.rstrip("/"),
+            timeout=settings.request_timeout_seconds,
+            headers={
+                "x-api-key": key,
+                "authorization": f"Bearer {key}",
+                "anthropic-version": "2023-06-01",
+                **(
+                    {"anthropic-workspace-id": settings.api_workspace_id}
+                    if settings.api_workspace_id
+                    else {}
+                ),
+            },
+        )
+
+    async def complete_json(
+        self, messages: Messages, schema: dict[str, Any], temperature: float
+    ) -> str:
+        del temperature
+        system = "\n".join(
+            str(message["content"]) for message in messages if message["role"] == "system"
+        )
+        system += (
+            "\nReturn exactly one JSON object, without markdown or commentary, matching this JSON schema:\n"
+            + json.dumps(schema)
+        )
+        conversation = [message for message in messages if message["role"] in {"user", "assistant"}]
+        try:
+            response = await self._client.post(
+                "/messages",
+                json={
+                    "model": self.model,
+                    "max_tokens": 12000,
+                    "system": system,
+                    "messages": conversation,
+                },
+            )
+            response.raise_for_status()
+            body = response.json()
+            if body.get("stop_reason") == "max_tokens":
+                raise ProviderError("Claude output was truncated")
+            raw = "".join(
+                block["text"] for block in body["content"] if block.get("type") == "text"
+            ).strip()
+            if raw.startswith("```"):
+                raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw)
+            # Every caller subsequently validates task fields against its own schema.
+            json.loads(raw)
+            return raw
+        except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
+            raise ProviderError(f"Claude request failed: {type(error).__name__}") from error
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+
+
 def create_provider(settings: Settings) -> Provider:
     match settings.ai_backend:
         case "mock":
@@ -424,3 +500,5 @@ def create_provider(settings: Settings) -> Provider:
             return OllamaProvider(settings)
         case "openai-compatible":
             return OpenAICompatibleProvider(settings)
+        case "anthropic":
+            return AnthropicProvider(settings)

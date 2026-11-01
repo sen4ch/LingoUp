@@ -14,3 +14,5 @@ export * from './mistakes.js';
 export * from './reading-check.js';
 export * from './weekly-report.js';
 export * from './next-practice.js';
+export * from './installation.js';
+export * from './installation-advice.js';

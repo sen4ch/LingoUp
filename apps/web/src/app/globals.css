@@ -10,6 +10,8 @@
 @import './listening.css';
 @import './profile.css';
 @import './exams.css';
+@import './installation.css';
+@import './translation.css';
 
 /* Scan the design-system sources for utility classes. */
 @source '../../../../packages/ui/src';

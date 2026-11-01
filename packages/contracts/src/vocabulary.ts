@@ -3,6 +3,13 @@ import { GlossaryEntrySchema, SlugSchema } from './content.js';
 import { IsoDateTimeSchema, pageOf, PageQuerySchema, UuidSchema } from './common.js';
 
 export const MAX_TERM_WORDS = 6;
+export const PronunciationSettingsSchema = z.object({
+  enabled: z.boolean(),
+  local: z.boolean(),
+  prefetchAllowed: z.boolean(),
+  revision: z.string(),
+});
+export type PronunciationSettings = z.infer<typeof PronunciationSettingsSchema>;
 
 export const WORD_CATEGORIES = [
   'clothes',

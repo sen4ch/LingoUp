@@ -245,7 +245,10 @@ export function Reader({ text }: { text: TextDetail }) {
   };
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-10">
+    <div
+      data-word-reader
+      className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-10"
+    >
       <div className="flex flex-col gap-4">
         <p id={instructionsId} className="text-sm text-muted">
           {t.reader.instructions} <Kbd>←</Kbd> <Kbd>→</Kbd> <Kbd>Enter</Kbd> <Kbd>Esc</Kbd>
@@ -258,6 +261,14 @@ export function Reader({ text }: { text: TextDetail }) {
           aria-label={t.reader.regionLabel}
           aria-describedby={instructionsId}
           onKeyDown={onKeyDown}
+          onClick={(event) => {
+            if (!window.getSelection()?.isCollapsed) return;
+            const cursor = tokenAt(event.target as Node);
+            if (!cursor || !paragraphs[cursor.paragraph]?.tokens[cursor.token]?.isWord) return;
+            const next = { paragraph: cursor.paragraph, from: cursor.token, to: cursor.token };
+            setRange(next);
+            open(next);
+          }}
           className="rounded-lg font-reading text-lg leading-relaxed sm:text-xl sm:leading-loose"
         >
           {paragraphs.map((paragraph, index) => (

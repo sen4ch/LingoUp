@@ -1,0 +1,11 @@
+# Optional NVIDIA acceleration. Requires a working NVIDIA Container Toolkit.
+# docker compose -f compose.easy.yml -f compose.easy.gpu.yml up -d --build --wait
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

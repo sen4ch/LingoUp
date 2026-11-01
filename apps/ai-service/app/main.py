@@ -1,6 +1,10 @@
 import asyncio
 import hmac
+import json
 import logging
+import os
+import signal
+from pathlib import Path
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -8,7 +12,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
-from .config import Settings
+from .config import Settings, load_settings
 from .exams import ExamInput
 from .listening import ListeningAudioInput, ListeningInput, narration
 from .providers import Provider, ProviderError, create_provider
@@ -29,6 +33,7 @@ from .speech import (
     SpeechInput,
     Synthesizer,
     edge_synthesize,
+    local_synthesize,
     synthesize_with_timeout,
 )
 from .writing import WritingInput
@@ -41,7 +46,7 @@ def create_app(
     provider: Provider | None = None,
     synthesize: Synthesizer = edge_synthesize,
 ) -> FastAPI:
-    settings = settings or Settings()  # type: ignore[call-arg]  # values come from the environment
+    settings = settings or load_settings()
     active = provider or create_provider(settings)
     recognizer = Recognizer(settings.whisper_model, settings.whisper_download_root)
 
@@ -67,7 +72,24 @@ def create_app(
         recognition_task = (
             asyncio.create_task(warm_recognition()) if settings.speaking_enabled else None
         )
+
+        async def watch_installation() -> None:
+            if not settings.installation_dir:
+                return
+            runtime = Path(settings.installation_dir, "runtime.json")
+            while True:
+                await asyncio.sleep(1)
+                revision = (
+                    json.loads(runtime.read_text()).get("revision", "") if runtime.exists() else ""
+                )
+                if revision != settings.installation_revision:
+                    # Uvicorn drains requests; Compose starts the new configuration.
+                    os.kill(os.getpid(), signal.SIGTERM)
+                    return
+
+        configuration_task = asyncio.create_task(watch_installation())
         yield
+        configuration_task.cancel()
         warm_up_task.cancel()
         if recognition_task:
             recognition_task.cancel()
@@ -161,7 +183,13 @@ def create_app(
     @app.post("/v1/tasks/speech-synthesis", dependencies=[Depends(require_token)])
     async def speech_synthesis(task: SpeechInput) -> Response:
         try:
-            audio = await synthesize_with_timeout(synthesize, task, settings.speech_timeout_seconds)
+            renderer = local_synthesize if task.voice.startswith("piper-") else synthesize
+            timeout = (
+                max(settings.speech_timeout_seconds, 120)
+                if task.voice.startswith("piper-")
+                else settings.speech_timeout_seconds
+            )
+            audio = await synthesize_with_timeout(renderer, task, timeout)
         except SpeechError as error:
             logger.warning("speech-synthesis failed: %s", error)
             raise HTTPException(status_code=502, detail="Speech backend failed") from error
@@ -204,7 +232,7 @@ def create_app(
     @app.post("/v1/listening/audio", dependencies=[Depends(require_token)])
     async def listening_audio(task: ListeningAudioInput) -> Response:
         try:
-            audio, duration = await narration(task)
+            audio, duration = await narration(task, settings.piper_quality)
         except SpeechError as error:
             raise HTTPException(status_code=502, detail="Narration failed") from error
         return Response(

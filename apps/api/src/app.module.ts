@@ -14,6 +14,7 @@ import { PlatformModule } from './platform/platform.module.js';
 import { clientRateLimitKey } from './platform/rate-limit/client-key.js';
 import { ValkeyThrottlerStorage } from './platform/rate-limit/valkey-throttler-storage.js';
 import { VALKEY } from './platform/tokens.js';
+import { InstallationModule } from './modules/installation/installation.module.js';
 
 @Module({})
 export class AppModule {
@@ -33,6 +34,7 @@ export class AppModule {
           }),
         }),
         IdentityModule,
+        InstallationModule,
         ContentModule,
         AiGatewayModule,
         VocabularyModule,

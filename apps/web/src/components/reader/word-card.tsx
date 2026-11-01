@@ -6,11 +6,12 @@ import { Alert, Badge, Button, buttonClasses, Skeleton } from '@lingoup/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { t } from '@/i18n';
 import { api, ApiRequestError } from '@/lib/api-client';
 import { describeError } from '@/lib/errors';
 import { useCurrentUser } from '@/lib/auth';
+import { primePronunciation } from '@/lib/pronunciation';
 import { DUE_COUNT_QUERY_KEY } from '../site-header';
 import { SpeakButton } from '../speak-button';
 import type { Lookup } from './selection';
@@ -21,11 +22,24 @@ export function WordCard({
   onClose,
 }: {
   lookup: Lookup;
-  textSlug: string;
+  textSlug?: string;
   onClose: () => void;
 }) {
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const pathname = usePathname();
+  const headingId = useId();
+  useEffect(() => {
+    if (user)
+      void primePronunciation(
+        { text: lookup.term, kind: 'term' },
+        {
+          useServer: true,
+          cacheScope: user.id,
+          localOnly: false,
+          externalSharingConsent: user.settings.aiDataSharing,
+        },
+      );
+  }, [lookup.term, user?.id, user?.settings.aiDataSharing]);
 
   // Escape closes the card even when focus is inside it.
   useEffect(() => {
@@ -37,10 +51,10 @@ export function WordCard({
   }, [onClose]);
 
   return (
-    <section aria-labelledby="word-card-term" className="flex flex-col gap-4">
+    <section data-translation-ignore aria-labelledby={headingId} className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-1">
-          <h2 id="word-card-term" className="text-2xl font-bold break-words">
+          <h2 id={headingId} className="text-2xl font-bold break-words">
             {lookup.term}
           </h2>
           <SpeakButton text={lookup.term} kind="term" label={t.speech.term(lookup.term)} />
@@ -83,9 +97,19 @@ export function WordCard({
   );
 }
 
-function LookupDetails({ lookup, textSlug }: { lookup: Lookup; textSlug: string }) {
+function LookupDetails({ lookup, textSlug }: { lookup: Lookup; textSlug?: string }) {
+  const { data: user } = useCurrentUser();
   const queryClient = useQueryClient();
-  const queryKey = ['lookup', textSlug, normalizeTerm(lookup.term), lookup.context];
+  const queryKey = [
+    'lookup',
+    user?.id,
+    user?.settings.nativeLanguage,
+    user?.settings.targetLevel,
+    user?.settings.aiDataSharing,
+    textSlug,
+    normalizeTerm(lookup.term),
+    lookup.context,
+  ];
   const query = useQuery({
     queryKey,
     queryFn: ({ signal }) =>
@@ -181,9 +205,9 @@ function LookupDetails({ lookup, textSlug }: { lookup: Lookup; textSlug: string 
             </p>
           ) : null}
         </div>
-      ) : (
+      ) : textSlug ? (
         <p className="text-sm text-muted">{t.card.noDefinition}</p>
-      )}
+      ) : null}
 
       {data.ai ? (
         <div className="flex flex-col gap-1.5 rounded-lg bg-surface-muted p-3">

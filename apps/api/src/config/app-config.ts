@@ -1,5 +1,6 @@
 import { assertNoPlaceholderSecrets, loadEnv } from '@lingoup/shared';
 import { z } from 'zod';
+import { installationEnvironment, readInstallationRuntime } from './installation.js';
 
 const booleanString = z
   .enum(['true', 'false', '1', '0'])
@@ -58,7 +59,7 @@ const EnvSchema = z.object({
   AI_ALLOW_EXTERNAL: booleanString.default(false),
   // Pronunciation audio. Setting azure is the administrator's opt-in to this external service.
   // edge: Microsoft Edge read-aloud voices through ai-service (edge-tts), free and keyless.
-  SPEECH_PROVIDER: z.enum(['none', 'edge', 'azure']).default('none'),
+  SPEECH_PROVIDER: z.enum(['none', 'edge', 'azure', 'piper-medium', 'piper-high']).default('none'),
   AZURE_SPEECH_KEY: optional(z.string().min(16)),
   AZURE_SPEECH_REGION: optional(
     z.string().regex(/^[a-z0-9]+$/, 'Azure region name, e.g. westeurope'),
@@ -84,6 +85,9 @@ const EnvSchema = z.object({
 export type AppConfig = ReturnType<typeof loadAppConfig>;
 
 export function loadAppConfig(source: Record<string, string | undefined> = process.env) {
+  const directory = source.BROWSER_SETUP_ENABLED === 'false' ? undefined : source.INSTALLATION_DIR;
+  const installation = readInstallationRuntime(directory);
+  if (installation) source = { ...source, ...installationEnvironment(installation.settings) };
   const env = loadEnv(
     EnvSchema.refine((value) => value.AI_PROVIDER !== 'ai-service' || value.AI_SERVICE_TOKEN, {
       message: 'AI_SERVICE_TOKEN is required when AI_PROVIDER=ai-service',
@@ -99,11 +103,16 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
           path: ['AZURE_SPEECH_KEY'],
         },
       )
-      .refine((value) => value.SPEECH_PROVIDER !== 'edge' || value.AI_SERVICE_TOKEN, {
-        message:
-          'AI_SERVICE_TOKEN is required when SPEECH_PROVIDER=edge (speech runs in ai-service)',
-        path: ['AI_SERVICE_TOKEN'],
-      }),
+      .refine(
+        (value) =>
+          !['edge', 'piper-medium', 'piper-high'].includes(value.SPEECH_PROVIDER) ||
+          value.AI_SERVICE_TOKEN,
+        {
+          message:
+            'AI_SERVICE_TOKEN is required when SPEECH_PROVIDER=edge (speech runs in ai-service)',
+          path: ['AI_SERVICE_TOKEN'],
+        },
+      ),
     source,
   );
   assertNoPlaceholderSecrets(env.NODE_ENV, {
@@ -113,6 +122,11 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
     AZURE_SPEECH_KEY: env.AZURE_SPEECH_KEY,
   });
   return {
+    installation: {
+      directory: directory || null,
+      revision: installation?.revision ?? null,
+      required: source.INSTALLATION_REQUIRED === 'true',
+    },
     env: env.NODE_ENV,
     http: {
       host: env.API_HOST,
@@ -149,7 +163,11 @@ export function loadAppConfig(source: Record<string, string | undefined> = proce
         env.AZURE_SPEECH_KEY && env.AZURE_SPEECH_REGION
           ? { key: env.AZURE_SPEECH_KEY, region: env.AZURE_SPEECH_REGION }
           : null,
-      voice: env.SPEECH_PROVIDER === 'edge' ? env.EDGE_SPEECH_VOICE : env.AZURE_SPEECH_VOICE,
+      voice: env.SPEECH_PROVIDER.startsWith('piper-')
+        ? env.SPEECH_PROVIDER
+        : env.SPEECH_PROVIDER === 'edge'
+          ? env.EDGE_SPEECH_VOICE
+          : env.AZURE_SPEECH_VOICE,
       cacheTtlSeconds: env.SPEECH_CACHE_TTL_DAYS * 24 * 60 * 60,
     },
   };

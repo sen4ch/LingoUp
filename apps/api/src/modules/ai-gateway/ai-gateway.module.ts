@@ -34,6 +34,8 @@ function createSpeechProvider(config: AppConfig): SpeechProvider | null {
     case 'none':
       return null;
     case 'edge':
+    case 'piper-medium':
+    case 'piper-high':
       if (!config.ai.serviceToken)
         throw new Error('AI_SERVICE_TOKEN is required for SPEECH_PROVIDER=edge');
       return new AiServiceSpeechProvider({

@@ -213,3 +213,43 @@ AZURE_SPEECH_VOICE=en-US-DerekMultilingualNeural   # any Azure neural voice
 4. Restart the API: `docker compose --profile ai up -d api`.
 
 Audio is cached in Valkey on `SPEECH_CACHE_TTL_DAYS` (30 days) by voice and text, so each word is sent to Microsoft once for all accounts. Cache hit does not consume the AI daily quota, service call does. If the service does not respond, the browser will speak itself and will not contact the server for five minutes.
+
+## Browser installation
+
+For model/provider choices, hardware detection, GPU deployment and local voice profiles, see [Models, voices and hardware](setup-hardware.md). The browser wizard now supports local Piper medium/high pronunciation independently of the LLM provider, and a native Claude adapter in addition to OpenAI-compatible APIs.
+
+The local preset needs only Docker with Compose v2:
+
+```bash
+docker compose -f compose.easy.yml up -d --build --wait
+```
+
+Open `http://localhost:3000`. New installations redirect to `/setup`. Set an installation password, choose a learning mode and finish. The installation password controls shared services; learner accounts and their passwords remain independent. An installation login lasts 30 minutes and uses a signed HttpOnly, SameSite=Strict cookie. It survives service restarts until expiry. Connection checks, downloads and settings changes require that login; browser writes also pass the existing origin checks. There is no Docker socket mount or container-control API.
+
+The initial password can be claimed once by the first local operator. Complete this step before making the web application accessible to other people. The preset publishes only `127.0.0.1:3000`; databases, caches and model services stay on the private Docker network. For remote HTTPS deployments use the environment-managed preset, configure secure cookies and trusted origins, and protect the installation before exposing it.
+
+The `bootstrap` job creates independent random PostgreSQL/Valkey passwords and an internal AI token. It preserves them on subsequent starts. Credentials are held in named volumes, with services receiving only the relevant mounts; API/worker connection strings are preloaded before Node entry points, including migrations. Do not delete credential volumes while retaining the database volume: PostgreSQL keeps its original password.
+
+The `installation` volume holds a private password hash/signing key (`owner.json`, mode 0600) and the runtime configuration (`runtime.json`). Provider keys in runtime configuration are readable by the API and the internal AI service; protect backups of this volume as credentials. HTTP responses never return saved keys. A blank API key retains a saved key only for the same provider/address; the remove-key checkbox clears it. Learner export endpoints do not include deployment settings.
+
+Saving writes configuration atomically. The API shuts down gracefully and Docker restarts it; the AI service watches configuration changes and also restarts gracefully. No database/cache restart or manual container rebuild is required for settings changes. Changes do not delete accounts, vocabulary or learning progress. The wizard waits for the API to load the saved revision. Models can need additional warm-up time before their first request.
+
+Core learning uses no AI provider. Choosing local AI does not download a model until **Download this model** is pressed. Downloads show progress, use the bundled Ollama model volume and may take several GB. The easy preset uses CPU inference; GPU setup remains optional. Host-installed Ollama is reachable through **Ollama on this computer**, if it accepts connections from Docker. OpenAI-compatible base addresses must expose `/models` for the connection check; an otherwise working server without that endpoint can still be saved and used. External providers require explicit operator permission and separate learner consent. Online picture search and Edge voices send their own search terms/text to their selected services. Enabling recognition downloads Whisper on AI service startup.
+
+Stop and restart with the same `-f compose.easy.yml` flag. `stop`, `restart` and `down` preserve named volumes; **`down -v` deletes installation data and credentials**. Back up PostgreSQL and the installation/credential volumes together. The easy preset uses the separate Compose project `lingoup-easy`: changing from the original `lingoup` preset is not a data migration. Existing installations should continue their original commands and can open `/setup` after updating the API/web images. To enable AI in that preset, start its `ai`/`ollama` profiles as described below.
+
+The environment-managed preset disables browser administration by default. To opt in, set `BROWSER_SETUP_ENABLED=true`, recreate API/AI containers and claim the installation password locally before exposing `/setup`. Saved browser settings then take precedence for supported features. Set the flag back to `false` and recreate API/AI containers to return those features to environment configuration. Network, TLS, database and reverse-proxy settings remain environment-managed.
+
+If the installation password is lost, a trusted machine operator can reset **only the installation login**:
+
+```bash
+docker compose -f compose.easy.yml exec api node -e "require('node:fs').rmSync('/app/.installation/owner.json')"
+```
+
+For the original preset omit `-f compose.easy.yml`. Open `/setup` locally and set a new password immediately. Existing signed installation cookies become invalid; runtime settings, provider keys and learner data are retained. Keep the web application private during recovery.
+
+## Pronunciation latency
+
+The server caches generated audio per voice and normalized text; simultaneous requests for the same clip share one generation and one quota charge. Browser speaker buttons also retain up to 24 clips in memory for replay. This cache is scoped to the learner, privacy settings and voice revision, and is cleared on sign-out or when this tab applies installation settings. Voice metadata is refreshed after ten seconds. The application does not save audio in localStorage or IndexedDB; normal browser-managed media caching follows the HTTP response headers.
+
+Opening a word card or hovering/focusing a speaker can prepare audio before playback. Automatic preparation uses local Piper voices, or Edge when the learner has allowed external sharing. It never speculatively calls a paid Azure voice. Private sentences still require consent for external synthesis, including cache hits. An uncached external voice request still depends on network/provider latency; preloading hides that wait only when it finishes before the learner presses play.

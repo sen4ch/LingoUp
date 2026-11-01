@@ -10,7 +10,7 @@ from collections.abc import Awaitable, Callable
 import edge_tts
 from pydantic import BaseModel, ConfigDict, Field
 
-VOICE_PATTERN = r"^[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural$"
+VOICE_PATTERN = r"^(?:[a-z]{2}-[A-Z]{2}-[A-Za-z0-9]+Neural|piper-medium|piper-high)$"
 MAX_AUDIO_BYTES = 1024 * 1024
 
 
@@ -41,6 +41,19 @@ async def edge_synthesize(text: str, voice: str) -> bytes:
     if not audio or len(audio) > MAX_AUDIO_BYTES:
         raise SpeechError(f"unexpected audio size: {len(audio)} bytes")
     return audio
+
+
+async def local_synthesize(text: str, voice: str) -> bytes:
+    """CPU neural synthesis; only voice weights are downloaded, never learner text."""
+    from .listening import _voice_lock, combine_audio, synthesize_local
+
+    quality = "high" if voice == "piper-high" else "medium"
+
+    def render() -> bytes:
+        with _voice_lock:
+            return combine_audio([synthesize_local(text, 1.0, quality)])
+
+    return await asyncio.to_thread(render)
 
 
 async def synthesize_with_timeout(

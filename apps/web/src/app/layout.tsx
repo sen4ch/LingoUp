@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { SiteHeader } from '@/components/site-header';
+import { SiteWordTranslation } from '@/components/site-word-translation';
 import { PracticeTimerRuntime, PracticeSectionTimer } from '@/components/practice-timer';
 import { t } from '@/i18n';
 import { Providers } from './providers';
@@ -51,11 +52,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <span>
               {/* AGPL-3.0 §13: users interacting over a network must be offered the source code. */}
               {t.footer.license}{' '}
+              <a href="/setup" className="mr-4 underline hover:text-text">
+                Installation settings
+              </a>{' '}
               <a href={SOURCE_CODE_URL} className="underline hover:text-text" rel="noopener">
                 {t.footer.source}
               </a>
             </span>
           </footer>
+          <SiteWordTranslation />
         </Providers>
       </body>
     </html>

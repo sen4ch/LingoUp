@@ -24,6 +24,9 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=builder --chown=node:node /out/api ./
 COPY --chown=node:node content ./content
+COPY infra/docker/load-bootstrap.cjs ./load-bootstrap.cjs
+RUN mkdir /app/.installation && chown node:node /app/.installation
+ENV NODE_OPTIONS="--require=/app/load-bootstrap.cjs"
 USER node
 EXPOSE 4000
 CMD ["node", "--enable-source-maps", "dist/main.js"]

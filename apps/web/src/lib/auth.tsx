@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { api, isUnauthenticated } from './api-client';
 import { useHydrated } from './use-hydrated';
+import { resetPronunciationCache } from './pronunciation';
 
 export const ME_QUERY_KEY = ['me'] as const;
 
@@ -46,6 +47,7 @@ export function useSignOut() {
     try {
       await api('/v1/auth/logout', { method: 'POST' });
     } finally {
+      resetPronunciationCache();
       queryClient.clear();
       queryClient.setQueryData(ME_QUERY_KEY, null);
       router.push('/library');

@@ -26,6 +26,8 @@ const LONG_RUNNING_PATHS = new Set([
   'v1/learning/writing/turn',
   'v1/learning/generated-texts',
   'v1/vocabulary/practice',
+  'v1/vocabulary/pronunciation',
+  'v1/setup/voice-preview',
   'v1/learning/speaking/transcribe',
 ]);
 const LONG_TIMEOUT_MS = 150_000;
@@ -55,7 +57,8 @@ async function proxy(
       signal: AbortSignal.timeout(
         path.join('/') === 'v1/learning/listening'
           ? 300_000
-          : LONG_RUNNING_PATHS.has(path.join('/')) || path.join('/').startsWith('v1/learning/exams/')
+          : LONG_RUNNING_PATHS.has(path.join('/')) ||
+              path.join('/').startsWith('v1/learning/exams/')
             ? LONG_TIMEOUT_MS
             : TIMEOUT_MS,
       ),

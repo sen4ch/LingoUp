@@ -34,6 +34,7 @@ export interface SpeechRequest {
 export class SpeechGateway {
   private readonly logger = new Logger(SpeechGateway.name);
   private readonly semaphore: Semaphore;
+  private readonly pending = new Map<string, Promise<SpeechOutcome>>();
 
   constructor(
     @Inject(SPEECH_PROVIDER) private readonly provider: SpeechProvider | null,
@@ -56,12 +57,33 @@ export class SpeechGateway {
 
     const text = request.text.trim().replace(/\s+/g, ' ');
     const key = `speech:v1:${provider.name}:${provider.voice}:${createHash('sha256').update(text).digest('hex')}`;
-    const deadline = AbortSignal.timeout(this.config.ai.timeoutMs);
+    const current = this.pending.get(key);
+    if (current) return current;
+    const work = this.generate(provider, request.userId, text, key);
+    this.pending.set(key, work);
+    try {
+      return await work;
+    } finally {
+      if (this.pending.get(key) === work) this.pending.delete(key);
+    }
+  }
+
+  private async generate(
+    provider: SpeechProvider,
+    userId: string,
+    text: string,
+    key: string,
+  ): Promise<SpeechOutcome> {
+    const deadline = AbortSignal.timeout(
+      provider.dataLocality === 'local'
+        ? Math.max(125_000, this.config.ai.timeoutMs)
+        : this.config.ai.timeoutMs,
+    );
     const startedAt = performance.now();
     try {
       const cached = await this.valkey.getBuffer(key);
       if (cached) return { status: 'ok', audio: cached, cached: true };
-      if (!(await this.quota.tryConsume(request.userId))) return { status: 'quota_exceeded' };
+      if (!(await this.quota.tryConsume(userId))) return { status: 'quota_exceeded' };
 
       const release = await this.semaphore.acquire(deadline);
       let audio: Buffer;

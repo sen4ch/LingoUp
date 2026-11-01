@@ -106,6 +106,8 @@ services:
       AI_PROVIDER: ${AI_PROVIDER:-mock}
       AI_SERVICE_URL: http://ai-service:8000
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?}
+      INSTALLATION_DIR: /app/.installation
+      BROWSER_SETUP_ENABLED: ${BROWSER_SETUP_ENABLED:-false}
       AI_TIMEOUT_MS: ${AI_TIMEOUT_MS:-20000}
       AI_GENERATION_TIMEOUT_MS: ${AI_GENERATION_TIMEOUT_MS:-120000}
       AI_MAX_CONCURRENCY: ${AI_MAX_CONCURRENCY:-4}
@@ -142,6 +144,11 @@ services:
       retries: 10
       start_period: 10s
     stop_grace_period: 30s
+
+    volumes:
+      - installation:/app/.installation
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   worker:
     <<: *hardening
@@ -205,6 +212,8 @@ services:
     environment:
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:?}
       AI_BACKEND: ${AI_BACKEND:-mock}
+      INSTALLATION_DIR: /run/lingoup-installation
+      BROWSER_SETUP_ENABLED: ${BROWSER_SETUP_ENABLED:-false}
       SPEAKING_ENABLED: ${SPEAKING_ENABLED:-false}
       WHISPER_MODEL: ${WHISPER_MODEL:-base}
       WHISPER_DOWNLOAD_ROOT: /models
@@ -220,6 +229,7 @@ services:
       OPENAI_COMPATIBLE_DATA_LOCALITY: ${OPENAI_COMPATIBLE_DATA_LOCALITY:-external}
     volumes:
       - whisper-models:/models
+      - installation:/run/lingoup-installation:ro
     # Lets OLLAMA_URL=http://host.docker.internal:11434 reach an Ollama installed on the host
     # (Docker Desktop resolves it anyway; Linux Docker Engine needs this mapping).
     extra_hosts:
@@ -258,6 +268,7 @@ services:
     #           capabilities: [gpu]
 
 volumes:
+  installation:
   postgres-data:
   valkey-data:
   ollama-data:

@@ -1,0 +1,215 @@
+# Local installation with browser setup. No .env or host Node.js required.
+# docker compose -f compose.easy.yml up -d --build --wait
+name: lingoup-easy
+
+x-safe: &safe
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  restart: unless-stopped
+
+x-app-env: &app-env
+  NODE_ENV: production
+  BOOTSTRAP_ENV_FILE: /run/lingoup-secrets/runtime.env
+  LOG_LEVEL: info
+
+x-api-build: &api-build
+  context: .
+  dockerfile: infra/docker/api.Dockerfile
+
+services:
+  bootstrap:
+    image: node:24-trixie-slim
+    restart: 'no'
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    command: ['node', '/bootstrap.mjs']
+    volumes:
+      - ./scripts/bootstrap-docker.mjs:/bootstrap.mjs:ro
+      - db-password:/state/postgres
+      - cache-password:/state/valkey
+      - ai-token:/state/ai
+      - runtime-secrets:/state/apps
+
+  postgres:
+    <<: *safe
+    # The official entrypoint needs its default capabilities to initialize ownership.
+    cap_drop: []
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    environment:
+      POSTGRES_USER: lingoup
+      POSTGRES_DB: lingoup
+      POSTGRES_PASSWORD_FILE: /run/lingoup-secrets/password
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - db-password:/run/lingoup-secrets:ro
+    depends_on:
+      bootstrap: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lingoup -d lingoup']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    stop_grace_period: 30s
+
+  valkey:
+    <<: *safe
+    cap_drop: []
+    image: valkey/valkey:9.0-alpine
+    command:
+      [
+        'sh',
+        '-c',
+        'exec valkey-server --requirepass "$$(cat /run/lingoup-secrets/password)" --appendonly yes --maxmemory-policy noeviction',
+      ]
+    volumes:
+      - valkey-data:/data
+      - cache-password:/run/lingoup-secrets:ro
+    depends_on:
+      bootstrap: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'VALKEYCLI_AUTH=$$(cat /run/lingoup-secrets/password) valkey-cli ping | grep -q PONG',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    <<: *safe
+    build: *api-build
+    restart: 'no'
+    command:
+      [
+        'sh',
+        '-c',
+        'node node_modules/@lingoup/database/dist/migrate.js && node dist/cli/import-content.js',
+      ]
+    environment:
+      <<: *app-env
+      CONTENT_DIR: /app/content
+    volumes: [runtime-secrets:/run/lingoup-secrets:ro]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    <<: *safe
+    build: *api-build
+    environment:
+      <<: *app-env
+      API_HOST: 0.0.0.0
+      API_PORT: '4000'
+      TRUST_PROXY: uniquelocal
+      COOKIE_SECURE: 'false'
+      SWAGGER_ENABLED: 'false'
+      ALLOWED_ORIGINS: http://localhost:${WEB_PORT:-3000},http://127.0.0.1:${WEB_PORT:-3000}
+      AI_PROVIDER: none
+      AI_SERVICE_URL: http://ai-service:8000
+      INSTALLATION_DIR: /app/.installation
+      INSTALLATION_REQUIRED: 'true'
+    volumes:
+      - runtime-secrets:/run/lingoup-secrets:ro
+      - installation:/app/.installation
+    extra_hosts: [host.docker.internal:host-gateway]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    stop_grace_period: 30s
+
+  worker:
+    <<: *safe
+    build: { context: ., dockerfile: infra/docker/worker.Dockerfile }
+    environment: *app-env
+    volumes: [runtime-secrets:/run/lingoup-secrets:ro]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+
+  web:
+    <<: *safe
+    build:
+      context: .
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        SOURCE_CODE_URL: ${SOURCE_CODE_URL:-https://github.com/sen4ch/LingoUp}
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: '3000'
+      API_INTERNAL_URL: http://api:4000
+    ports: ['127.0.0.1:${WEB_PORT:-3000}:3000']
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/setup').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  ai-service:
+    <<: *safe
+    build: { context: apps/ai-service, dockerfile: Dockerfile }
+    environment:
+      AI_SERVICE_TOKEN_FILE: /run/lingoup-token/token
+      INSTALLATION_DIR: /run/lingoup-installation
+      HF_HOME: /models/huggingface
+      HF_XET_CACHE: /models/xet
+      WHISPER_DOWNLOAD_ROOT: /models
+    volumes:
+      - ai-token:/run/lingoup-token:ro
+      - installation:/run/lingoup-installation:ro
+      - whisper-models:/models
+    extra_hosts: [host.docker.internal:host-gateway]
+    depends_on:
+      bootstrap: { condition: service_completed_successfully }
+      api: { condition: service_started }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    stop_grace_period: 30s
+
+  ollama:
+    image: ollama/ollama:0.40.11
+    environment:
+      OLLAMA_NUM_PARALLEL: '1'
+      OLLAMA_MAX_LOADED_MODELS: '1'
+    restart: unless-stopped
+    volumes: [ollama-data:/root/.ollama]
+    # CPU works out of the box. GPU deployment remains an optional advanced setup.
+
+volumes:
+  db-password:
+  cache-password:
+  ai-token:
+  runtime-secrets:
+  installation:
+  postgres-data:
+  valkey-data:
+  whisper-models:
+  ollama-data:

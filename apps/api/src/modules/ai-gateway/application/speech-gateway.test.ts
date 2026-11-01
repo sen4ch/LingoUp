@@ -46,6 +46,42 @@ function gateway(provider: SpeechProvider | null, valkey = fakeValkey(), aiQuota
 }
 
 describe('SpeechGateway', () => {
+  it('coalesces simultaneous normalized terms into one generation and quota charge', async () => {
+    let finish!: (value: Buffer) => void;
+    const { provider, synthesize } = fakeProvider(
+      vi.fn().mockImplementation(
+        () =>
+          new Promise<Buffer>((resolve) => {
+            finish = resolve;
+          }),
+      ),
+    );
+    const { quota: aiQuota, tryConsume } = quota();
+    const service = gateway(provider, fakeValkey(), aiQuota);
+    const first = service.synthesize(term);
+    const second = service.synthesize({ ...term, text: 'look forward to' });
+    await vi.waitFor(() => expect(synthesize).toHaveBeenCalledOnce());
+    // A private sentence cannot join an external request that is already in progress.
+    await expect(service.synthesize({ ...term, sensitive: true })).resolves.toEqual({
+      status: 'consent_required',
+    });
+    finish(audio);
+    const results = await Promise.all([first, second]);
+    expect(results[0]).toEqual({ status: 'ok', audio, cached: false });
+    expect(results[1]).toEqual(results[0]);
+    expect(tryConsume).toHaveBeenCalledOnce();
+  });
+
+  it('clears a failed in-flight request so the next attempt can succeed', async () => {
+    const { provider, synthesize } = fakeProvider(
+      vi.fn().mockRejectedValueOnce(new Error('temporary')).mockResolvedValue(audio),
+    );
+    const service = gateway(provider);
+    expect((await service.synthesize(term)).status).toBe('unavailable');
+    expect((await service.synthesize(term)).status).toBe('ok');
+    expect(synthesize).toHaveBeenCalledTimes(2);
+  });
+
   it('is disabled without a provider', async () => {
     await expect(gateway(null).synthesize(term)).resolves.toEqual({ status: 'disabled' });
   });
@@ -68,6 +104,23 @@ describe('SpeechGateway', () => {
     const outcome = await gateway(provider).synthesize({ ...term, sensitive: true });
     expect(outcome).toEqual({ status: 'consent_required' });
     expect(synthesize).not.toHaveBeenCalled();
+  });
+
+  it('uses a local voice for private sentences without external sharing consent', async () => {
+    const synthesize = vi.fn().mockResolvedValue(audio);
+    const provider: SpeechProvider = {
+      name: 'piper-high',
+      voice: 'piper-high',
+      dataLocality: 'local',
+      synthesize,
+    };
+    const result = await gateway(provider).synthesize({
+      ...term,
+      sensitive: true,
+      externalSharingConsent: false,
+    });
+    expect(result.status).toBe('ok');
+    expect(synthesize).toHaveBeenCalledOnce();
   });
 
   it('serves cached audio without calling the provider or consuming quota', async () => {

@@ -5,8 +5,12 @@ import type { SpeechProvider } from '../application/speech-provider.js';
  * but the text is sent to Microsoft, so it is treated as an external provider.
  */
 export class AiServiceSpeechProvider implements SpeechProvider {
-  readonly name = 'edge';
-  readonly dataLocality = 'external' as const;
+  get name() {
+    return this.options.voice.startsWith('piper-') ? this.options.voice : 'edge';
+  }
+  get dataLocality(): 'local' | 'external' {
+    return this.options.voice.startsWith('piper-') ? 'local' : 'external';
+  }
 
   constructor(
     private readonly options: { baseUrl: string; token: string; voice: string },

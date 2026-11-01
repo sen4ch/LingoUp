@@ -7,10 +7,14 @@ export async function teacherVoice(
   signal: AbortSignal,
 ): Promise<void> {
   signal.throwIfAborted();
-  if (consent) {
+  {
+    // The server allows local voices and enforces consent before external synthesis.
     try {
       const query = new URLSearchParams({ text, kind: 'sentence' });
-      const response = await fetch(`/api/v1/vocabulary/pronunciation?${query}`, { signal });
+      const response = await fetch(`/api/v1/vocabulary/pronunciation?${query}`, {
+        signal,
+        cache: 'no-store',
+      });
       if (!response.ok) throw new Error('Speech unavailable');
       const url = URL.createObjectURL(await response.blob());
       try {

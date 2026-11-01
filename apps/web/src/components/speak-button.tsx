@@ -5,7 +5,7 @@ import { cn } from '@lingoup/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { t } from '@/i18n';
 import { useCurrentUser } from '@/lib/auth';
-import { pronounce } from '@/lib/pronunciation';
+import { pronounce, warmPronunciation, primePronunciation } from '@/lib/pronunciation';
 
 type State = 'idle' | 'playing' | 'failed';
 
@@ -22,6 +22,9 @@ export function SpeakButton({
   const { data: user } = useCurrentUser();
   const [state, setState] = useState<State>('idle');
   const consent = user?.settings.aiDataSharing ?? false;
+  useEffect(() => {
+    if (user) void warmPronunciation();
+  }, [user?.id]);
 
   const play = useCallback(async () => {
     setState('playing');
@@ -29,7 +32,9 @@ export function SpeakButton({
       await pronounce(
         { text, kind },
         {
-          useServer: Boolean(user) && (kind === 'term' || consent),
+          useServer: Boolean(user),
+          cacheScope: user?.id,
+          externalSharingConsent: consent,
           localOnly: kind === 'sentence' && !consent,
         },
       );
@@ -57,6 +62,28 @@ export function SpeakButton({
     <button
       type="button"
       onClick={() => void play()}
+      onMouseEnter={() =>
+        void primePronunciation(
+          { text, kind },
+          {
+            useServer: !!user,
+            cacheScope: user?.id,
+            localOnly: kind === 'sentence' && !consent,
+            externalSharingConsent: consent,
+          },
+        )
+      }
+      onFocus={() =>
+        void primePronunciation(
+          { text, kind },
+          {
+            useServer: !!user,
+            cacheScope: user?.id,
+            localOnly: kind === 'sentence' && !consent,
+            externalSharingConsent: consent,
+          },
+        )
+      }
       aria-label={label}
       title={state === 'failed' ? t.speech.unavailable : label}
       aria-busy={state === 'playing' || undefined}
