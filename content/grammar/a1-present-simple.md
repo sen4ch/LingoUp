@@ -36,24 +36,23 @@ exercises:
     explanation: 'Use Does in a question with he / she / it, and keep the main verb without -s.'
 ---
 
-## When to use it
+## Meaning and use
 
-The present simple describes **habits**, **regular actions** and **facts**.
+The present simple describes **habits**, repeated events, general facts, and relatively stable situations. It can also describe schedules and instructions. The tense alone does not mean that an action is happening at this exact moment. With most verbs, the positive form changes only in the third-person singular. Negatives and questions use do or does, except when the main verb is be or a modal such as can.
 
-> I get up at seven every day.
-> Water boils at 100 degrees.
+## Forms and sentence patterns
 
-## Adding -s
+- I/you/we/they + base form: We work. He/she/it + -s: She works.
+- Consonant + y changes to -ies: studies; common -es forms include watches, goes and does.
+- Negative: subject + do/does not + base form. Question: do/does + subject + base form?
+- Frequency adverbs normally precede the main verb: She often walks. With be: She is often late.
 
-With **he**, **she** and **it**, add **-s** to the verb: **she works**, **it rains**. After -s, -sh, -ch, -x and -o, add **-es**: **he watches**, **she goes**.
+## Examples in context
 
-## Negatives and questions
+> My uncle repairs clocks on Saturdays.
+> Does the first train leave at six?
+> They do not usually eat meat.
 
-Use the helping verb **do**, or **does** with he/she/it. Keep the main verb in its base form.
+## Common mistakes and important distinctions
 
-- I **don't** like tea. — **Do** you like tea?
-- She **doesn't** like tea. — **Does** she like tea?
-
-> He doesn't work on Sundays.
-
-Common time expressions include **always**, **usually**, **often**, **sometimes**, **never** and **every day**.
+Use **does she work**, not does she works. A positive third-person verb needs its ending even with a long subject: The woman next door works at a bakery. Do not put do before be: Is she busy? is correct. For a temporary action happening now, compare the present continuous. Timetable uses can refer to the future: The bus leaves tomorrow at nine.

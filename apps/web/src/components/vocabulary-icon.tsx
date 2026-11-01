@@ -22,6 +22,11 @@ const paths = {
   pause: 'M8 5v14M16 5v14',
   play: 'm8 4 12 8-12 8V4Z',
   mail: 'M3 5h18v14H3V5Zm0 0 9 8 9-8',
+  headphones:
+    'M4 13v-1a8 8 0 0 1 16 0v1M4 12h3v9H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Zm16 0h-3v9h3a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2Z',
+  film: 'M3 3h18v18H3V3Zm4 0v18M17 3v18M3 8h4M3 16h4m10-8h4m-4 8h4M7 12h10',
+  download: 'M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5',
+  upload: 'M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5',
 };
 
 export function VocabularyIcon({

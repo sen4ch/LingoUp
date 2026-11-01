@@ -9,6 +9,7 @@ import { PracticeTimer } from '@/components/practice-timer';
 import { VocabularyIcon as Icon } from '@/components/vocabulary-icon';
 import { t } from '@/i18n';
 import { serverApi, ServerApiError } from '@/lib/server-api';
+import { GRAMMAR_INDEX, GRAMMAR_SOURCES, grammarAreaLabel } from '@/lib/grammar-reference';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,20 @@ export async function generateMetadata({
 
 export default async function GrammarTopicPage({ params }: { params: Promise<{ slug: string }> }) {
   const topic = await loadTopic((await params).slug);
+  const reference = GRAMMAR_INDEX[topic.slug];
+  const headings = topic.blocks.flatMap((block, index) =>
+    block.type === 'heading' ? [{ title: block.text, id: `rule-${index}` }] : [],
+  );
+  const related = Object.entries(GRAMMAR_INDEX)
+    .filter(([slug, entry]) => slug !== topic.slug && entry.area === reference?.area)
+    .sort(
+      ([, a], [, b]) =>
+        Math.abs(a.order - (reference?.order ?? 0)) - Math.abs(b.order - (reference?.order ?? 0)),
+    )
+    .slice(0, 3);
+  const reading = GRAMMAR_SOURCES.filter(
+    (source) => reference && source.areas.includes(reference.area),
+  );
   return (
     <article className="grammar-lesson">
       <header className="grammar-lesson-header">
@@ -53,6 +68,7 @@ export default async function GrammarTopicPage({ params }: { params: Promise<{ s
           ) : null}
         </div>
         <p className="eyebrow">A LITTLE CLARITY. A LOT MORE CONFIDENCE.</p>
+        <p className="grammar-lesson-area">{grammarAreaLabel(topic.slug)}</p>
         <h1>{topic.title}</h1>
         <p className="text-muted">{topic.summary}</p>
         <div className="grammar-lesson-actions">
@@ -68,6 +84,21 @@ export default async function GrammarTopicPage({ params }: { params: Promise<{ s
       </header>
       <div className="grammar-lesson-layout">
         <div className="grammar-lesson-content">
+          <details className="grammar-contents">
+            <summary>
+              <Icon name="list" width="14" height="14" />
+              On this page
+              <Icon name="chevron" width="12" height="12" />
+            </summary>
+            <nav aria-label="Lesson contents">
+              {headings.map((item) => (
+                <a key={item.id} href={`#${item.id}`}>
+                  {item.title}
+                </a>
+              ))}
+              <a href="#exercises">Practice exercises</a>
+            </nav>
+          </details>
           <section id="lesson-rule" className="grammar-rule-panel" aria-label="Grammar explanation">
             <p className="eyebrow">
               <Icon name="book" width="14" height="14" /> UNDERSTAND THE PATTERN
@@ -128,6 +159,37 @@ export default async function GrammarTopicPage({ params }: { params: Promise<{ s
           <p className="grammar-lesson-reassurance">
             You don’t have to get it right the first time. Every attempt helps it click.
           </p>
+          {related.length ? (
+            <section className="grammar-related">
+              <h2>Related lessons</h2>
+              {related.map(([slug, entry]) => (
+                <Link key={slug} href={`/grammar/${slug}`}>
+                  <span>{entry.level}</span>
+                  {entry.title}
+                  <Icon name="arrow" width="12" height="12" />
+                </Link>
+              ))}
+            </section>
+          ) : null}
+          <details className="grammar-reference-info">
+            <summary>
+              <Icon name="book" width="13" height="13" />
+              Further reading
+              <Icon name="chevron" width="12" height="12" />
+            </summary>
+            {[...reading, ...GRAMMAR_SOURCES.filter((source) => source.areas.length === 0)]
+              .slice(0, 3)
+              .map((source) => (
+                <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">
+                  {source.title}
+                  <Icon name="arrow" width="12" height="12" />
+                </a>
+              ))}
+            <p>
+              These are independent reference publishers. LingoUp explanations and exercises are
+              original; linked content keeps its publisher’s terms.
+            </p>
+          </details>
         </aside>
       </div>
     </article>

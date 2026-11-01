@@ -35,30 +35,23 @@ exercises:
     explanation: 'Question in Past Simple is formed with did.'
 ---
 
-## When is it used
+## Meaning and use
 
-Past Simple describes **completed actions in the past**, especially if a time is specified: **yesterday**, **last week**, **in 2020**, **two days ago**.
+The past simple places an event, state, or repeated action in a finished past period. The time can be stated directly or understood from context. A narrative often uses several past-simple verbs to move events forward. Regular verbs take -ed; frequent irregular verbs have special forms that must be learned. Negative statements and questions use did plus the base form. Be is different: was and were make their own negatives and questions.
 
-> I watched a film last night.
+## Forms and sentence patterns
 
-## Regular verbs
+- Regular positive: walk/walked; study/studied; stop/stopped.
+- Irregular positive: go/went, see/saw, take/took, buy/bought.
+- Negative: did not/didn’t + base form. Question: did + subject + base form?
+- Be: I/he/she/it was; you/we/they were.
 
-The **-ed** is added to regular verbs: **work → worked**, **play → played**, **stop → stopped**, **study → studied**.
+## Examples in context
 
-## Irregular verbs
+> We visited the gallery last Saturday.
+> Did you see the final scene? No, I did not.
+> The room was quiet when we arrived.
 
-Their forms need to be memorized:
+## Common mistakes and important distinctions
 
-- go → **went**
-- see → **saw**
-- buy → **bought**
-- have → **had**
-
-## Negation and questions
-
-The **did** is used for all persons, and the main verb returns to its base form.
-
-- I **didn't go** to work.
-- **Did** you **go** to work?
-
-> She didn't like the film.
+After did, remove the past ending: **Did she go?**, not Did she went? Do not use did with a main-verb be question: Were they tired? Regular -ed has different pronunciations, but it is written the same way. A past-simple event need not be short; We lived there for ten years is natural if that period is over. Compare present perfect when a past event is connected to an unfinished present period.

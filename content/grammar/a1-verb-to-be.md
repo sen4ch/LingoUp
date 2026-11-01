@@ -36,28 +36,23 @@ exercises:
     explanation: "The negative form with it is is not / isn't."
 ---
 
-## Forms
+## Meaning and use
 
-Use **to be** to say who someone is, where someone is, or how someone feels. In the present tense, use **am**, **is** or **are**: **I am a student**.
+Use **be** to identify people and things, describe qualities, give ages, and talk about places. Its present forms are am, is, and are. A noun phrase after be can identify the subject; an adjective describes it; a place phrase locates it. The form of be agrees with the subject, not with a word later in the sentence. Short forms are normal in conversation and informal writing. Full forms are useful for emphasis and in more formal writing.
 
-- I **am**
-- he / she / it **is**
-- we / you / they **are**
+## Forms and sentence patterns
 
-> I am hungry.
-> She is a teacher.
-> They are in the park.
+- I am; you/we/they are; he/she/it is.
+- Negative: subject + am/is/are + not.
+- Question: am/is/are + subject + description?
+- Short answers: Yes, I am. No, she is not. Yes, they are.
 
-## Contractions
+## Examples in context
 
-In conversation, we often use short forms: **I'm**, **he's**, **she's**, **it's**, **we're**, **you're**, **they're**.
+> I am nineteen and my sister is twenty-two.
+> The tickets are on the kitchen table.
+> Is your new teacher friendly? Yes, she is.
 
-## Negatives
+## Common mistakes and important distinctions
 
-To make a negative sentence, add **not** after the verb: **I am not**, **she is not (isn't)**, **we are not (aren't)**.
-
-> He isn't at work today.
-
-## Questions
-
-To ask a question, put **to be** before the subject: **Are you ready?** **Is it expensive?**
+Do not use do or does to make questions with main-verb be: **Are you ready?**, not Do you are ready? Say **I am not**, not I amn’t in standard English. Contracted negative forms include isn’t and aren’t. Do not finish a positive short answer with a contraction: Yes, she is, not Yes, she’s. In English, ages use be: I am thirty, not I have thirty years.

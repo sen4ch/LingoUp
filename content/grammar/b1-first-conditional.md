@@ -36,24 +36,23 @@ exercises:
     explanation: 'unless = if not; result with will.'
 ---
 
-## Form
+## Meaning and use
 
-**If + Present Simple**, **will + verb**.
+Use a first-conditional pattern for a future situation the speaker presents as a realistic possibility. A present form in the condition can have a future reference. The result often uses will, but other modals and imperatives are also possible. The order of the clauses does not change their logical relationship. If marks uncertainty; when presents an event as expected. A condition and its result need not have exactly the same time reference.
 
-> If it rains, we will stay at home.
-> If you heat ice, it will melt.
+## Forms and sentence patterns
 
-The parts can be swapped. A comma is needed only if **if** is at the beginning.
+- If + present form, will + base verb.
+- Result alternatives: can, may, might, or an imperative.
+- Unless means if not in many ordinary conditional meanings.
+- An initial conditional clause normally takes a comma before the main clause.
 
-> We will stay at home if it rains.
+## Examples in context
 
-## Main Mistake
+> If you leave now, you will catch the bus.
+> If the shop is closed, we can order online.
+> Call me if you need any help.
 
-After **if** you do not use **will**, even if it is about the future.
+## Common mistakes and important distinctions
 
-- If I **will see** him… — mistake
-- If I **see** him, I will tell him. — correct
-
-## Unless
-
-**Unless** means «if not»: **Unless you hurry, you will be late.**
+For ordinary prediction, do not put will in the if clause: If it rains, we will stay in. Will can occur in an if clause with other meanings, such as willingness, so the classroom rule is not an absolute ban. Distinguish a condition from an indirect yes/no question: I do not know if she will come uses if to mean whether.

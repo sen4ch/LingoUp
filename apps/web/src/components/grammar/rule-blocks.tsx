@@ -22,7 +22,7 @@ export function RuleBlocks({ blocks }: { blocks: GrammarBlock[] }) {
         switch (block.type) {
           case 'heading':
             return (
-              <h2 key={index} className="mt-2 text-xl font-semibold">
+              <h2 key={index} id={`rule-${index}`} className="mt-2 text-xl font-semibold">
                 {block.text}
               </h2>
             );

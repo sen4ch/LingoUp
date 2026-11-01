@@ -12,6 +12,7 @@ import { api } from '@/lib/api-client';
 import { ME_QUERY_KEY } from '@/lib/auth';
 import { describeError } from '@/lib/errors';
 import { PracticeTimer, StartPracticeLink } from '@/components/practice-timer';
+import { VocabularyIcon as Icon } from '@/components/vocabulary-icon';
 
 const SKILL_NAMES = {
   reading: 'Reading',
@@ -21,21 +22,15 @@ const SKILL_NAMES = {
   grammar: 'Grammar',
   vocabulary: 'Vocabulary',
 };
-const SKILL_ICONS = {
-  reading: '↗',
-  listening: '♫',
-  speaking: '◎',
-  writing: '✎',
-  grammar: 'Aa',
-  vocabulary: 'W',
-};
 
 export function LearningDashboard({
   settings,
   userId,
+  section = 'all',
 }: {
   settings: UserSettings;
   userId: string;
+  section?: 'all' | 'plan' | 'skills' | 'hidden';
 }) {
   const queryClient = useQueryClient();
   const [minutes, setMinutes] = useState(String(settings.dailyGoalMinutes));
@@ -65,7 +60,12 @@ export function LearningDashboard({
   const data = growth.data;
   return (
     <>
-      <section aria-labelledby="learning-plan-title" className="space-y-4">
+      <section
+        id="profile-plan"
+        hidden={section !== 'all' && section !== 'plan'}
+        aria-labelledby="learning-plan-title"
+        className="profile-plan space-y-4"
+      >
         <div>
           <p className="text-sm font-semibold tracking-wide text-primary uppercase">
             Make room for your English
@@ -74,7 +74,7 @@ export function LearningDashboard({
             Your daily learning plan
           </h2>
         </div>
-        <Card className="space-y-5">
+        <Card className="profile-plan-card space-y-5">
           <form onSubmit={submit} className="space-y-4">
             <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
               <TextField
@@ -144,7 +144,7 @@ export function LearningDashboard({
                   /{data.plan.activities.length} activities complete
                 </p>
               </div>
-              <ol className="space-y-3">
+              <ol className="profile-plan-activities space-y-3">
                 {data.plan.activities.map((activity, index) => (
                   <li
                     key={activity.skill}
@@ -155,7 +155,11 @@ export function LearningDashboard({
                         aria-hidden="true"
                         className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted font-semibold text-primary"
                       >
-                        {activity.completed >= activity.target ? '✓' : index + 1}
+                        {activity.completed >= activity.target ? (
+                          <Icon name="check" width="16" height="16" />
+                        ) : (
+                          index + 1
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-semibold">
@@ -190,11 +194,16 @@ export function LearningDashboard({
           ) : null}
         </Card>
       </section>
-      <section aria-labelledby="skill-levels-title" className="space-y-4">
+      <section
+        id="profile-skills"
+        hidden={section !== 'all' && section !== 'skills'}
+        aria-labelledby="skill-levels-title"
+        className="profile-skills space-y-4"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold tracking-wide text-primary uppercase">
-              Your character sheet
+              Six skills. One journey.
             </p>
             <h2 id="skill-levels-title" className="mt-1 text-2xl font-bold">
               Skills & levels
@@ -208,7 +217,7 @@ export function LearningDashboard({
         </div>
         {data ? (
           <>
-            <Card className="space-y-3">
+            <Card className="profile-player-progress space-y-3">
               <div className="flex justify-between gap-3">
                 <span className="font-semibold">English practice · {data.overall.xp} total XP</span>
                 <span className="text-sm text-muted">
@@ -226,16 +235,30 @@ export function LearningDashboard({
                 level.
               </p>
             </Card>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="profile-skill-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {data.skills.map((skill) => (
-                <Card key={skill.skill} className="space-y-4">
+                <Card key={skill.skill} className="profile-skill-card space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <span
                         aria-hidden="true"
                         className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-lg font-bold text-primary"
                       >
-                        {SKILL_ICONS[skill.skill]}
+                        <Icon
+                          name={
+                            skill.skill === 'reading' || skill.skill === 'grammar'
+                              ? 'book'
+                              : skill.skill === 'listening'
+                                ? 'headphones'
+                                : skill.skill === 'speaking'
+                                  ? 'mic'
+                                  : skill.skill === 'writing'
+                                    ? 'edit'
+                                    : 'cards'
+                          }
+                          width="19"
+                          height="19"
+                        />
                       </span>
                       <h3 className="font-semibold">{SKILL_NAMES[skill.skill]}</h3>
                     </div>

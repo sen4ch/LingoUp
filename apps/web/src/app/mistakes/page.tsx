@@ -70,7 +70,9 @@ export default function MistakesPage() {
           <p className="mistakes-counts" role="status">
             {counts
               ? `${counts.open} to review · ${counts.resolved} understood`
-              : 'Loading your journal…'}
+              : journal.isError
+                ? 'Could not load your journal.'
+                : 'Loading your journal…'}
           </p>
         </div>
         <div
@@ -85,7 +87,9 @@ export default function MistakesPage() {
                 ? total
                   ? `${understood}% of entries marked as understood`
                   : 'No entries yet'
-                : 'Loading journal statistics'
+                : journal.isError
+                  ? 'Journal statistics unavailable'
+                  : 'Loading journal statistics'
             }
           >
             <span>
@@ -251,9 +255,6 @@ export default function MistakesPage() {
                         Correction and rule
                         <Icon name="chevron" width="13" height="13" />
                       </summary>
-                      <p className="mistake-reveal-hint">
-                        Try correcting the phrase, then reveal the answer.
-                      </p>
                       <div className="mistake-answer-body">
                         <p className="eyebrow">
                           {entry.category === 'suggestion'
@@ -339,7 +340,7 @@ export default function MistakesPage() {
           </p>
           {filtered ? (
             <Button variant="secondary" onClick={resetFilters}>
-              Reset filters
+              Clear filters
             </Button>
           ) : (
             <div className="mistakes-empty-actions">

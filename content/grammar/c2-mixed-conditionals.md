@@ -36,25 +36,23 @@ exercises:
     explanation: 'Character trait now, result in the past.'
 ---
 
-## Idea
+## Meaning and use
 
-In ordinary conditional sentences, the time of the condition and the result coincide. In **mixed** they refer to **different** moments.
+A mixed conditional links a hypothetical condition and result with different time references. One common pattern imagines a different past event and its present consequence. Another relates an ongoing or general unreal condition to an alternative past outcome. Identify the time of each proposition independently before selecting forms. Ordinary conditionals also allow time differences; mixed conditional is a useful teaching label, not a rule that all other if sentences refer to exactly the same moment.
 
-## Past condition → present result
+## Forms and sentence patterns
 
-**If + Past Perfect**, **would + verb**.
+- Past condition, present result: if + past perfect, would + base form.
+- General present condition, past result: if + past form, would have + participle.
+- Continuous or passive forms can refine the viewpoint: would be living; would have been selected.
+- Formal inversion can replace if: Had I checked ...; Were I more experienced ... .
 
-> If I had studied medicine, I would be a doctor now.
+## Examples in context
 
-## Present condition → past result
+> If I had accepted the transfer, I would be living abroad now.
+> If she were less cautious, she would have signed the contract yesterday.
+> Had we saved the original file, we would not need to recreate it now.
 
-**If + Past Simple**, **would have + V3**. Usually the condition is a constant trait or state.
+## Common mistakes and important distinctions
 
-> If I were braver, I would have spoken up at the meeting.
-
-## Formal variant
-
-In written speech **if** can be omitted, by moving **had** or **were** forward.
-
-> Had I known, I would be there now.
-> Were she more careful, she wouldn't have lost the keys.
+Do not select a pattern only by spotting now or yesterday: decide what the entire condition actually means. A present-condition/past-result sentence needs a condition that plausibly held at the earlier time, often a stable quality or continuing state. Would have describes a hypothetical past outcome, not simply a future-in-the-past prediction. Could and might can adjust the strength or nature of the result.

@@ -36,23 +36,23 @@ exercises:
     explanation: 'The performer of the action is introduced by the preposition by.'
 ---
 
-## Why use passive voice
+## Meaning and use
 
-Passive voice is used when **it doesn't matter** or **it is unknown** who performed the action, or when the object is in focus.
+The passive changes how an event is organised as information. It makes an affected participant the grammatical subject and leaves the agent unmentioned or introduces it in a by phrase. Use it when the agent is unknown, obvious, less important, or deliberately backgrounded. It does not automatically make writing more formal or more objective. Only verbs and constructions that allow an appropriate object can normally form this kind of passive.
 
-> The window was broken. (who — unknown)
-> This bridge was designed by a famous engineer.
+## Forms and sentence patterns
 
-## Form
+- Be + past participle; tense and aspect are expressed by the auxiliary sequence.
+- Present: is repaired; past: was repaired; perfect: has been repaired.
+- Continuous: is being repaired; modal: must be repaired.
+- Agent: repaired by a specialist; instrument: opened with a key.
 
-**be** in the correct tense + **third form of the verb** (V3).
+## Examples in context
 
-- Present Simple: is / are **made**
-- Past Simple: was / were **made**
-- Present Perfect: has / have **been made**
-- Future: will **be made**
-- Continuous: is / was **being made**
+> The bridge was inspected last week.
+> Your application is being reviewed.
+> The results must have been checked before publication.
 
-## Performer of the action
+## Common mistakes and important distinctions
 
-If you need to name who did the action, use **by**: **The song was written by Freddie Mercury.**
+Keep the past participle unchanged when the tense changes. Been and being perform different jobs: has been repaired versus is being repaired. Verbs such as arrive and happen do not form ordinary passives: The accident happened, not was happened. An adjective can resemble a passive participle: The door is closed may describe a state or an event depending on context.

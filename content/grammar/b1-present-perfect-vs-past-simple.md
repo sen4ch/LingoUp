@@ -37,22 +37,23 @@ exercises:
     explanation: 'Questions with the word when concern a time in the past — Past Simple.'
 ---
 
-## Present Perfect
+## Meaning and use
 
-Form: **have / has + third form of the verb** (V3). It is used when the **result** or **experience** is important, and the time is not specified.
+The choice depends on the time frame and the connection you want to make. The **past simple** places a situation within a finished past period. The **present perfect** views earlier events from the present, often as experience, a current result, or part of an unfinished period. The same event can be described either way when the surrounding viewpoint changes. A time expression such as today can be treated as finished or unfinished depending on the situation.
 
-> I have lost my phone. (It is not here now)
-> Have you ever been to London?
+## Forms and sentence patterns
 
-Typical words: **ever**, **never**, **already**, **yet**, **just**, **so far**.
+- Finished time: I visited Rome in 2022.
+- Experience up to now: I have visited Rome twice.
+- Ongoing state: We have lived here since May.
+- Narrative sequence: She arrived, checked her ticket, and joined the queue.
 
-## Past Simple
+## Examples in context
 
-It is used when the action took place at a **specific moment in the past** and this moment is known or specified.
+> I have read that book, but I read it several years ago.
+> Have you eaten yet? I had lunch at noon.
+> We have sold ten tickets this morning, and the morning is not over.
 
-> I lost my phone yesterday.
-> She moved to Berlin in 2021.
+## Common mistakes and important distinctions
 
-## Main rule
-
-If the sentence has **yesterday**, **last year**, **ago** or **in 2020**, choose **Past Simple**. Words **when** and **what time** in the question also indicate Past Simple.
+Do not use a present-perfect event with an ordinary finished-time marker such as last Friday. Been and gone differ in their present implications. A question about a finished event usually uses did: When did you arrive? The present perfect often opens a topic and the past simple supplies details. British and American preferences differ in some recent-event contexts, so distinguish a real grammatical error from a regional preference.

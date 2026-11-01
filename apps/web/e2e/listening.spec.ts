@@ -94,19 +94,32 @@ test('listening has exactly two sections, grades questions and opens publisher v
   await expect(page.getByText('A1 · 4:00', { exact: true })).toBeVisible();
   await expect(page.getByText('Show transcript')).toHaveCount(0);
   const check = page.getByRole('button', { name: 'Check answers' });
+  await page.getByRole('button', { name: 'Go to question 5', exact: true }).click();
   await expect(check).toBeDisabled();
-  for (let index = 1; index <= 5; index++)
+  await page.getByRole('button', { name: 'Go to question 1', exact: true }).click();
+  for (let index = 1; index <= 5; index++) {
     await page
       .getByRole('group', { name: `Question ${index}`, exact: true })
       .getByRole('button')
       .first()
       .click();
+    if (index < 5) await page.getByRole('button', { name: 'Next question', exact: true }).click();
+  }
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
+  await expect(
+    page.getByRole('group', { name: 'Question 4', exact: true }).getByRole('button').first(),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Next question', exact: true }).click();
   await check.click();
   await expect(page.getByRole('status').filter({ hasText: 'Score: 5 of 5' })).toBeVisible();
   await page.getByText('Show transcript', { exact: true }).click();
   await expect(
     page.getByText('Nora works at the library in a small town.', { exact: true }),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
+  await expect(
+    page.getByRole('group', { name: 'Question 4', exact: true }).getByRole('button').first(),
+  ).toBeDisabled();
   await page.getByRole('tab', { name: 'Films and series' }).click();
   await page
     .getByRole('textbox', { name: 'YouTube video or playlist link' })

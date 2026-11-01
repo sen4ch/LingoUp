@@ -35,22 +35,23 @@ exercises:
     explanation: 'bad — exception: bad → worse.'
 ---
 
-## Short adjectives
+## Meaning and use
 
-The suffix **-er** is added to one-syllable adjectives, and **than** is used after the comparison.
+Comparatives compare two people, things, or situations. Short adjectives commonly take -er, while longer adjectives normally use more. Than introduces the second side of a comparison when it is stated. Some adjectives have irregular forms. Comparative adverbs compare how actions happen. The comparative describes a difference rather than identifying the single highest member of a group, which is the job of a superlative.
 
-> My brother is taller than me.
+## Forms and sentence patterns
 
-If a word ends with one vowel and one consonant, the consonant is doubled: **big → bigger**, **hot → hotter**. If it ends with **-y**, then **y** is changed to **i**: **happy → happier**.
+- Short adjective + -er: smaller, later, bigger; happy/happier.
+- More + longer adjective: more comfortable; less expensive.
+- Irregular: good/better, bad/worse, far/further or farther.
+- Modifiers: much better, a little colder, far more interesting.
 
-## Long adjectives
+## Examples in context
 
-The prefix **more** is placed before adjectives with two or more syllables: **more expensive**, **more beautiful**.
+> This path is narrower than the main road.
+> The new timetable is much more convenient.
+> My sister runs faster than I do.
 
-> This phone is more expensive than that one.
+## Common mistakes and important distinctions
 
-## Exceptions
-
-- good → **better**
-- bad → **worse**
-- far → **further**
+Use one comparative marker: more useful or bigger, not more bigger. Two-syllable adjectives vary: happier is usual, while more careful is the normal form. Do not automatically add -er to every short-looking adjective. Than is different from then. A comparison can omit its second term when context supplies it: It is getting warmer. For equality, use as ... as rather than a comparative.

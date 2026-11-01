@@ -79,12 +79,13 @@ test('builds and saves a 90-minute plan and displays server-earned skill levels'
   );
   await page.clock.install();
   await page.goto('/profile');
-  await expect(page.getByRole('heading', { name: 'Your daily learning plan' })).toBeVisible();
   await expect(page.getByText('Player level 2', { exact: true })).toBeVisible();
   await expect(
     page.getByRole('progressbar', { name: 'Reading level progress', exact: true }),
   ).toHaveAttribute('value', '9');
   await expect(page.getByText('English practice · 49 total XP', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Learning plan', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your daily learning plan' })).toBeVisible();
   await page.getByRole('button', { name: '1 h 30 min', exact: true }).click();
   await expect(page.getByLabel('Daily study time (minutes)')).toHaveValue('90');
   await page.getByRole('button', { name: 'Build my plan' }).click();
@@ -102,6 +103,7 @@ test('builds and saves a 90-minute plan and displays server-earned skill levels'
   await expect(page.getByRole('button', { name: 'Pause timer', exact: true })).toBeVisible();
   await expect(page.getByRole('timer', { name: 'Grammar time remaining' })).not.toHaveText('15:00');
   await page.goto('/profile');
+  await page.getByRole('button', { name: 'Learning plan', exact: true }).click();
   const grammarTimer = page.getByRole('timer', { name: 'Grammar time remaining' });
   await expect(grammarTimer).toBeVisible();
   const paused = await grammarTimer.textContent();
@@ -119,6 +121,14 @@ test('builds and saves a 90-minute plan and displays server-earned skill levels'
     ['/vocabulary/practice', 'Vocabulary', '10:00'],
   ] as const) {
     await page.goto(path);
+    if (path !== '/vocabulary/practice') {
+      const tools = page
+        .locator('summary')
+        .filter({ hasText: /Focus timer|Session tools/i })
+        .first();
+      await expect(tools).toBeVisible();
+      await tools.click();
+    }
     await expect(page.getByRole('timer', { name: `${name} time remaining` })).toHaveText(time);
   }
 });

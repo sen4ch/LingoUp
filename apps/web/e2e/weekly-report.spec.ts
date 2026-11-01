@@ -20,6 +20,7 @@ test('weekly summary records focused timer time, persists it and switches weeks 
     await page.clock.fastForward(65_000);
     await page.clock.resume();
     await page.goto('/profile');
+    await page.getByRole('button', { name: 'Weekly summary', exact: true }).click();
     const report = page.getByRole('region', { name: 'Weekly summary', exact: true });
     const time = report.getByText('Timer-recorded time', { exact: true }).locator('..');
     await expect(time).toContainText('1 min');

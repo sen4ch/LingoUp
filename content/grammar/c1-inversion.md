@@ -36,23 +36,23 @@ exercises:
     explanation: 'Little did he know — fixed expression with inversion.'
 ---
 
-## What is inversion
+## Meaning and use
 
-If a sentence begins with **negative** or **limiting** adverb, the auxiliary verb is placed **before the subject**, as in a question. This gives the statement force and sounds formal.
+Fronted negative or restrictive expressions can trigger subject–auxiliary inversion in the main clause. This is common in formal or emphatic writing rather than neutral everyday statements. The finite auxiliary moves before the subject; if a simple lexical verb has no auxiliary, add do, does, or did. The exact scope of the initial expression matters: a negative subject does not trigger this pattern merely because it comes first.
 
-> Never have I seen anything like it.
-> Seldom does he complain.
+## Forms and sentence patterns
 
-## Common trigger words
+- Never/rarely/seldom + auxiliary + subject + verb.
+- Not until + time clause, then inverted main clause.
+- Only after/only when + clause, then inverted main clause.
+- No sooner ... than; hardly/scarcely ... when.
 
-- **never**, **rarely**, **seldom**
-- **not only … but also**
-- **no sooner … than**, **hardly … when**
-- **under no circumstances**, **on no account**
-- **little** (in the meaning of «completely not»)
+## Examples in context
 
-## If there is no auxiliary verb
+> Rarely have I seen such a patient teacher.
+> Only after the final check did we publish the results.
+> No sooner had we sat down than the alarm rang.
 
-In Present and Past Simple, you need to add **do / does / did**.
+## Common mistakes and important distinctions
 
-> Not only does she sing, but she also writes her own songs.
+Do not invert the subordinate time clause in Only when she arrived did we start. Do not invert after a negative subject: Nobody knew the answer uses ordinary order. Not only ... but also can place inversion in its initial clause. Negative-fronting inversion is different from full locative inversion such as On the hill stood a tower, which has its own restrictions.

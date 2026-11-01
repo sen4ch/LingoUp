@@ -41,9 +41,11 @@ test('continues the next task, preserves timer time and rechecks the plan before
     expect(saved).not.toBe('20:00');
     await page.clock.resume();
     await page.goto('/profile');
+    await page.getByRole('button', { name: 'Learning plan', exact: true }).click();
     await expect(
       page.getByRole('timer', { name: 'Reading time remaining', exact: true }),
     ).toHaveText(saved!);
+    await page.getByRole('button', { name: 'Overview', exact: true }).click();
     await button.click();
     await expect(page).toHaveURL(/\/read\/a1-morning-routine$/);
     await expect(page.getByRole('button', { name: 'Pause timer', exact: true })).toBeVisible();

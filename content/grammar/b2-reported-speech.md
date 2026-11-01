@@ -36,27 +36,23 @@ exercises:
     explanation: 'Negative request: told + whom + not to + verb.'
 ---
 
-## Shift of Tenses
+## Meaning and use
 
-If the introductory verb is in the past (**said**, **told**, **asked**), the tense in the reported speech usually 'shifts back'.
+Reported speech conveys what someone said without reproducing the exact original words. Pronouns, time references, and place expressions depend on the reporter's viewpoint. With a past reporting verb, backshift often moves present forms to past forms and past forms to past perfect, but a shift is not compulsory when the information remains current or the reporter keeps the original time perspective. A report can describe a statement, question, command, promise, or request.
 
-- am / is → **was**
-- do / does → **did**
-- did → **had done**
-- will → **would**
-- can → **could**
+## Forms and sentence patterns
 
-> "I like it," she said. → She said that she liked it.
+- Statement: She said (that) she was tired. Tell normally takes an object: She told me ...
+- Yes/no question: He asked if/whether I was ready.
+- Wh-question: She asked where I lived; use statement order inside the report.
+- Command/request: They told/asked us to wait; negative: not to enter.
 
-## Said or Told
+## Examples in context
 
-After **told** it is necessary to specify to whom the speaker spoke: **He told me…**, whereas after **said** it is not required: **He said that…**
+> He said that he had already booked a room.
+> She asked whether we could hear her.
+> The guide warned us not to touch the paintings.
 
-## Questions and Requests
+## Common mistakes and important distinctions
 
-In indirect questions, the word order is direct, and instead of yes/no questions, **if** or **whether** is used.
-
-> She asked me where I worked.
-> He asked if I was ready.
-
-Requests and commands are reported through the infinitive: **She told me to wait.** **He told us not to touch it.**
+Do not put an ordinary person object directly after say: said to me, but told me. Do not retain direct-question inversion in an embedded report. Today does not always have to become that day: make changes only when the reporting context requires them. Modal shifts vary: can often becomes could; must expressing obligation often becomes had to; might and should often remain unchanged.

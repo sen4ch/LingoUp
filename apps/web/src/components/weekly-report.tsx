@@ -25,7 +25,7 @@ export function WeeklyReport({ userId }: { userId: string }) {
   });
   const data = report.data;
   return (
-    <section aria-labelledby="weekly-report-title" className="space-y-4">
+    <section aria-labelledby="weekly-report-title" className="profile-weekly-report space-y-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 id="weekly-report-title" className="text-2xl font-semibold">

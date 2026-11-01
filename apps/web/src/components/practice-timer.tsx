@@ -140,6 +140,7 @@ export function PracticeSectionTimer() {
     pathname === '/review' ||
     pathname === '/speaking' ||
     pathname === '/writing' ||
+    pathname === '/listening' ||
     pathname.startsWith('/grammar')
   )
     return null;

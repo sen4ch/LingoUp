@@ -402,9 +402,6 @@
 .mistake-alternatives p span {
   color: #7d9b88;
 }
-.mistake-answer[open] .mistake-reveal-hint {
-  display: none;
-}
 .mistake-context {
   margin: 0 20px 18px;
   padding: 0 11px;

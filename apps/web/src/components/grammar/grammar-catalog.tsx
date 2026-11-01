@@ -1,13 +1,19 @@
 'use client';
 
-import type { CefrLevel, GrammarTopicSummary } from '@lingoup/contracts';
-import { Button, EmptyState, LevelBadge, buttonClasses } from '@lingoup/ui';
+import { CEFR_LEVELS, type CefrLevel, type GrammarTopicSummary } from '@lingoup/contracts';
+import { Button, EmptyState, LevelBadge, SelectField, buttonClasses } from '@lingoup/ui';
 import Link from 'next/link';
 import { useDeferredValue, useState } from 'react';
 import { LevelFilter } from '@/components/level-filter';
 import { PracticeTimer } from '@/components/practice-timer';
 import { VocabularyIcon as Icon } from '@/components/vocabulary-icon';
 import { t } from '@/i18n';
+import {
+  GRAMMAR_AREAS,
+  GRAMMAR_INDEX,
+  GRAMMAR_SOURCES,
+  grammarAreaLabel,
+} from '@/lib/grammar-reference';
 
 const isComplete = (topic: GrammarTopicSummary) =>
   topic.exerciseCount > 0 && (topic.progress?.correct ?? 0) >= topic.exerciseCount;
@@ -20,8 +26,14 @@ export function GrammarCatalog({
   level: CefrLevel | undefined;
 }) {
   const [search, setSearch] = useState('');
+  const [area, setArea] = useState('');
   const [filter, setFilter] = useState<'all' | 'started' | 'complete'>('all');
   const query = useDeferredValue(search.trim().toLowerCase());
+  const ordered = [...topics].sort(
+    (a, b) =>
+      CEFR_LEVELS.indexOf(a.level) - CEFR_LEVELS.indexOf(b.level) ||
+      (GRAMMAR_INDEX[a.slug]?.order ?? 999) - (GRAMMAR_INDEX[b.slug]?.order ?? 999),
+  );
   const completed = topics.filter(isComplete).length;
   const started = topics.filter(
     (topic) => (topic.progress?.attempted ?? 0) > 0 && !isComplete(topic),
@@ -29,12 +41,16 @@ export function GrammarCatalog({
   const exercises = topics.reduce((total, topic) => total + topic.exerciseCount, 0);
   const correct = topics.reduce((total, topic) => total + (topic.progress?.correct ?? 0), 0);
   const next =
-    topics.find((topic) => (topic.progress?.attempted ?? 0) > 0 && !isComplete(topic)) ??
-    topics.find((topic) => !isComplete(topic));
+    ordered.find((topic) => (topic.progress?.attempted ?? 0) > 0 && !isComplete(topic)) ??
+    ordered.find((topic) => !isComplete(topic));
   const tracked = topics.some((topic) => topic.progress !== null);
-  const visible = topics.filter(
+  const visible = ordered.filter(
     (topic) =>
-      (!query || `${topic.title} ${topic.summary}`.toLowerCase().includes(query)) &&
+      (!query ||
+        `${topic.title} ${topic.summary} ${grammarAreaLabel(topic.slug)}`
+          .toLowerCase()
+          .includes(query)) &&
+      (!area || GRAMMAR_INDEX[topic.slug]?.area === area) &&
       (filter === 'all' ||
         (filter === 'complete'
           ? isComplete(topic)
@@ -130,6 +146,25 @@ export function GrammarCatalog({
               placeholder="Find a topic, rule or a little clarity…"
             />
           </div>
+          <div className="grammar-area-filter">
+            <SelectField
+              label="Grammar area"
+              value={area}
+              onChange={(event) => setArea(event.target.value)}
+              options={[
+                { value: '', label: 'All grammar areas' },
+                ...GRAMMAR_AREAS.map((item) => ({
+                  ...item,
+                  count: topics.filter((topic) => GRAMMAR_INDEX[topic.slug]?.area === item.id)
+                    .length,
+                })).map((item) => ({ value: item.id, label: `${item.label} (${item.count})` })),
+              ]}
+            />
+            <p>
+              {visible.length} {visible.length === 1 ? 'lesson' : 'lessons'} shown · A1–C2 study
+              guide
+            </p>
+          </div>
           <div className="grammar-tabs" role="group" aria-label="Filter lessons by progress">
             {(
               [
@@ -160,12 +195,13 @@ export function GrammarCatalog({
                   topics.length === 0 ? t.grammar.empty : 'A little room for your next discovery.'
                 }
                 action={
-                  search || filter !== 'all' ? (
+                  search || area || filter !== 'all' ? (
                     <Button
                       variant="secondary"
                       onClick={() => {
                         setSearch('');
                         setFilter('all');
+                        setArea('');
                       }}
                     >
                       Show all lessons
@@ -209,6 +245,7 @@ export function GrammarCatalog({
                       <h3>
                         <Link href={`/grammar/${topic.slug}`}>{topic.title}</Link>
                       </h3>
+                      <span className="grammar-area-label">{grammarAreaLabel(topic.slug)}</span>
                       <p>{topic.summary}</p>
                       <div className="grammar-topic-progress">
                         <div>
@@ -246,6 +283,29 @@ export function GrammarCatalog({
           )}
         </section>
         <aside className="grammar-sidebar" aria-label="Your grammar practice">
+          <details className="grammar-reference-info">
+            <summary>
+              <Icon name="book" width="14" height="14" />
+              About this reference
+              <Icon name="chevron" width="12" height="12" />
+            </summary>
+            <p>
+              Explore core learner grammar across A1–C2. Level labels are study guidance: many
+              structures overlap levels. Explanations, examples and practice questions are original
+              and written in English.
+            </p>
+            <h3>Further reading</h3>
+            {GRAMMAR_SOURCES.filter((source) => source.areas.length === 0).map((source) => (
+              <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">
+                {source.title}
+                <Icon name="arrow" width="12" height="12" />
+              </a>
+            ))}
+            <p>
+              Includes verb-form and tense references, punctuation, irregular verbs, and a grammar
+              glossary.
+            </p>
+          </details>
           <div className="grammar-next-card">
             <p className="eyebrow">
               <Icon name="spark" width="13" height="13" /> YOUR NEXT SMALL STEP

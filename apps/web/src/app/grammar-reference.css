@@ -1,0 +1,151 @@
+.grammar-area-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  margin: 15px 0 17px;
+}
+.grammar-area-filter label {
+  color: #9bbba6;
+  font-size: 11px;
+}
+.grammar-area-filter select {
+  height: 40px;
+  border-radius: 7px;
+  background: #0d1510;
+  font-size: 12px;
+}
+.grammar-area-filter > p {
+  color: #789c84;
+  font-size: 10px;
+  padding-bottom: 11px;
+}
+.grammar-area-label {
+  display: block;
+  margin: -3px 0 10px;
+  color: #7caa8a;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.grammar-lesson-area {
+  color: #85b695;
+  font-size: 12px;
+}
+.grammar-reference-info,
+.grammar-contents,
+.grammar-related {
+  border: 1px solid #a1c5ad27;
+  border-radius: 9px;
+  background: #101713;
+}
+.grammar-reference-info > summary,
+.grammar-contents > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 17px;
+  color: #aacbb6;
+  font-size: 11px;
+  list-style: none;
+  cursor: pointer;
+}
+.grammar-reference-info > summary::-webkit-details-marker,
+.grammar-contents > summary::-webkit-details-marker {
+  display: none;
+}
+.grammar-reference-info > summary > svg:last-child,
+.grammar-contents > summary > svg:last-child {
+  margin-left: auto;
+}
+.grammar-reference-info[open] > summary > svg:last-child,
+.grammar-contents[open] > summary > svg:last-child {
+  transform: rotate(90deg);
+}
+.grammar-reference-info > p {
+  margin: 0 17px 15px;
+  color: #84a38e;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.grammar-reference-info > h3 {
+  margin: 0 17px 10px;
+  color: #b0cbbb;
+  font-size: 11px;
+  font-weight: 500;
+}
+.grammar-reference-info > a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 17px 13px;
+  color: #a8cdb5;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.grammar-reference-info > a > svg {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.grammar-contents {
+  margin-bottom: 19px;
+}
+.grammar-contents > nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 20px;
+  padding: 0 17px 17px;
+}
+.grammar-contents > nav > a {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #8dbf9d;
+}
+.grammar-rule-blocks > h2 {
+  scroll-margin-top: 140px;
+}
+.grammar-related {
+  padding: 17px;
+}
+.grammar-related h2 {
+  color: #b5d1bf;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.grammar-related > a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid #a1c5ad20;
+  color: #9bbda7;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.grammar-related > a > span {
+  color: #699c79;
+  font: 8px monospace;
+}
+.grammar-related > a > svg {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.grammar-lesson-sidebar:has(.grammar-related) {
+  position: static;
+}
+@media (max-width: 767px) {
+  .grammar-area-filter {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .grammar-area-filter > p {
+    padding-bottom: 0;
+    font-size: 9px;
+  }
+  .grammar-contents > nav {
+    grid-template-columns: 1fr;
+  }
+  .grammar-lesson-area {
+    font-size: 11px;
+  }
+}
