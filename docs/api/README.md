@@ -1,10 +1,12 @@
 # API
 
+Reviewed: 2026-11-01. Routes below are API paths. Browser clients use the same-origin `/api` prefix, for example `/api/v1/me`. Installation administration uses a separate operator login; a learner session is not installation authorization.
+
 - **Swagger UI:** http://localhost:4000/docs (when `SWAGGER_ENABLED=true`)
 - **OpenAPI JSON:** http://localhost:4000/docs/openapi.json, copy in the repository — [openapi.json](openapi.json)
 - Update the copy after changing the API: `pnpm build && pnpm openapi:export`
 
-Request and response schemas are generated from the same Zod schemas (`packages/contracts`), which the API uses to validate requests, and the frontend uses to validate responses. Documentation and validations are consistent.
+Declared request/response schemas come from the API's Zod contract bindings; frontend calls validate declared response contracts. The generated document includes current controller routes, but handlers without response decorators can have incomplete response schemas, particularly setup/media helpers. Consult controllers and `packages/contracts` for those details. Regenerate the snapshot after route/contract changes; do not hand-edit the JSON.
 
 ## Agreements
 
@@ -55,3 +57,38 @@ Request and response schemas are generated from the same Zod schemas (`packages/
 | `POST /v1/learning/listening`                                                                | session | Audio generation for 3–5 minutes and questions according to CEFR; `{ level, topic? }`                                                                                                 |
 | `GET /v1/learning/listening/:id/audio`                                                       | session | Owner's MP3, available 24 hours                                                                                                                                                       |
 | `POST /v1/learning/listening/:id/answers`                                                    | session | Check `{ answers }`, explanations, quotes and recording text                                                                                                                          |
+| `GET /v1/vocabulary/pronunciation/settings`                                                  | session | Non-secret voice capability/revision metadata; `enabled`, `local`, `prefetchAllowed`, `revision`; private/no-store                                                                    |
+| `GET /v1/vocabulary/categories`                                                              | session | Category counts for the current learner's saved words                                                                                                                                 |
+| `GET /v1/progress/development`                                                               | session | Six-skill XP/player development, daily time-budgeted plan and activity state                                                                                                          |
+| `POST /v1/learning/writing/turn`                                                             | session | Level-aware email reply and assessment; bounded exchange context supplied by the client                                                                                               |
+| `POST /v1/learning/exams`                                                                    | session | Start original four-section IELTS-style practice                                                                                                                                      |
+| `GET /v1/learning/exams/:id`                                                                 | session | Owned temporary exam session/results                                                                                                                                                  |
+| `GET /v1/learning/exams/:id/audio/:part`                                                     | session | Owned exam audio, part 0–3, `audio/mpeg`                                                                                                                                              |
+| `POST /v1/learning/exams/:id/answers`                                                        | session | Grade answers and return retry-safe practice results; sessions/results expire after 24 hours                                                                                          |
+
+## Installation API
+
+These routes are available when browser setup is enabled. The controller is exempt from learner authentication but protects configuration actions with its own installation cookie. Mutating browser requests still require an allowed Origin. Claiming the first installation password must be done locally before exposure.
+
+| Method and path                             | Access        | Purpose                                                              |
+| ------------------------------------------- | ------------- | -------------------------------------------------------------------- |
+| `GET /v1/setup/status`                      | public        | Setup availability/completion and current installation login state   |
+| `POST /v1/setup/owner`                      | initial claim | Set the first installation password; minimum 12 characters           |
+| `POST /v1/setup/login`                      | public        | Authenticate the installation operator; 30-minute signed cookie      |
+| `POST /v1/setup/logout`                     | installation  | End the installation login                                           |
+| `GET /v1/setup/settings`                    | installation  | Read shared settings with saved keys redacted                        |
+| `PUT /v1/setup/settings`                    | installation  | Save settings and return a revision; API/AI restart to apply         |
+| `GET /v1/setup/hardware`                    | installation  | Server/container CPU, memory, storage and observable NVIDIA capacity |
+| `POST /v1/setup/test`                       | installation  | Test the submitted provider connection/model listing                 |
+| `POST /v1/setup/pull`, `GET /v1/setup/pull` | installation  | Start an Ollama download and poll its status                         |
+| `POST /v1/setup/voice-preview`              | installation  | Fixed-text Edge/Piper preview, `audio/mpeg`, no-store                |
+
+Setup settings are shared infrastructure configuration, not learner profile settings. API keys are write-only; connection tests do not imply model-generation quality or hardware capacity. See [operations](../operations.md#browser-installation).
+
+## Persistence, retries and media
+
+Reviews use `clientReviewId`; focus-time synchronization retains cumulative totals and does not award XP by time alone. Reading completion and activity rewards avoid duplicate completion rewards. Writing exchanges and speaking context are supplied from the current page rather than loaded as durable conversation history.
+
+Listening and exam sessions live in Valkey for 24 hours. Binary image uploads and recognition requests have route-specific limits above the default JSON body limit. Media/helper endpoints can return buffers rather than JSON; check content type before decoding.
+
+Speech privacy checks run before cache access. Explicit external term playback and external sentence playback have different consent requirements. Server audio is cached per provider/voice/normalized text; simultaneous identical requests share synthesis. Automatic external preparation is consent-gated and excludes paid Azure. See [pronunciation behavior](../operations.md#pronunciation-latency).

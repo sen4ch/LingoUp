@@ -1,294 +1,161 @@
-# Architecture of Open English Learning Platform
+# LingoUp architecture
 
-> Project working name — **Open English Learning Platform** (repository `LingoUp`, npm-scope `@lingoup/*`).
-> This document describes the target architecture and the current state of implementation. Anything that is not yet implemented is explicitly marked.
+Reviewed: 2026-11-01 against the current checkout. LingoUp is a self-hosted English-learning application. This document describes implemented components; future work is listed in the [roadmap](ROADMAP.md) and [known limitations](docs/architecture/tech-debt.md).
 
-## 1. Architectural Style
+## 1. Architectural style
 
-**Modular Monolith + Event-Driven Architecture + Independent AI Services.**
+The backend is a modular NestJS monolith with domain events, a separate worker and a separate Python AI service. Learning records live in PostgreSQL. Valkey holds queues, rate limits, quotas, speech cache and temporary learning sessions. Core reading, grammar, vocabulary and review work without a real AI model.
 
-| Principle                                      | How it is implemented                                                                                                                                                                                 |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Modular backend with strict boundaries         | NestJS modules in `apps/api/src/modules/*`, each with its own public API (`index.ts`) and own PostgreSQL schema. Boundaries are checked by architectural test (`apps/api/test/architecture.test.ts`). |
-| Minimal coupling                               | Modules communicate through public services (synchronously) or through domain events (asynchronously). Direct access to other tables is prohibited.                                                   |
-| Gradual extraction into microservices          | Each module has its own database schema, its own events, and contracts in `packages/contracts`. A module can be extracted by replacing in-process calls with HTTP and keeping the events.             |
-| Independent scaling of AI and background tasks | `apps/worker` and `apps/ai-service` — separate processes and Docker images.                                                                                                                           |
-| Stateless HTTP API                             | Session state is stored in PostgreSQL (opaque token), counter limits — in Valkey. Any API instance can process any request.                                                                           |
-| Asynchronous processing of heavy operations    | Transactional Outbox → BullMQ → idempotent handlers in `apps/worker`.                                                                                                                                 |
-| Self-hosted-first                              | Everything runs through Docker Compose without external paid services. AI by default is `MockAIProvider`, GPU is not needed.                                                                          |
+Heavy model generation is currently synchronous HTTP work. The background worker handles event delivery/projections and maintenance; it is not a general lesson-generation queue.
 
-Deliberately excluded from the first stage: microservices, Kubernetes, Kafka, a separate database per module and a service mesh. See [ADR-0001](docs/adr/0001-modular-monolith.md).
-
-## 2. System Context
+## 2. System context
 
 ```mermaid
 flowchart LR
-    learner([Student<br/>browser / PWA])
-    subgraph platform[Open English Learning Platform]
-        web[apps/web<br/>Next.js]
-        api[apps/api<br/>NestJS + Fastify]
-        worker[apps/worker<br/>BullMQ workers]
-        ai[apps/ai-service<br/>FastAPI]
-        pg[(PostgreSQL)]
-        valkey[(Valkey)]
-    end
-    llm[[Ollama / vLLM /<br/>OpenAI-compatible API<br/>— optionally]]
-
-    learner -->|HTTPS| web
-    web -->|/api/* rewrite| api
-    api --> pg
-    api --> valkey
-    api -->|only when AI_PROVIDER=ai-service| ai
-    worker --> pg
+    learner[Browser] -->|HTTPS| web[Next.js web]
+    web -->|same-origin /api proxy| api[NestJS / Fastify API]
+    api --> pg[(PostgreSQL)]
+    api --> valkey[(Valkey)]
+    worker[BullMQ worker] --> pg
     worker --> valkey
-    ai -.->|optionally| llm
+    api -->|internal token| ai[FastAPI AI service]
+    ai --> local[Ollama / self-hosted compatible server]
+    ai --> hosted[Hosted compatible API / Anthropic]
+    ai --> speech[Local Piper / Whisper / external Edge]
 ```
 
-## 3. Containers and Processes
+The browser communicates through the web proxy rather than directly with model providers. Azure speech is a separate API-side adapter. YouTube/publisher embeds and user-opened external links have their own browser connections. Local video/subtitle files are handled in the browser.
 
-| Process      | Purpose                                                                                                                            | Scaling                                         |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `web`        | UI on Next.js (App Router). Proxy `/api/*` to API to have same-origin cookies.                                                     | Horizontal, stateless                           |
-| `api`        | REST API, OpenAPI, authorization, synchronous business logic, writing to outbox.                                                   | Horizontal, stateless                           |
-| `worker`     | Outbox relay (PostgreSQL → BullMQ) and event handlers (progress projections).                                                      | Horizontal; relay uses `FOR UPDATE SKIP LOCKED` |
-| `ai-service` | Python/FastAPI: LLM adapters (mock, Ollama, OpenAI-compatible — suitable for vLLM and user APIs), validation of structured output. | Independent, based on inference load            |
-| `postgres`   | Single source of truth. Image `pgvector/pgvector` — extension is available, but not enabled yet.                                   | Vertical, then read replicas                    |
-| `valkey`     | BullMQ queues, rate limiting, AI quotas. Data in Valkey can be lost without losing business data.                                  | Vertical / Sentinel                             |
-| `ollama`     | Optional local LLM (Compose profile `ollama`).                                                                                     | GPU nodes                                       |
+## 3. Containers and processes
+
+| Component  | Responsibility                                                                            |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| web        | Next.js App Router, English UI, same-origin API proxy and browser media controls          |
+| api        | Sessions, authorization, REST contracts, learning operations, AI policy and outbox writes |
+| worker     | Outbox relay, idempotent progress projections and event-table maintenance                 |
+| ai-service | LLM adapters, structured output validation, recognition and voice synthesis               |
+| postgres   | Durable learner accounts, content, learning records and event tables                      |
+| valkey     | BullMQ, limits/quotas, audio cache and expiring listening/exam state                      |
+| ollama     | Optional local language-model inference                                                   |
+| bootstrap  | Easy-preset one-shot credential generation into private Docker volumes                    |
+| migrate    | One-shot SQL migration and bundled content import                                         |
+
+The original Compose preset uses environment configuration and optional AI/Ollama profiles. The easy preset includes browser installation, generates credentials and publishes only the loopback web port. They use separate project/volume sets; switching presets is not a data migration.
 
 ## 4. Backend modules
 
-```mermaid
-flowchart TB
-    subgraph api[apps/api]
-        identity[Identity]
-        content[Content]
-        vocabulary[Vocabulary]
-        learning[Learning]
-        grammar[Grammar]
-        progress[Progress]
-        aigw[AI Gateway]
-        platformm[Platform:<br/>DB, Outbox, Valkey, Health]
-    end
-    vocabulary -->|ContentGlossaryQuery| content
-    vocabulary -->|AiGateway| aigw
-    vocabulary -->|AiConsentQuery| identity
-    learning -->|ContentCatalogQuery,<br/>PrivateTextsService| content
-    learning -->|PracticeService| vocabulary
-    learning -->|UserSettingsQuery| identity
-    learning -->|AiGateway| aigw
-    progress -->|VocabularyStatsQuery| vocabulary
-    identity & vocabulary & learning & grammar -->|OutboxWriter| platformm
-```
+| Module       | Implemented responsibility                                                                                     | Storage                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Identity     | Registration/login, learner sessions/settings, export/deletion                                                 | identity schema                                  |
+| Content      | Public reading library, glossaries, imported content and owned generated texts                                 | content schema                                   |
+| Vocabulary   | Manual add/edit/categories, lookup, images, card templates, FSRS reviews and gap practice                      | vocabulary schema; speech through gateway        |
+| Grammar      | Topic reference, checked exercises, attempts and topic progress                                                | grammar schema                                   |
+| Learning     | Reading completion/checks, generated texts, speaking, writing, listening, exams and next-practice selection    | learning schema plus temporary Valkey sessions   |
+| Progress     | Activity, six skill rewards, daily plan/development summary, focus time, weekly reports and mistake journal    | progress schema                                  |
+| AI Gateway   | Model task policy, provider routing, validation, quotas/timeouts and speech cache/coalescing                   | Valkey; no owned SQL schema                      |
+| Installation | Separate operator login, shared runtime settings, hardware checks, provider tests/downloads and voice previews | private filesystem/volume; no learner SQL schema |
 
-Arrow means: "calls the public API of the module." There are no reverse dependencies or cycles.
+Daily guidance, exam practice and video playback already exist within these modules. Separate generalized Assessment, Planner and Media backend modules have not been extracted or implemented as standalone services.
 
-| Module         | Status             | Responsibility                                                                                                                                                                                                                                                 | DB Schema           |
-| -------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| **Identity**   | ✅ MVP             | Registration, login, sessions, profile, settings (including consent for external AI)                                                                                                                                                                           | `identity`          |
-| **Content**    | ✅ MVP             | Text library, CEFR metadata, glossary, import from `content/`; personal AI texts of the user (visible only to the owner)                                                                                                                                       | `content`           |
-| **Vocabulary** | ✅ MVP             | Personal dictionary, word context, FSRS cards, repetition history, lookup, gap-fill exercises (AI or saved examples), word images                                                                                                                              | `vocabulary`        |
-| **Learning**   | 🟡 Partial         | Reading completion (`LessonCompleted`), generation of personal texts from the user's words, voice conversation with AI tutor, listening with questions. Learning sessions — later                                                                              | `learning`          |
-| **Grammar**    | ✅ MVP             | Topics by levels: rule, examples, exercises (selection and input) with server-side checking and progress. Import from `content/grammar/`                                                                                                                       | `grammar`           |
-| **Progress**   | 🟡 Partially       | Daily activity projection (from events), profile summary. Weakness analysis — later                                                                                                                                                                            | `progress`          |
-| **AI Gateway** | 🟡 Partially       | Abstraction `AIProvider`, routing, timeouts (interactive and for generation), parallelism limit, retry, output validation, quotas, privacy. Tasks: `WordExplanation`, `ReadingTextGeneration`, `ExerciseGeneration`, `SpeakingTutor`; local speech recognition | — (Valkey)          |
-| **Assessment** | ⏳ Not implemented | Skill testing, confidence level assessment                                                                                                                                                                                                                     | `assessment` (plan) |
-| **Planner**    | ⏳ Not implemented | Goals, available time, adaptive plan                                                                                                                                                                                                                           | `planner` (plan)    |
-| **Media**      | ⏳ Not implemented | Video, audio, subtitles                                                                                                                                                                                                                                        | `media` (plan)      |
+### 4.1. Module structure
 
-### 4.1. Internal structure of the module
+Modules generally use domain, application, infrastructure and http folders, with index.ts as the public cross-module API. The small Installation module keeps its controller/service/hardware helpers together. Introduce abstractions when they clarify an actual boundary.
 
-```text
-modules/vocabulary/
-├── domain/          # Pure rules and invariants. Without NestJS and DB.
-├── application/     # Use cases (services), ports (repository interfaces).
-├── infrastructure/  # Drizzle repositories and adapters.
-├── http/            # Controllers, contract binding to HTTP.
-├── vocabulary.module.ts
-└── index.ts         # Public API module — the only thing that can be imported from outside.
-```
+### 4.2. Boundary rules
 
-Layers are not dogmatic: if the use case is trivial, the repository interface is not created (see the "no unnecessary abstractions" rule).
+The architecture test in apps/api/test/architecture.test.ts checks cross-module imports, schema ownership, platform dependencies and cycles. Packages must not depend on applications. Changes adding modules or storage ownership must keep this test's metadata current.
 
-### 4.2. Boundary Rules (automatically checked)
+## 5. Data ownership and lifetime
 
-1. A module file `X` can import from module `Y` only `modules/Y/index.ts`.
-2. Module `X` can import a Drizzle schema only `@lingoup/database/schema/X` (and `platform` — only through `OutboxWriter`).
-3. Packages in `packages/*` do not import applications from `apps/*`.
+| Storage             | Records                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| identity            | users, sessions and user_settings, including native language, daily goal and card display settings       |
+| content             | texts and glossary_entries                                                                               |
+| vocabulary          | words, cards, review_logs and word_images                                                                |
+| grammar             | topics, exercises and attempts                                                                           |
+| learning            | text_completions and reading_checks                                                                      |
+| progress            | daily_activity, skill_rewards, focus_time and mistake_entries                                            |
+| platform            | outbox_events and processed_events                                                                       |
+| Valkey              | Jobs/limits/quotas, shared per-voice speech cache, temporary listening lessons and exam sessions/results |
+| Installation volume | owner.json password/signing state and runtime.json shared provider/settings state                        |
+| Model volumes       | Downloaded Ollama, Whisper and Piper artifacts                                                           |
 
-Test: `apps/api/test/architecture.test.ts`.
+Account deletion cascades through owned SQL records and removes user-linked outbox data. Export aggregates supported durable account records; it does not export installation secrets.
 
-## 5. Data Ownership
+Writing exchanges and speaking context live in the current browser page. Listening/exam state expires after 24 hours. Those are different persistence guarantees from saved vocabulary, reading checks, grammar attempts and the mistake journal.
 
-One PostgreSQL database, **a separate schema per module**. Details — [ADR-0003](docs/adr/0003-postgres-schema-per-module.md).
+## 6. Events and progress
 
-```mermaid
-erDiagram
-    identity_users ||--o{ identity_sessions : has
-    identity_users ||--|| identity_user_settings : has
-    identity_users ||--o{ vocabulary_words : owns
-    vocabulary_words ||--|| vocabulary_cards : "scheduled by"
-    vocabulary_cards ||--o{ vocabulary_review_logs : "history"
-    content_texts ||--o{ content_glossary_entries : has
-    identity_users ||--o{ learning_text_completions : completes
-    identity_users ||--o{ content_texts : "owns private"
-    grammar_topics ||--o{ grammar_exercises : has
-    grammar_exercises ||--o{ grammar_attempts : "answered in"
-    identity_users ||--o{ grammar_attempts : makes
-    identity_users ||--o{ progress_daily_activity : "projected"
-    platform_outbox_events
-    platform_processed_events
-```
+Business changes and corresponding events are committed together through OutboxWriter. The relay selects unpublished rows using FOR UPDATE SKIP LOCKED, puts them into BullMQ with event-id job IDs, and marks them published. Consumers use platform.processed_events in the same transaction as projection updates.
 
-| Schema       | Owner                                | Tables                                           |
-| ------------ | ------------------------------------ | ------------------------------------------------ |
-| `identity`   | Identity                             | `users`, `sessions`, `user_settings`             |
-| `content`    | Content                              | `texts` (public and private), `glossary_entries` |
-| `grammar`    | Grammar                              | `topics`, `exercises`, `attempts`                |
-| `vocabulary` | Vocabulary                           | `words`, `cards`, `review_logs`, `word_images`   |
-| `learning`   | Learning                             | `text_completions`                               |
-| `progress`   | Progress (write — handler in worker) | `daily_activity`                                 |
-| `platform`   | Platform (infrastructure)            | `outbox_events`, `processed_events`              |
+| Event                                                                      | Current use                                           |
+| -------------------------------------------------------------------------- | ----------------------------------------------------- |
+| UserRegistered                                                             | Published by Identity                                 |
+| WordSaved                                                                  | Vocabulary activity projection                        |
+| VocabularyReviewCompleted                                                  | Review activity and vocabulary progress               |
+| LessonCompleted                                                            | Reading completion                                    |
+| ExerciseCompleted                                                          | Grammar/vocabulary exercise completion                |
+| PracticeCompleted                                                          | Skill practice rewards, including learning activities |
+| LessonStarted, AssessmentCompleted, SkillLevelUpdated, LearningPlanUpdated | Reserved contracts; no current producers              |
 
-Cross-schema foreign keys are allowed **only on `identity.users(id)`** with `ON DELETE CASCADE`: this enables complete deletion of personal data. Links to content (`source_text_id`) are stored without FK: a content module may move, and the context snapshot (suggestion, slug) is preserved in the glossary.
+Delivery is at least once with idempotent consumers. Published queue jobs are retried eight times with exponential backoff; failed jobs are retained for seven days. Cleanup limits event-table retention.
 
-## 6. Events
+Valkey loss is not equivalent to an ordinary worker restart: published-but-unprocessed jobs are not automatically selected by the unpublished-only relay. Durable SQL records remain, but queue reconciliation/projection repair needs operator work. See [operations](docs/operations.md#backup-and-restoration).
 
-Catalog and versions — in `packages/contracts/src/events`. Event converter:
+Skill XP/player levels are activity rewards, not calibrated CEFR estimates. Focus-time synchronization keeps cumulative totals without awarding XP just for elapsed time. Daily-plan/weekly logic uses Europe/Kyiv; the older daily activity projection retains UTC buckets.
 
-```ts
-{ id: uuid, type: "WordSaved", version: 1, occurredAt: ISO-8601, userId?: uuid, payload: {...} }
-```
+## 7. AI and speech architecture
 
-| Event                       | Version | Producer            | Consumers   | Status                            |
-| --------------------------- | ------- | ------------------- | ----------- | --------------------------------- |
-| `UserRegistered`            | 1       | Identity            | — (reserve) | ✅ published                      |
-| `WordSaved`                 | 1       | Vocabulary          | Progress    | ✅                                |
-| `VocabularyReviewCompleted` | 1       | Vocabulary          | Progress    | ✅                                |
-| `LessonCompleted`           | 1       | Learning            | Progress    | ✅ (reading text)                 |
-| `LessonStarted`             | 1       | Learning            | —           | 📄 contract, not published        |
-| `ExerciseCompleted`         | 1       | Grammar, Vocabulary | Progress    | ✅ (grammar, vocabulary exercise) |
-| `AssessmentCompleted`       | 1       | Assessment          | —           | 📄 contract, not published        |
-| `SkillLevelUpdated`         | 1       | Progress            | —           | 📄 contract, not published        |
-| `LearningPlanUpdated`       | 1       | Planner             | —           | 📄 contract, not published        |
+AiGateway applies task support, provider locality, operator permission, learner consent, quota, concurrency and task-specific deadlines. Only retry-safe tasks are retried. Task input/output contracts are in packages/ai-sdk; Python validates structured model output independently.
 
-### Transactional Outbox
+Adapters support mock demonstration output, local Ollama, OpenAI-compatible servers and native Anthropic Messages. OpenAI/GPT and DeepSeek use compatible endpoints. A configured provider still needs to support the required structured output reliably.
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant API as API (Vocabulary)
-    participant PG as PostgreSQL
-    participant R as Worker: outbox relay
-    participant Q as Valkey (BullMQ)
-    participant H as Worker: handler for Progress
+Implemented learning tasks include word explanations, text/exercise generation, reading checks, speaking, writing, listening generation and exam assessment. GrammarExplanation and LearningRecommendation remain reserved unsupported contracts. Whisper recognition and speech synthesis have dedicated service implementations.
 
-    C->>API: POST /v1/vocabulary/words
-    API->>PG: BEGIN; INSERT words, cards; INSERT outbox_events; COMMIT
-    API-->>C: 201 Created
-    loop every OUTBOX_POLL_INTERVAL_MS
-        R->>PG: SELECT ... FOR UPDATE SKIP LOCKED (published_at IS NULL)
-        R->>Q: add(job, jobId = event.id)
-        R->>PG: UPDATE published_at = now()
-    end
-    Q->>H: job(WordSaved)
-    H->>PG: BEGIN; INSERT processed_events (ON CONFLICT DO NOTHING); UPSERT daily_activity; COMMIT
-```
+### Voice path
 
-- Delivery guarantee — **at-least-once**. Duplicates are filtered at two levels: `jobId = event.id` in BullMQ and the table `platform.processed_events` (key `consumer + event_id`) in a single transaction with the projection update.
-- Retry with exponential backoff is configured in BullMQ. After exhausting attempts, the task remains in the failed set for analysis.
-- Everything that needs to be executed synchronously for the user immediately (word saving, FSRS calculation) is done synchronously. Only side effects (projections, in the future — exercise generation, notifications) go through the queue.
+SpeechGateway uses a provider-specific port: Azure directly, or Edge/Piper through the internal AI service. It checks consent before cache access, hashes normalized text into a provider/voice key, combines matching in-flight requests and charges quota only on uncached generation.
 
-## 7. AI-architecture
+Browser speaker controls keep up to 24 media clips scoped by learner/privacy/voice revision. Selected-word preparation and hover/focus preparation are allowed for local voices, or Edge with learner external-sharing consent; paid Azure is not called speculatively. Voice metadata has a short lifetime, and sign-out/installation changes clear this tab's prepared cache.
 
-```mermaid
-flowchart LR
-    svc[Vocabulary: LookupService] --> gw[AiGateway]
-    gw --> policy{Policy:<br/>quota, consent,<br/>provider locality}
-    policy --> mock[MockAIProvider<br/>in-process]
-    policy --> remote[AiServiceProvider<br/>HTTP + token]
-    remote --> fast[ai-service FastAPI]
-    fast --> pm[mock]
-    fast --> ol[Ollama]
-    fast --> oa[OpenAI-compatible<br/>vLLM / own API]
-```
+Explicit external term playback has a separate policy from private sentence playback: sentences require consent; dictionary terms do not. External LLM consent does not implicitly configure a speech provider. Local Piper does not silently fall back to external Edge. Browser fallback restricts private sentences to on-device voices.
 
-- Task contracts are described in `packages/ai-sdk`. Implemented tasks include `WordExplanation`, `ReadingTextGeneration`, `ExerciseGeneration`, `SpeakingTutor`, listening lesson generation and `WritingAssessment` (level-aware email exchanges with corrections of the latest reply). Writing exchanges live in the current browser page; recent email pairs form bounded AI context. Local Whisper recognition and Piper listening narration have dedicated endpoints; vocabulary and teacher speech use the speech gateway. `GrammarExplanation` and `LearningRecommendation` remain unsupported task contracts.
-- **Speech synthesis** (`SpeechGateway`, port `SpeechProvider`): `AiServiceSpeechProvider` — Microsoft Edge voices through ai-service (edge-tts, free), `AzureSpeechProvider` — Azure AI Speech directly from API. Audio is cached in Valkey, quota is shared with AI. A single word is sent to Microsoft without user consent, a sentence — only with consent; without a provider, the browser's voice works. See [ADR-0009](docs/adr/0009-pronunciation-azure-speech.md).
-- Generation is performed synchronously in an HTTP request with a separate timeout `AI_GENERATION_TIMEOUT_MS` and is not repeated on error; if AI is unavailable, the word-based exercise is built from saved examples. See [ADR-0008](docs/adr/0008-grammar-and-ai-practice.md).
-- `AiGateway` does not know about models: it selects the provider by `AI_PROVIDER`, applies the timeout (`AbortSignal.timeout`), parallelism semaphore, retry only for idempotent tasks, validates the response with a Zod schema, and tracks the user's daily quota in Valkey.
-- **Privacy:** the provider declares `dataLocality: "local" | "external"`. User text is sent to an external provider only if the administrator has allowed it (`AI_ALLOW_EXTERNAL=true`) **and** the user has given consent (`user_settings.ai_data_sharing`). Otherwise, only the text glossary is used, without AI.
-- AI endpoints are not public: a session is required, rate limit applies. ai-service accepts only requests with `AI_SERVICE_TOKEN`.
-- Streaming: **not implemented**. It is needed for conversational practice and detailed explanations; it is not justified in `WordExplanation` (the response is short and structured).
+The first local model/voice load or external synthesis can still be slow. Caching does not guarantee instant new speech, and conversation responses are not streamed.
 
-## 8. MVP Scenario: Interactive Reading + Personal Vocabulary
+## 8. Frontend behavior
 
-```mermaid
-sequenceDiagram
-    actor U as User
-    participant W as Web
-    participant A as API
-    participant AI as AiGateway
-    U->>W: /library?level=B1
-    W->>A: GET /v1/texts?level=B1
-    U->>W: opens text, highlights the word
-    W->>A: POST /v1/vocabulary/lookup {term, context, textSlug}
-    A->>A: glossary of text (Content)
-    A->>AI: WordExplanation (if allowed)
-    A-->>W: card: value, translation, example, source
-    U->>W: "Save"
-    W->>A: POST /v1/vocabulary/words
-    U->>W: /review
-    W->>A: GET /v1/vocabulary/reviews/due
-    U->>W: rating Again/Hard/Good/Easy
-    W->>A: POST /v1/vocabulary/reviews {cardId, rating, clientReviewId}
-    A->>A: FSRS (packages/learning-engine), review_logs, outbox
-```
+TanStack Query manages server data. Original reading text keeps its glossary/source links and keyboard selection behavior. Shared site translation uses DOM ranges and event delegation rather than rewriting React-owned text nodes. Editable fields require explicit selection; credentials, controls and hidden content are excluded.
 
-Reviews are idempotent: the client sends `clientReviewId` (UUID), and resubmitting does not create a second record.
+Pronunciation and teacher-call playback use separate client helpers so call cancellation can stop obsolete speech. Native browser dialog/popup behavior and responsive layouts are covered by targeted desktop/mobile scenarios, not a complete accessibility certification.
 
 ## 9. Security
 
-| Requirement       | Implementation                                                                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Authorization     | Email + password, hash Argon2id (`@node-rs/argon2`). Opaque session token (256 bits) in `HttpOnly; SameSite=Lax` cookie, stored only SHA-256 token in the database.                                                    |
-| CSRF              | `SameSite=Lax` and check `Origin` for all mutating requests (`ALLOWED_ORIGINS`).                                                                                                                                       |
-| Access Rights     | All requests to user data are filtered by `user_id` from the session at the repository level.                                                                                                                          |
-| Validation        | Zod schemas from `packages/contracts` on API input; AI responses are also validated.                                                                                                                                   |
-| Rate Limiting     | `@nestjs/throttler` with storage in Valkey; key — client IP (IPv6 is grouped by /64), separate limits for auth and AI-lookup. Additional: no more than 10 failed attempts per 15 minutes per account regardless of IP. |
-| Request Size      | `bodyLimit` Fastify (default 64 KB), field length restrictions in schemas.                                                                                                                                             |
-| HTML/Markdown     | Texts are stored as plain paragraphs; import rejects HTML. React renders only text nodes, without `dangerouslySetInnerHTML`.                                                                                           |
-| Logs              | Pino with `redact` for `authorization`, `cookie`, passwords and email. Request bodies are not logged; values of query parameters are removed from database errors (`toSafeError`).                                     |
-| Secrets           | Only environment variables; `.env` in `.gitignore`; in the repository — `.env.example`. In production services refuse to start with placeholders `change-me`.                                                          |
-| Containers        | Non-privileged users, `no-new-privileges`, `cap_drop: ALL`; only ports on `127.0.0.1` are published outwardly.                                                                                                         |
-| Redirects         | After login, only relative paths of the same origin are allowed (protection against open redirect).                                                                                                                    |
-| Headers           | `@fastify/helmet` in API; security headers in Next.js.                                                                                                                                                                 |
-| Health / shutdown | `/health/live`, `/health/ready` (PostgreSQL + Valkey); `enableShutdownHooks` in API, handling `SIGTERM` in worker.                                                                                                     |
-| Personal data     | `GET /v1/me/export` (JSON export) and `DELETE /v1/me` (cascade deletion).                                                                                                                                              |
+- Learner passwords use Argon2id; opaque session tokens are hashed in PostgreSQL and sent as HttpOnly, SameSite=Lax cookies.
+- Mutating browser requests require an allowed Origin. Public deployments need HTTPS, secure cookies and a correctly trusted/replacing outer proxy.
+- Owned data is filtered by the authenticated account; AI responses and API inputs use explicit schemas.
+- Rate limits and account login protection supplement quotas. Upload and recognition routes have specific binary size limits.
+- The installation login is separate: scrypt password state, signed HttpOnly SameSite=Strict cookie and a 30-minute session. It grants shared configuration access, not learner-account access.
+- API keys are write-only in setup responses but readable by authorized services from runtime configuration. Back up those files as secrets.
+- Containers use restricted users/capabilities where supported; the easy preset has no Docker socket mount.
+- Pino redacts known credential fields and does not log request bodies. Request URLs can still include query parameters, including pronunciation text; operational logs need appropriate access and retention controls.
+- Email verification/recovery, audit logs and device management remain incomplete. See [known limitations](docs/architecture/tech-debt.md).
 
 ## 10. Technology stack
 
-| Layer                | Technologies                                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
-| Monorepo             | pnpm 12 workspaces, Turborepo 2                                                                |
-| Frontend             | Next.js 16, React 19, TypeScript 6, Tailwind CSS 4, TanStack Query 5                           |
-| Backend              | NestJS 12 (ESM), Fastify 5, Zod 4, OpenAPI (`@nestjs/swagger`)                                 |
-| Database             | PostgreSQL 18 (image with pgvector), Drizzle ORM 0.45, drizzle-kit (versioned SQL migrations)  |
-| Queues / cache       | Valkey 9, BullMQ 6, ioredis 6                                                                  |
-| Interval repetitions | FSRS through `ts-fsrs` (MIT)                                                                   |
-| AI                   | Python 3.14, FastAPI, Pydantic 2, httpx; Ollama (optional)                                     |
-| Quality              | ESLint 9 + typescript-eslint (strictTypeChecked), Prettier, Vitest 5, Playwright, Ruff, Pytest |
-| Infrastructure       | Docker, Docker Compose, GitHub Actions                                                         |
+The repository uses Node.js 24, pnpm 12, TypeScript 6, Next.js 16/React 19, NestJS/Fastify, Zod, Drizzle/PostgreSQL, Valkey/BullMQ, Python/FastAPI, Ollama, Whisper and Piper. Exact versions live in package manifests, the lockfile, Python requirements and Dockerfiles.
 
-Reason for version selection — [ADR-0002](docs/adr/0002-technology-stack.md).
+## 11. Deployment and observability
 
-## 11. Observability
+JSON logs, request identifiers and readiness/liveness endpoints are implemented. OpenTelemetry, metrics dashboards and failed-queue alerts remain planned.
 
-- ✅ Structured JSON logs (pino) with request id.
-- ✅ Health checks.
-- ⏳ OpenTelemetry (traces API → worker → ai-service) — planned, see [ROADMAP.md](ROADMAP.md).
-- ⏳ Prometheus / Grafana — directory `infra/monitoring` is reserved.
+Learner HTTP sessions are shared through PostgreSQL. Browser installation settings, downloads and restart coordination are designed for one installation, not an automatic multi-replica control plane. Horizontal deployment requires port/load-balancer overrides, shared configuration and coordinated rollout. Do not infer support from a bare Compose scale command.
 
-## 12. Technical debt and MVP limitations
+## 12. Further documentation
 
-Current list — in [docs/architecture/tech-debt.md](docs/architecture/tech-debt.md).
+- [Learner guide](docs/user-guide.md)
+- [Installation, backups and recovery](docs/operations.md)
+- [Models, voices and hardware](docs/setup-hardware.md)
+- [API reference](docs/api/README.md)
+- [Development and tests](docs/development.md)
+- [Status and release criteria](docs/project-status.md)
+- [Architecture decisions](docs/adr/README.md)

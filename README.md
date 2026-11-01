@@ -4,10 +4,13 @@ An open, self-hosted platform for learning English at CEFR levels A1–C2. Readi
 
 The interface, bundled learning materials and project documentation are in English. You can choose a native language for AI vocabulary translations in your profile.
 
+**Current status:** functional self-hosted MVP for personal use and a controlled pilot. Public-launch hardening remains. See [project status and release criteria](docs/project-status.md), the [learner guide](docs/user-guide.md), and [known limitations](docs/architecture/tech-debt.md). Documentation was reviewed against the current checkout on 2026-11-01; this does not imply a tagged release or a complete fresh regression run.
+
 ## Features
 
 - **Reading:** six original demo texts, level filters, and word or phrase selection with mouse, touch or keyboard.
-- **Vocabulary:** contextual word cards, a built-in glossary, optional AI explanations, saved examples, search, pictures and pronunciation.
+- **Vocabulary:** contextual word cards, source-text glossaries, optional AI explanations, manual word creation/editing, categories, saved examples, search, pictures and pronunciation. Card settings support English-first or translation-first recall and configurable answer details.
+- **Pronunciation:** browser, local Piper medium/high, Edge and environment-configured Azure voices. Server caching and identical-request coalescing avoid duplicate synthesis; a bounded browser cache speeds replay. Selected-word preparation respects privacy/provider settings. A first uncached request can still take seconds.
 - **Review:** FSRS scheduling, persistent review history, keyboard controls and safe retry of ratings.
 - **Grammar:** 100 topics and 420 exercises across A1–C2, explanations, examples and saved progress.
 - **Word translation across the site:** click rendered words or select a short phrase in any section for a contextual explanation, translation into your profile language, pronunciation and vocabulary saving. Writing fields offer an explicit selection action / Alt+T; passwords and credential fields are excluded. The original reader retains its glossary and source links. Translation uses the configured AI provider and existing consent/quota rules; the interface stays English.
@@ -47,7 +50,7 @@ docker compose -f compose.easy.yml up -d --build --wait
 Open **http://localhost:3000**. The browser opens the setup wizard:
 
 1. Create an installation password, separate from your learner account.
-2. Choose core learning without AI, local Ollama, or an OpenAI-compatible provider. Test connections and download an Ollama model directly in the wizard.
+2. Choose core learning without AI, local Ollama, or a hosted/custom API. Presets cover OpenAI/GPT, Anthropic/Claude, DeepSeek and other compatible endpoints. Test connections and download an Ollama model directly in the wizard.
 3. Review and finish. Services apply changes automatically; then create a learner account or log in.
 
 Database/cache passwords and the internal service token are generated once and retained in Docker volumes. The stack includes the AI service and an empty CPU Ollama server; a language model is downloaded only when requested. No paid service is needed for core learning. Optional picture search, online pronunciation and local speech recognition are also configured in the browser.
@@ -149,6 +152,8 @@ docs/               Architecture, ADRs, API and operations
 ## Documentation
 
 - [Architecture](ARCHITECTURE.md): module boundaries, events, security and diagrams.
+- [Learner guide](docs/user-guide.md): daily workflows, vocabulary cards, translation and progress.
+- [Project status](docs/project-status.md): available scope, verification limits and public-launch criteria.
 - [Architecture decisions](docs/adr/README.md).
 - [Development and testing](docs/development.md).
 - [Operations](docs/operations.md): deployment, secrets, backups, recovery and AI.

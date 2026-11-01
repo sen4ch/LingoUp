@@ -2,12 +2,12 @@
 
 ## Environment
 
-| Tool    | Version                                      | Note                                                 |
-| ------- | -------------------------------------------- | ---------------------------------------------------- |
-| Node.js | 24 LTS (`.nvmrc`)                            | `engine-strict` is enabled                           |
-| pnpm    | 12.15.0 (`packageManager` in `package.json`) | `npm i -g pnpm@12.15.0` or `corepack enable`         |
-| Docker  | with Compose v2                              | PostgreSQL, Valkey, image building, tests ai-service |
-| Python  | 3.13+ (optional)                             | only for development of ai-service outside Docker    |
+| Tool    | Version                                      | Note                                                          |
+| ------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Node.js | 24 LTS (`.nvmrc`)                            | `engine-strict` is enabled                                    |
+| pnpm    | 12.15.0 (`packageManager` in `package.json`) | `npm i -g pnpm@12.15.0` or `corepack enable`                  |
+| Docker  | with Compose v2                              | PostgreSQL, Valkey, image building, tests ai-service          |
+| Python  | 3.14 container reference (optional on host)  | Dockerfile/requirements define the tested service environment |
 
 pnpm in this project:
 
@@ -37,17 +37,43 @@ Why API is built through `tsc`, not through esbuild/tsx: dependency injection in
 
 ## Tests
 
-| Level               | Command                                      | What is needed                                                |
-| ------------------- | -------------------------------------------- | ------------------------------------------------------------- |
-| Unit + architecture | `pnpm test`                                  | nothing                                                       |
-| Integration         | `pnpm test:integration`                      | PostgreSQL and Valkey from `.env`                             |
-| API smoke           | `pnpm smoke:api`                             | running API (`API_URL`, default http://localhost:4000)        |
-| E2E (Playwright)    | `pnpm test:e2e`                              | running stack (`E2E_BASE_URL`, default http://localhost:3000) |
-| ai-service          | `docker build --target test apps/ai-service` | Docker                                                        |
+| Level               | Command                                      | What is needed                                                                |
+| ------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| Unit + architecture | `pnpm test`                                  | installed dependencies; build workspace packages first for dist-based imports |
+| Integration         | `pnpm test:integration`                      | PostgreSQL and Valkey from `.env`                                             |
+| API smoke           | `pnpm smoke:api`                             | running API (`API_URL`, default http://localhost:4000)                        |
+| E2E (Playwright)    | `pnpm test:e2e`                              | running stack (`E2E_BASE_URL`, default http://localhost:3000)                 |
+| ai-service          | `docker build --target test apps/ai-service` | Docker                                                                        |
 
 Integration tests **recreate** the database from `TEST_DATABASE_URL` (the name must end with `_test`, otherwise the helper will refuse to work), apply migrations, and import demo content. API Valkey test keys are written to logical DB 15.
 
 Browsers for Playwright: `pnpm --filter @lingoup/web exec playwright install chromium`.
+
+### Focused scenarios and test environments
+
+Playwright defines desktop Chromium and Pixel 7 mobile projects. Most feature tests can use deterministic route/provider fixtures, but some scenarios need additional services:
+
+- `site-translation.spec.ts`: real temporary learner accounts and database saves, with lookup responses stubbed to avoid model cost.
+- `pronunciation-cache.spec.ts`: a real enabled Edge speech provider, internet access and disposable learner accounts. It verifies network-free replay and external-consent-gated preparation. Its current assertions assume an external Edge voice; local Piper has different consent behavior and Azure does not prefetch. The default mock/core CI stack does not satisfy these prerequisites: exclude this file from that target or provide a separate Edge-enabled job before expecting the full browser suite to pass.
+- `installation.spec.ts` and `installation-options.spec.ts`: a dedicated disposable browser-setup deployment, `E2E_INSTALLATION=1` and the test model fixture. These tests change shared installation settings; never point them at your everyday installation. The options scenario also downloads/uses real local Piper voices and needs first-download access.
+
+Read each test's environment prerequisites before selecting a suite. The presence of a GitHub Actions job does not establish that every real-provider scenario is supported by its default mock configuration. Keep CI jobs/filters and provider fixtures aligned when adding environment-dependent tests.
+
+Example focused commands from the repository root:
+
+```bash
+pnpm --filter @lingoup/web exec vitest run src/lib/pronunciation.test.ts
+pnpm --filter @lingoup/api exec vitest run --project unit src/modules/ai-gateway/application/speech-gateway.test.ts
+pnpm --filter @lingoup/web exec playwright test e2e/site-translation.spec.ts --workers 1
+```
+
+Use randomized `@example.test` accounts and clean up only those accounts in teardown. Browser setup tests need their own project/volumes and port. `E2E_BASE_URL` selects a browser target; it does not change the Compose project's identity. Keep service credentials and real learner data out of fixtures, traces and shared reports.
+
+### Documentation changes
+
+Keep README feature summaries, ROADMAP, architecture, API documentation and known limitations consistent. Separate durable records from browser-only/expiring state. Record a review date and the scope of actual verification; do not claim a full regression run from focused tests. Update generated OpenAPI after controller changes using `pnpm build && pnpm openapi:export`.
+
+Check Markdown/JSON formatting and local links for documentation-only edits. Application tests are needed when behavior changes, not to revalidate unchanged code after a prose edit. ADRs retain their historical context; append dated implementation updates for subsequent decisions. Current scope and public-launch criteria are in [project status](project-status.md).
 
 ### Architecture Test
 

@@ -3,6 +3,8 @@
 - Status: Accepted
 - Date: 2026-10-27
 
+Implementation update: 2026-11-01. The original Microsoft-voice decision below is retained as historical context. Local Piper pronunciation is now implemented, along with bounded browser replay caching and privacy-aware preparation; see the dated update at the end.
+
 ## Context
 
 In the word card, the user should hear how a word and the sentence in which it appears sound. The user selected Azure AI Speech, male American voice `en-US-DerekMultilingualNeural`. Azure is an external paid service, and the default project is self-hosted and does not send user content outside without consent (ADR-0005).
@@ -36,3 +38,16 @@ The user requested a free option without a key following the pattern of their An
 - New variables: `SPEECH_PROVIDER`, `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `AZURE_SPEECH_VOICE`, `SPEECH_CACHE_TTL_DAYS`. Region is validated by a regular expression to prevent host request substitution.
 - Integration tests forcibly disable speech to avoid contacting a paid service.
 - Cache size in Valkey is not limited separately (see tech-debt).
+
+## Implementation update: 2026-11-01
+
+- `SPEECH_PROVIDER=piper-medium` and `piper-high` use local LJ Speech models through ai-service. Browser setup offers these voices and fixed-text previews. First use downloads weights; cached synthesis can run offline. Local voice failure does not switch to Edge on the server.
+- Edge remains external and Azure remains an environment-configured option. Explicit dictionary-term playback does not require sentence-sharing consent; external sentences do. This check runs before cache access.
+- The server normalizes text, caches per provider/voice and combines matching in-flight requests, charging quota only once for a new clip. Cache hits do not consume generation quota; expiry/loss can require regeneration.
+- Browser speaker buttons retain up to 24 clips, scoped to learner/privacy/voice revision. Metadata refreshes after ten seconds; expired metadata does not permit replaying a stale cached voice while it refreshes. Logout and this tab's applied installation changes clear prepared clips.
+- Opening a selected word card and hovering/focusing a speaker can prepare audio. Local preparation is permitted; external Edge preparation requires learner consent. Paid Azure is not called speculatively.
+- Pronunciation responses currently use `Cache-Control: private, no-cache`; voice metadata uses private/no-store. The browser application does not persist its prepared cache in localStorage or IndexedDB. Browser-managed HTTP/media caching is separate.
+- Rate limiting uses the API throttler's client-IP policy, with a 60/minute pronunciation route limit, rather than a guaranteed separate 60/minute budget for each learner. Generation also uses the per-user AI quota.
+- First uncached external speech still depends on the network/service; browser replay measurements do not establish a new-word latency guarantee.
+
+Current setup and operational behavior: [voices/hardware](../setup-hardware.md#voice-choices), [pronunciation latency](../operations.md#pronunciation-latency).

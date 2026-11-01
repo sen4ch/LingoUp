@@ -3,6 +3,8 @@
 - Status: accepted
 - Date: 2026-10-28
 
+Implementation update: 2026-11-01. The original voice selection below is historical; current narration uses the LJ Speech profiles described in the update at the end.
+
 ## Solution
 
 The page `/listening` contains exactly two sections: "Audio and Questions" and "Movies and Series".
@@ -25,3 +27,9 @@ The page `/listening` contains exactly two sections: "Audio and Questions" and "
 ## Limitations
 
 AI questions are checked structurally and by quotes, but this does not replace editorial assessment of their definitiveness. Exercises are temporary, separate tables and long-term history of results are not created. Control of audio cache volume is needed when the number of users grows. The external video catalog depends on the availability of clips, publisher restrictions, and subtitles.
+
+## Implementation update: 2026-11-01
+
+Narration now uses local Piper LJ Speech medium/high. A local pronunciation choice determines the quality; browser/Edge pronunciation uses medium for listening. Existing generated lesson recordings are retained. Voice weights/configuration are cached in the AI model volume and can be used offline after the first download. See [voice choices](../setup-hardware.md#voice-choices).
+
+Listening lessons, audio and grading state still expire after 24 hours in Valkey rather than forming durable listening history. Completed activity rewards can persist in the account even after the lesson expires. Local video/subtitle files remain browser-side; publisher/YouTube playback requires the corresponding external service.

@@ -15,5 +15,6 @@
 | [0011](0011-speaking-tutor.md)             | Voice conversation with an AI English tutor                                                      | accepted |
 | [0012](0012-listening.md)                  | Listening: audio with questions and movies / series                                              | accepted |
 | [0013](0013-english-language.md)           | English interface, documentation and bundled lessons; preserve progress during explanatory edits | accepted |
+| [0014](0014-browser-installation.md)       | Browser installation, separate operator login, shared AI settings and hardware/voice guidance    | Accepted |
 
 New ADR: copy the nearest file, increase the number and describe the context, solution, alternatives and consequences.

@@ -125,6 +125,34 @@
                         },
                         "aiDataSharing": {
                           "type": "boolean"
+                        },
+                        "reviewTemplate": {
+                          "type": "object",
+                          "properties": {
+                            "front": {
+                              "type": "string",
+                              "enum": [
+                                "term",
+                                "translation"
+                              ]
+                            },
+                            "showDefinition": {
+                              "type": "boolean"
+                            },
+                            "showContext": {
+                              "type": "boolean"
+                            },
+                            "showImage": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "front",
+                            "showDefinition",
+                            "showContext",
+                            "showImage"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -297,6 +325,34 @@
                         },
                         "aiDataSharing": {
                           "type": "boolean"
+                        },
+                        "reviewTemplate": {
+                          "type": "object",
+                          "properties": {
+                            "front": {
+                              "type": "string",
+                              "enum": [
+                                "term",
+                                "translation"
+                              ]
+                            },
+                            "showDefinition": {
+                              "type": "boolean"
+                            },
+                            "showContext": {
+                              "type": "boolean"
+                            },
+                            "showImage": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "front",
+                            "showDefinition",
+                            "showContext",
+                            "showImage"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -456,6 +512,34 @@
                         },
                         "aiDataSharing": {
                           "type": "boolean"
+                        },
+                        "reviewTemplate": {
+                          "type": "object",
+                          "properties": {
+                            "front": {
+                              "type": "string",
+                              "enum": [
+                                "term",
+                                "translation"
+                              ]
+                            },
+                            "showDefinition": {
+                              "type": "boolean"
+                            },
+                            "showContext": {
+                              "type": "boolean"
+                            },
+                            "showImage": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "front",
+                            "showDefinition",
+                            "showContext",
+                            "showImage"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -560,6 +644,33 @@
                   },
                   "aiDataSharing": {
                     "type": "boolean"
+                  },
+                  "reviewTemplate": {
+                    "type": "object",
+                    "properties": {
+                      "front": {
+                        "type": "string",
+                        "enum": [
+                          "term",
+                          "translation"
+                        ]
+                      },
+                      "showDefinition": {
+                        "type": "boolean"
+                      },
+                      "showContext": {
+                        "type": "boolean"
+                      },
+                      "showImage": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "front",
+                      "showDefinition",
+                      "showContext",
+                      "showImage"
+                    ]
                   }
                 }
               }
@@ -606,6 +717,34 @@
                     },
                     "aiDataSharing": {
                       "type": "boolean"
+                    },
+                    "reviewTemplate": {
+                      "type": "object",
+                      "properties": {
+                        "front": {
+                          "type": "string",
+                          "enum": [
+                            "term",
+                            "translation"
+                          ]
+                        },
+                        "showDefinition": {
+                          "type": "boolean"
+                        },
+                        "showContext": {
+                          "type": "boolean"
+                        },
+                        "showImage": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "front",
+                        "showDefinition",
+                        "showContext",
+                        "showImage"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -659,6 +798,588 @@
         },
         "tags": [
           "me"
+        ]
+      }
+    },
+    "/v1/setup/status": {
+      "get": {
+        "operationId": "InstallationController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/owner": {
+      "post": {
+        "operationId": "InstallationController_claim",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/login": {
+      "post": {
+        "operationId": "InstallationController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/logout": {
+      "post": {
+        "operationId": "InstallationController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/settings": {
+      "get": {
+        "operationId": "InstallationController_settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      },
+      "put": {
+        "operationId": "InstallationController_save",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "basic",
+                      "ollama",
+                      "openai-compatible"
+                    ]
+                  },
+                  "apiProvider": {
+                    "default": "custom",
+                    "type": "string",
+                    "enum": [
+                      "custom",
+                      "openai",
+                      "anthropic",
+                      "deepseek"
+                    ]
+                  },
+                  "workspaceId": {
+                    "default": "",
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^[a-zA-Z0-9_:-]*$"
+                  },
+                  "endpoint": {
+                    "default": "http://ollama:11434",
+                    "type": "string",
+                    "maxLength": 500,
+                    "format": "uri"
+                  },
+                  "model": {
+                    "default": "qwen3:4b",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$"
+                  },
+                  "apiKey": {
+                    "type": "string",
+                    "maxLength": 4096
+                  },
+                  "clearApiKey": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "allowExternal": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "dataLocality": {
+                    "default": "external",
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "external"
+                    ]
+                  },
+                  "imageSearch": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "wikimedia",
+                      "openverse"
+                    ]
+                  },
+                  "speech": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "edge",
+                      "piper-medium",
+                      "piper-high"
+                    ]
+                  },
+                  "hardwareOverride": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "object",
+                    "properties": {
+                      "memoryGiB": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 16384
+                      },
+                      "cpuCores": {
+                        "type": "number",
+                        "minimum": 0.25,
+                        "maximum": 4096
+                      },
+                      "gpuMemoryGiB": {
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 4096
+                      }
+                    },
+                    "required": [
+                      "memoryGiB",
+                      "cpuCores",
+                      "gpuMemoryGiB"
+                    ]
+                  },
+                  "speaking": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "mode"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/hardware": {
+      "get": {
+        "operationId": "InstallationController_hardware",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/test": {
+      "post": {
+        "operationId": "InstallationController_test",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "basic",
+                      "ollama",
+                      "openai-compatible"
+                    ]
+                  },
+                  "apiProvider": {
+                    "default": "custom",
+                    "type": "string",
+                    "enum": [
+                      "custom",
+                      "openai",
+                      "anthropic",
+                      "deepseek"
+                    ]
+                  },
+                  "workspaceId": {
+                    "default": "",
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^[a-zA-Z0-9_:-]*$"
+                  },
+                  "endpoint": {
+                    "default": "http://ollama:11434",
+                    "type": "string",
+                    "maxLength": 500,
+                    "format": "uri"
+                  },
+                  "model": {
+                    "default": "qwen3:4b",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$"
+                  },
+                  "apiKey": {
+                    "type": "string",
+                    "maxLength": 4096
+                  },
+                  "clearApiKey": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "allowExternal": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "dataLocality": {
+                    "default": "external",
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "external"
+                    ]
+                  },
+                  "imageSearch": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "wikimedia",
+                      "openverse"
+                    ]
+                  },
+                  "speech": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "edge",
+                      "piper-medium",
+                      "piper-high"
+                    ]
+                  },
+                  "hardwareOverride": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "object",
+                    "properties": {
+                      "memoryGiB": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 16384
+                      },
+                      "cpuCores": {
+                        "type": "number",
+                        "minimum": 0.25,
+                        "maximum": 4096
+                      },
+                      "gpuMemoryGiB": {
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 4096
+                      }
+                    },
+                    "required": [
+                      "memoryGiB",
+                      "cpuCores",
+                      "gpuMemoryGiB"
+                    ]
+                  },
+                  "speaking": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "mode"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/pull": {
+      "post": {
+        "operationId": "InstallationController_pull",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "basic",
+                      "ollama",
+                      "openai-compatible"
+                    ]
+                  },
+                  "apiProvider": {
+                    "default": "custom",
+                    "type": "string",
+                    "enum": [
+                      "custom",
+                      "openai",
+                      "anthropic",
+                      "deepseek"
+                    ]
+                  },
+                  "workspaceId": {
+                    "default": "",
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^[a-zA-Z0-9_:-]*$"
+                  },
+                  "endpoint": {
+                    "default": "http://ollama:11434",
+                    "type": "string",
+                    "maxLength": 500,
+                    "format": "uri"
+                  },
+                  "model": {
+                    "default": "qwen3:4b",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$"
+                  },
+                  "apiKey": {
+                    "type": "string",
+                    "maxLength": 4096
+                  },
+                  "clearApiKey": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "allowExternal": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "dataLocality": {
+                    "default": "external",
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "external"
+                    ]
+                  },
+                  "imageSearch": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "wikimedia",
+                      "openverse"
+                    ]
+                  },
+                  "speech": {
+                    "default": "none",
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "edge",
+                      "piper-medium",
+                      "piper-high"
+                    ]
+                  },
+                  "hardwareOverride": {
+                    "default": null,
+                    "nullable": true,
+                    "type": "object",
+                    "properties": {
+                      "memoryGiB": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 16384
+                      },
+                      "cpuCores": {
+                        "type": "number",
+                        "minimum": 0.25,
+                        "maximum": 4096
+                      },
+                      "gpuMemoryGiB": {
+                        "nullable": true,
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 4096
+                      }
+                    },
+                    "required": [
+                      "memoryGiB",
+                      "cpuCores",
+                      "gpuMemoryGiB"
+                    ]
+                  },
+                  "speaking": {
+                    "default": false,
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "mode"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      },
+      "get": {
+        "operationId": "InstallationController_progress",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
+        ]
+      }
+    },
+    "/v1/setup/voice-preview": {
+      "post": {
+        "operationId": "InstallationController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "speech": {
+                    "type": "string",
+                    "enum": [
+                      "edge",
+                      "piper-medium",
+                      "piper-high"
+                    ]
+                  }
+                },
+                "required": [
+                  "speech"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Installation"
         ]
       }
     },
@@ -1014,6 +1735,75 @@
         ]
       }
     },
+    "/v1/vocabulary/categories": {
+      "get": {
+        "operationId": "VocabularyController_categories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "clothes",
+                              "food",
+                              "travel",
+                              "work",
+                              "home",
+                              "shopping",
+                              "people",
+                              "nature",
+                              "health",
+                              "education",
+                              "technology",
+                              "daily-life",
+                              "other"
+                            ]
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "category",
+                          "count"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
     "/v1/vocabulary/lookup": {
       "post": {
         "operationId": "VocabularyController_lookup",
@@ -1203,6 +1993,29 @@
             }
           },
           {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "clothes",
+                "food",
+                "travel",
+                "work",
+                "home",
+                "shopping",
+                "people",
+                "nature",
+                "health",
+                "education",
+                "technology",
+                "daily-life",
+                "other"
+              ]
+            }
+          },
+          {
             "name": "q",
             "required": false,
             "in": "query",
@@ -1236,6 +2049,25 @@
                           },
                           "normalizedTerm": {
                             "type": "string"
+                          },
+                          "category": {
+                            "default": "other",
+                            "type": "string",
+                            "enum": [
+                              "clothes",
+                              "food",
+                              "travel",
+                              "work",
+                              "home",
+                              "shopping",
+                              "people",
+                              "nature",
+                              "health",
+                              "education",
+                              "technology",
+                              "daily-life",
+                              "other"
+                            ]
                           },
                           "definition": {
                             "nullable": true,
@@ -1358,6 +2190,7 @@
                           "id",
                           "term",
                           "normalizedTerm",
+                          "category",
                           "definition",
                           "translation",
                           "contextSentence",
@@ -1405,6 +2238,25 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 80
+                  },
+                  "category": {
+                    "nullable": true,
+                    "type": "string",
+                    "enum": [
+                      "clothes",
+                      "food",
+                      "travel",
+                      "work",
+                      "home",
+                      "shopping",
+                      "people",
+                      "nature",
+                      "health",
+                      "education",
+                      "technology",
+                      "daily-life",
+                      "other"
+                    ]
                   },
                   "definition": {
                     "nullable": true,
@@ -1459,6 +2311,25 @@
                     },
                     "normalizedTerm": {
                       "type": "string"
+                    },
+                    "category": {
+                      "default": "other",
+                      "type": "string",
+                      "enum": [
+                        "clothes",
+                        "food",
+                        "travel",
+                        "work",
+                        "home",
+                        "shopping",
+                        "people",
+                        "nature",
+                        "health",
+                        "education",
+                        "technology",
+                        "daily-life",
+                        "other"
+                      ]
                     },
                     "definition": {
                       "nullable": true,
@@ -1581,6 +2452,7 @@
                     "id",
                     "term",
                     "normalizedTerm",
+                    "category",
                     "definition",
                     "translation",
                     "contextSentence",
@@ -1688,6 +2560,25 @@
                     "normalizedTerm": {
                       "type": "string"
                     },
+                    "category": {
+                      "default": "other",
+                      "type": "string",
+                      "enum": [
+                        "clothes",
+                        "food",
+                        "travel",
+                        "work",
+                        "home",
+                        "shopping",
+                        "people",
+                        "nature",
+                        "health",
+                        "education",
+                        "technology",
+                        "daily-life",
+                        "other"
+                      ]
+                    },
                     "definition": {
                       "nullable": true,
                       "type": "string"
@@ -1809,6 +2700,7 @@
                     "id",
                     "term",
                     "normalizedTerm",
+                    "category",
                     "definition",
                     "translation",
                     "contextSentence",
@@ -1849,6 +2741,25 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "category": {
+                    "nullable": true,
+                    "type": "string",
+                    "enum": [
+                      "clothes",
+                      "food",
+                      "travel",
+                      "work",
+                      "home",
+                      "shopping",
+                      "people",
+                      "nature",
+                      "health",
+                      "education",
+                      "technology",
+                      "daily-life",
+                      "other"
+                    ]
+                  },
                   "definition": {
                     "nullable": true,
                     "type": "string",
@@ -1893,6 +2804,25 @@
                     "normalizedTerm": {
                       "type": "string"
                     },
+                    "category": {
+                      "default": "other",
+                      "type": "string",
+                      "enum": [
+                        "clothes",
+                        "food",
+                        "travel",
+                        "work",
+                        "home",
+                        "shopping",
+                        "people",
+                        "nature",
+                        "health",
+                        "education",
+                        "technology",
+                        "daily-life",
+                        "other"
+                      ]
+                    },
                     "definition": {
                       "nullable": true,
                       "type": "string"
@@ -2014,6 +2944,7 @@
                     "id",
                     "term",
                     "normalizedTerm",
+                    "category",
                     "definition",
                     "translation",
                     "contextSentence",
@@ -2536,6 +3467,20 @@
         },
         "responses": {
           "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "vocabulary"
+        ]
+      }
+    },
+    "/v1/vocabulary/pronunciation/settings": {
+      "get": {
+        "operationId": "PronunciationController_settings",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         },

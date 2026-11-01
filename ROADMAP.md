@@ -1,65 +1,74 @@
-﻿# Roadmap
+# Roadmap
 
-Development follows vertical slices: each stage delivers a complete user workflow.
+Last reviewed: 2026-11-01. This describes the current checkout, including local changes; it is not a release announcement. See [project status](docs/project-status.md) for scope and release criteria.
 
-## Foundation and reading — complete
+## Available: core learning
 
-- [x] Architecture, ADRs and diagrams.
-- [x] pnpm/Turborepo monorepo, strict TypeScript, ESLint, Prettier and CI.
-- [x] Docker Compose with PostgreSQL, Valkey, API, worker, web, optional AI service and Ollama.
-- [x] Registration, login, sessions, settings, data export and deletion.
-- [x] A1–C2 reading library, glossary and content import.
-- [x] Vocabulary lookup, saved words, FSRS reviews and review history.
-- [x] Transactional Outbox, BullMQ and progress projections.
-- [x] AI Gateway with mock, Ollama and OpenAI-compatible adapters.
-- [x] English interface, documentation, grammar explanations and bundled glossaries.
+- [x] Registration, login, session cookies, learner settings, export and account deletion.
+- [x] English interface and responsive learning pages.
+- [x] Six bundled A1-C2 reading texts, glossaries and private generated texts.
+- [x] Reading comprehension checks, saved results and one-time reading completion rewards.
+- [x] Contextual word/phrase lookup in the reader and across site pages, with explicit selection in writing fields.
+- [x] Manual vocabulary creation and editing, categories, pictures, search and pronunciation.
+- [x] Configurable card fronts/backs, including translation-first practice.
+- [x] FSRS reviews, persistent review history, keyboard ratings and retry-safe submissions.
+- [x] Vocabulary gap exercises with AI generation or saved-example fallback.
+- [x] Grammar reference: 100 topics, 420 exercises, A1-C2 filters and saved attempts.
 
-## Grammar and personalized practice — available
+## Available: speaking, writing and listening
 
-- [x] A1–C2 grammar topics, structured rules, server-checked exercises and topic progress.
-- [x] `ExerciseCompleted` events update progress.
-- [x] Vocabulary gap exercises with validated AI output and saved-example fallback.
-- [x] Private texts from all saved words or a selected subset ([ADR-0008](docs/adr/0008-grammar-and-ai-practice.md)).
-- [x] Vocabulary pictures, image uploads and pronunciation.
-- [ ] Learning sessions and `LessonStarted` events.
-- [ ] Background generation with progress for slow models.
-- [ ] AI grammar error explanations, output moderation and a topic editor.
+- [x] Turn-based AI teacher calls, local Whisper recognition, pause and interrupt controls.
+- [x] Level-aware writing exchanges, corrected text and linked explanations.
+- [x] Generated listening lessons with local narration, grading, evidence and transcripts.
+- [x] Publisher video links, YouTube embeds and local video/subtitle playback.
+- [x] Short original IELTS-style practice across four sections, with a practice score and explicit assessment limits.
+- [x] Account-saved mistake journal for grammar, writing and speaking corrections.
+- [ ] Persistent writing exchanges and speaking transcripts across page sessions.
+- [ ] Long-term listening and exam history; current sessions expire after 24 hours.
+- [ ] Streaming teacher responses and end-to-end voice latency improvements.
 
-## Listening and speaking — available
+## Available: progress and daily guidance
 
-- [x] Voice calls with an English-only AI teacher and conversation context.
-- [x] Local Whisper speech recognition, voice playback, microphone controls and browser policy checks.
-- [x] Generated listening exercises with measured 3–5 minute local narration.
-- [x] CEFR-dependent question counts, difficulty, grading, evidence and transcripts.
-- [x] Publisher-hosted films and series, YouTube links and local videos with SRT/VTT subtitles.
-- [ ] Long-term listening history and richer media discovery.
-- [ ] Streaming teacher responses and lower-latency voice interaction.
-- [x] Level-aware email writing practice with highlighted errors and explanations.
-- [ ] Saved writing exchanges and long-term writing progress.
+- [x] Six skill XP tracks, player levels and completion rewards.
+- [x] Saved daily study-time goal and a time-budgeted six-skill plan.
+- [x] Continue learning: recheck the plan and select the next available unfinished activity.
+- [x] Skill timers and retry-safe cumulative focus-time synchronization.
+- [x] Kyiv Monday-Sunday weekly reports, previous-week comparisons and suggested goals.
+- [x] Mark saved mistakes understood or reopen them.
+- [ ] Adaptive plans driven by measured weaknesses and learning outcomes.
+- [ ] User-selectable study timezone and calendar-based planning.
+- [ ] Adaptive proficiency assessment with confidence intervals. XP levels do not establish CEFR proficiency.
+- [ ] Producers for the reserved LessonStarted, AssessmentCompleted, SkillLevelUpdated and LearningPlanUpdated events.
 
-## MVP hardening
+## Available: installation and AI configuration
 
-- [ ] OpenTelemetry traces across web, API, worker and AI service.
-- [ ] Prometheus metrics and Grafana dashboards in `infra/monitoring`.
-- [ ] Email verification and password recovery through an optional SMTP adapter.
-- [ ] Session caching in Valkey.
-- [ ] PWA, offline reviews and synchronization.
-- [ ] A bundled open dictionary after checking source licenses.
-- [ ] CSV / Anki vocabulary import and export.
-- [ ] Content publishing administration.
+- [x] Docker-only local startup without manually editing .env or installing Node.js.
+- [x] Separate browser installation login and learner accounts.
+- [x] Core-only, local Ollama and hosted/custom API modes.
+- [x] OpenAI/GPT, native Anthropic/Claude, DeepSeek and other compatible API presets.
+- [x] Write-only provider keys, connection checks and explicit operator/learner external-processing permissions.
+- [x] Docker-aware hardware detection, editable capacity estimates and model recommendations.
+- [x] Optional NVIDIA Compose override for Ollama.
+- [x] Browser voices, Piper medium/high, Edge, and environment-configured Azure speech.
+- [x] Local/Edge fixed-text previews and automatic application of saved installation settings.
+- [x] Server speech cache, identical-request coalescing and bounded browser replay cache.
+- [x] Selected-word audio preparation subject to privacy/provider policy.
+- [ ] Background lesson/text generation with durable jobs, status and cancellation.
+- [ ] Built-in licensed dictionary for arbitrary lookup without AI.
+- [ ] CSV/Anki vocabulary import and export.
+- [ ] Content editing/publishing administration.
 
-## Assessment and planning
+## Before a public launch
 
-- [ ] Adaptive tests for reading, listening, vocabulary and grammar.
-- [ ] Level estimates with confidence intervals.
-- [ ] `AssessmentCompleted` and `SkillLevelUpdated` events.
-- [ ] Goals, available study time and a calendar.
-- [ ] Adaptive plans based on progress and weaker skills.
-- [ ] Learning recommendations and `LearningPlanUpdated` events.
+- [ ] Complete full-stack regression testing on a clean installation and an upgraded existing installation.
+- [ ] Test model/provider failures, consent changes, network loss and service restarts.
+- [ ] Add learner email verification and password recovery.
+- [ ] Review public deployment configuration, proxy trust, CSP and installation access.
+- [ ] Automate encrypted backups and demonstrate restoration of database, configuration and credentials.
+- [ ] Provide queue failure alerts, resource monitoring and operational dashboards.
+- [ ] Run representative concurrent-user and AI workload tests.
+- [ ] Have learning materials and AI feedback reviewed by English teachers.
+- [ ] Conduct usability and accessibility testing with learners on desktop and mobile.
+- [ ] Keep documentation and generated API specifications synchronized with release code.
 
-## Scaling when needed
-
-- PostgreSQL read replicas and pgvector for semantic content search.
-- Dedicated GPU nodes for AI workloads, for example with vLLM.
-- Extract modules when an independent team or workload justifies a service boundary.
-- Replace BullMQ with an event broker if many independent consumers need fan-out.
+See [known limitations](docs/architecture/tech-debt.md) for implementation details. PWA/offline synchronization, personalized FSRS optimization, database scaling and dedicated inference nodes remain later work.
