@@ -9,7 +9,7 @@ dependencies = [
   "uvicorn==0.54.0",
   "httpx==0.28.1",
   "pydantic==2.14.1",
-  "pydantic-settings==2.16.1",
+  "pydantic-settings==2.16.2",
   # LGPL-3.0; Microsoft Edge read-aloud voices without a key (see ADR-0009).
   "edge-tts==7.3.1",
 ]
