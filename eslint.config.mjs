@@ -47,8 +47,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.mjs', '**/*.js'],
+    files: ['**/*.mjs', '**/*.cjs', '**/*.js'],
     ...tseslint.configs.disableTypeChecked,
+  },
+  {
+    files: ['**/*.cjs'],
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts', '**/e2e/**/*.ts'],

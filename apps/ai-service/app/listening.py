@@ -235,9 +235,9 @@ def audio_duration(data: bytes) -> float:
 
 @lru_cache(maxsize=2)
 def piper_voice(quality: str = "medium") -> Any:
+    import onnxruntime
     from huggingface_hub import hf_hub_download
     from huggingface_hub.errors import LocalEntryNotFoundError
-    import onnxruntime
     from piper import PiperVoice
 
     if quality not in {"medium", "high"}:

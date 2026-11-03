@@ -1,6 +1,6 @@
 ---
 slug: a1-possessives
-title: "Possession: my, mine and apostrophe s"
+title: 'Possession: my, mine and apostrophe s'
 level: A1
 summary: Possessive forms show ownership and relationships.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -24,7 +24,7 @@ exercises:
     answer: its
     explanation: Its is the possessive determiner.
   - type: choice
-    prompt: "These toys belong to the children: the ___ toys."
+    prompt: 'These toys belong to the children: the ___ toys.'
     options:
       - childrens'
       - childrens

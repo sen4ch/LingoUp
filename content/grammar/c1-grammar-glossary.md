@@ -1,6 +1,6 @@
 ---
 slug: c1-grammar-glossary
-title: "Grammar terminology: a practical glossary"
+title: 'Grammar terminology: a practical glossary'
 level: C1
 summary: Grammar terminology helps explain patterns precisely.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

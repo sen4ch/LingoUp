@@ -179,7 +179,8 @@ async function playFromServer(query: PronunciationQuery, options: PronounceOptio
       audio.removeEventListener('ended', ended);
       audio.removeEventListener('pause', paused);
       audio.removeEventListener('error', failed);
-      error ? reject(error) : resolve();
+      if (error) reject(error);
+      else resolve();
     };
     const ended = () => finish();
     const paused = () => {

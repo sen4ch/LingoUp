@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "Choose a natural extraposition: ___ is surprising that nobody replied."
+    prompt: 'Choose a natural extraposition: ___ is surprising that nobody replied.'
     options:
       - There
       - What it
@@ -32,7 +32,7 @@ exercises:
     answer: topic continuity
     explanation: It can foreground the participant already under discussion.
   - type: choice
-    prompt: "Choose the normal pronoun pattern: Give ___."
+    prompt: 'Choose the normal pronoun pattern: Give ___.'
     options:
       - to me it
       - me to it

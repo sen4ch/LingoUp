@@ -1,6 +1,6 @@
 ---
 slug: a1-can-ability
-title: "Can and cannot: ability and simple permission"
+title: 'Can and cannot: ability and simple permission'
 level: A1
 summary: Can is a modal verb used to express ability, possibility in a situation, or informal permission.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -32,7 +32,7 @@ exercises:
     answer: cannot
     explanation: Use cannot for the standard negative.
   - type: choice
-    prompt: "Choose the correct statement: She ___ help us."
+    prompt: 'Choose the correct statement: She ___ help us.'
     options:
       - can to
       - can

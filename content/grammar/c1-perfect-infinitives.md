@@ -24,7 +24,7 @@ exercises:
     answer: waiting
     explanation: A continuous infinitive uses be plus ing.
   - type: choice
-    prompt: "The passive infinitive is: to ___ selected."
+    prompt: 'The passive infinitive is: to ___ selected.'
     options:
       - being have
       - has

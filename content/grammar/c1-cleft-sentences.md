@@ -1,6 +1,6 @@
 ---
 slug: c1-cleft-sentences
-title: "Cleft sentences: it was and what I need"
+title: 'Cleft sentences: it was and what I need'
 level: C1
 summary: A cleft divides a message to give special focus to one part.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -24,7 +24,7 @@ exercises:
     answer: is
     explanation: Be connects the wh-clause with its complement.
   - type: choice
-    prompt: "Choose a time-focus cleft: It was yesterday ___ we met."
+    prompt: 'Choose a time-focus cleft: It was yesterday ___ we met.'
     options:
       - what
       - whose
@@ -32,7 +32,7 @@ exercises:
     answer: that
     explanation: That is a standard linker in this it-cleft.
   - type: choice
-    prompt: "Choose the clear object cleft: It was this book ___."
+    prompt: 'Choose the clear object cleft: It was this book ___.'
     options:
       - what I borrowed it
       - that I borrowed

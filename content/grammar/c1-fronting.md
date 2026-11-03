@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "Choose natural pronoun order: Here ___."
+    prompt: 'Choose natural pronoun order: Here ___.'
     options:
       - it comes
       - comes it

@@ -16,7 +16,7 @@ exercises:
     answer: to live
     explanation: The personal reporting passive uses an infinitive.
   - type: choice
-    prompt: "The earlier event: He is said ___ the country last week."
+    prompt: 'The earlier event: He is said ___ the country last week.'
     options:
       - to leave yesterday now
       - to left

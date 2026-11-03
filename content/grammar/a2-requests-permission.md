@@ -2,7 +2,7 @@
 slug: a2-requests-permission
 title: Requests, offers and permission
 level: A2
-summary: "A question can do more than ask for facts: it can request an action, offer help, or ask permission."
+summary: 'A question can do more than ask for facts: it can request an action, offer help, or ask permission.'
 author: AI-generated for LingoUp; original explanations and examples (no human author)
 provenance: ai-generated
 license: CC0-1.0

@@ -24,7 +24,7 @@ exercises:
     answer: has
     explanation: She takes has.
   - type: choice
-    prompt: "Choose the normal state form: I ___ him for years."
+    prompt: 'Choose the normal state form: I ___ him for years.'
     options:
       - am know
       - have known

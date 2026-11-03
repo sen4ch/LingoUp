@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "Choose a strong deduction: They ___ have forgotten the date."
+    prompt: 'Choose a strong deduction: They ___ have forgotten the date.'
     options:
       - may
       - must
@@ -32,7 +32,7 @@ exercises:
     answer: obligation
     explanation: Had to describes necessity, unlike deductive must have.
   - type: choice
-    prompt: "The possible ongoing event: He may have ___ when you called."
+    prompt: 'The possible ongoing event: He may have ___ when you called.'
     options:
       - sleeping
       - been sleeping

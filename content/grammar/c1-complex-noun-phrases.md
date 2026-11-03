@@ -32,7 +32,7 @@ exercises:
     answer: plan
     explanation: Plan is the central noun modified by the earlier elements.
   - type: choice
-    prompt: "Choose the ordinary phrase: a two-___ flat."
+    prompt: 'Choose the ordinary phrase: a two-___ flat.'
     options:
       - bedroom
       - bedrooms

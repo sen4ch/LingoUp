@@ -32,7 +32,7 @@ exercises:
     answer: Built
     explanation: A past participle gives a passive description of the bridge.
   - type: choice
-    prompt: "Choose the clear modifier: Walking home, ___ noticed the rainbow."
+    prompt: 'Choose the clear modifier: Walking home, ___ noticed the rainbow.'
     options:
       - the rainbow
       - my umbrella

@@ -32,7 +32,7 @@ exercises:
     answer: question mark
     explanation: A question mark marks the direct question.
   - type: choice
-    prompt: "Choose the correctly formed modifier: a three-___ course."
+    prompt: 'Choose the correctly formed modifier: a three-___ course.'
     options:
       - week’s of
       - week

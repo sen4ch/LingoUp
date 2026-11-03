@@ -16,7 +16,7 @@ exercises:
     answer: decision
     explanation: Decision is the conventional derived noun.
   - type: choice
-    prompt: "Choose the normal noun pattern: a discussion ___ the proposal."
+    prompt: 'Choose the normal noun pattern: a discussion ___ the proposal.'
     options:
       - of
       - the of

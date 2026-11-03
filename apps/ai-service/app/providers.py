@@ -459,8 +459,8 @@ class AnthropicProvider(LlmProvider):
             str(message["content"]) for message in messages if message["role"] == "system"
         )
         system += (
-            "\nReturn exactly one JSON object, without markdown or commentary, matching this JSON schema:\n"
-            + json.dumps(schema)
+            "\nReturn exactly one JSON object, without markdown or commentary, "
+            "matching this JSON schema:\n" + json.dumps(schema)
         )
         conversation = [message for message in messages if message["role"] in {"user", "assistant"}]
         try:

@@ -32,7 +32,7 @@ exercises:
     answer: are
     explanation: Both ... and normally creates a plural subject.
   - type: choice
-    prompt: "There is no water left: ___ of it remains."
+    prompt: 'There is no water left: ___ of it remains.'
     options:
       - either
       - none

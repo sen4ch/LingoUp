@@ -24,7 +24,7 @@ exercises:
     answer: but also
     explanation: Not only conventionally pairs with but also.
   - type: choice
-    prompt: "Choose parallel infinitives: to read carefully and ___."
+    prompt: 'Choose parallel infinitives: to read carefully and ___.'
     options:
       - to write clearly
       - clearly written yesterday

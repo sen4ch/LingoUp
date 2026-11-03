@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "At the earlier past viewpoint: By noon, we ___ for two hours."
+    prompt: 'At the earlier past viewpoint: By noon, we ___ for two hours.'
     options:
       - had been waiting
       - have been waiting

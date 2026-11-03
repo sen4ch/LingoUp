@@ -33,7 +33,7 @@ export default async function LibraryPage({
         className="library-section-heading flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
-          <p className="eyebrow mb-3">// READ SOMETHING WORTH LEARNING</p>
+          <p className="eyebrow mb-3">{'// READ SOMETHING WORTH LEARNING'}</p>
           <h1 className="text-3xl font-medium tracking-tight sm:text-4xl">
             {t.library.title}
             <span className="text-primary">.</span>

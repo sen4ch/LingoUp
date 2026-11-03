@@ -1,6 +1,6 @@
 ---
 slug: b1-second-conditional
-title: "Second conditional: imagined situations"
+title: 'Second conditional: imagined situations'
 level: B1
 summary: The second conditional presents a situation as hypothetical, unlikely, or remote from reality in the present or future.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

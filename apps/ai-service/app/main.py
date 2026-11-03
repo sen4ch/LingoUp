@@ -4,9 +4,9 @@ import json
 import logging
 import os
 import signal
-from pathlib import Path
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
@@ -79,9 +79,12 @@ def create_app(
             runtime = Path(settings.installation_dir, "runtime.json")
             while True:
                 await asyncio.sleep(1)
-                revision = (
-                    json.loads(runtime.read_text()).get("revision", "") if runtime.exists() else ""
-                )
+                try:
+                    contents = await asyncio.to_thread(runtime.read_text)
+                except FileNotFoundError:
+                    revision = ""
+                else:
+                    revision = json.loads(contents).get("revision", "")
                 if revision != settings.installation_revision:
                     # Uvicorn drains requests; Compose starts the new configuration.
                     os.kill(os.getpid(), signal.SIGTERM)

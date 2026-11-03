@@ -1,6 +1,6 @@
 ---
 slug: b2-mandative-subjunctive
-title: "Recommendations: that she be, that he go"
+title: 'Recommendations: that she be, that he go'
 level: B2
 summary: After expressions of a demand, recommendation, or necessity, a that clause can use the plain verb form.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -32,7 +32,7 @@ exercises:
     answer: not
     explanation: A negative mandative plain clause uses not before the verb.
   - type: choice
-    prompt: "A common alternative is: They suggested that we ___ wait."
+    prompt: 'A common alternative is: They suggested that we ___ wait.'
     options:
       - must to
       - should

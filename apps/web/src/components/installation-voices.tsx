@@ -23,10 +23,6 @@ export function InstallationVoices({
     },
     [audio],
   );
-  useEffect(() => {
-    setAudio('');
-    setError('');
-  }, [settings.speech]);
   async function preview() {
     setBusy(true);
     onBusyChange(true);

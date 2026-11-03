@@ -23,6 +23,8 @@ test('real speech replays from memory and prefetch respects learner consent', as
   await page.addInitScript(() => {
     const timings: number[] = [];
     Object.assign(window, { pronunciationTimings: timings });
+    // Keep the native method so the wrapper can forward its media element as `this`.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const original = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
       const started = performance.now();
@@ -82,9 +84,14 @@ test('real speech replays from memory and prefetch respects learner consent', as
       () => (window as Window & { pronunciationTimings?: number[] }).pronunciationTimings,
     );
     expect(timings?.length).toBe(2);
-    console.log(
-      `Pronunciation ${test.info().project.name}: first playback ${Math.round(timings![0]!)} ms, repeat ${Math.round(timings![1]!)} ms, repeat network requests 0`,
-    );
+    await test.info().attach('pronunciation-timings', {
+      body: JSON.stringify({
+        firstPlaybackMs: timings![0],
+        repeatPlaybackMs: timings![1],
+        repeatNetworkRequests: 0,
+      }),
+      contentType: 'application/json',
+    });
 
     expect(
       (await page.request.patch('/api/v1/me/settings', { data: { aiDataSharing: true } })).ok(),

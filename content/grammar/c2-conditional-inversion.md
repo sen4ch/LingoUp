@@ -24,7 +24,7 @@ exercises:
     answer: Had
     explanation: Had introduces an inverted past-perfect condition.
   - type: choice
-    prompt: "Choose standard negative order: Had ___."
+    prompt: 'Choose standard negative order: Had ___.'
     options:
       - not she called
       - she called not have

@@ -2,7 +2,7 @@
 slug: b1-reflexive-reciprocal
 title: Myself, themselves and each other
 level: B1
-summary: "A reflexive pronoun often refers back to the subject within the same clause: the person doing the action is also affected by it."
+summary: 'A reflexive pronoun often refers back to the subject within the same clause: the person doing the action is also affected by it.'
 author: AI-generated for LingoUp; original explanations and examples (no human author)
 provenance: ai-generated
 license: CC0-1.0

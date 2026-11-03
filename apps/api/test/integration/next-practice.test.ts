@@ -29,22 +29,20 @@ async function finish(userId: string, skill: LearningSkill) {
 }
 async function privateText(userId: string) {
   const slug = `next-private-${randomUUID()}`;
-  await ctx.database.db
-    .insert(texts)
-    .values({
-      slug,
-      title: 'My private A1 text',
-      level: 'A1',
-      summary: 'A private practice text.',
-      paragraphs: ['I live in a small town. I walk to school every day.'],
-      wordCount: 13,
-      author: 'Test',
-      license: 'CC0-1.0',
-      provenance: 'ai-generated',
-      contentHash: randomUUID(),
-      ownerUserId: userId,
-      publishedAt: new Date(),
-    });
+  await ctx.database.db.insert(texts).values({
+    slug,
+    title: 'My private A1 text',
+    level: 'A1',
+    summary: 'A private practice text.',
+    paragraphs: ['I live in a small town. I walk to school every day.'],
+    wordCount: 13,
+    author: 'Test',
+    license: 'CC0-1.0',
+    provenance: 'ai-generated',
+    contentHash: randomUUID(),
+    ownerUserId: userId,
+    publishedAt: new Date(),
+  });
   return slug;
 }
 

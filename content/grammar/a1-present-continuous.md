@@ -1,6 +1,6 @@
 ---
 slug: a1-present-continuous
-title: "Present continuous: actions in progress"
+title: 'Present continuous: actions in progress'
 level: A1
 summary: Use the present continuous for an action happening now or around the present, a temporary situation, or a change in progress.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -32,7 +32,7 @@ exercises:
     answer: Are
     explanation: Present continuous questions begin with a form of be.
   - type: choice
-    prompt: "Choose the normal statement about knowledge: I ___ the answer."
+    prompt: 'Choose the normal statement about knowledge: I ___ the answer.'
     options:
       - knowing
       - know

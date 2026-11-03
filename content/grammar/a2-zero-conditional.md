@@ -2,7 +2,7 @@
 slug: a2-zero-conditional
 title: Zero conditional and general results
 level: A2
-summary: "Use a general conditional to describe a regular relationship: if a condition happens, a result normally follows."
+summary: 'Use a general conditional to describe a regular relationship: if a condition happens, a result normally follows.'
 author: AI-generated for LingoUp; original explanations and examples (no human author)
 provenance: ai-generated
 license: CC0-1.0
@@ -32,7 +32,7 @@ exercises:
     answer: turns
     explanation: A general relationship uses a present-simple form here.
   - type: choice
-    prompt: "Complete the normal order: I feel cold ___ I forget my coat."
+    prompt: 'Complete the normal order: I feel cold ___ I forget my coat.'
     options:
       - if
       - unless not

@@ -162,24 +162,22 @@ it('reports Kyiv week boundaries, skill/player gains, saved words and errors wit
       milliseconds: 30_000,
     },
   ]);
-  await ctx.database.db
-    .insert(mistakeEntries)
-    .values(
-      Array.from({ length: 6 }, (_, index) => ({
-        userId: user.id,
-        fingerprint: randomUUID(),
-        source: 'writing',
-        category: index === 5 ? 'suggestion' : index < 3 ? 'word' : 'grammar',
-        errorType: index === 5 ? 'naturalness' : index < 3 ? 'spelling' : 'verb_tense',
-        original: 'I go',
-        corrected: 'I went',
-        explanation: 'Use the past tense.',
-        context: 'A day out',
-        sourceHref: '/writing',
-        createdAt: new Date('2026-10-30T10:00:00Z'),
-        resolvedAt: index === 0 ? new Date('2026-10-30T11:00:00Z') : null,
-      })),
-    );
+  await ctx.database.db.insert(mistakeEntries).values(
+    Array.from({ length: 6 }, (_, index) => ({
+      userId: user.id,
+      fingerprint: randomUUID(),
+      source: 'writing',
+      category: index === 5 ? 'suggestion' : index < 3 ? 'word' : 'grammar',
+      errorType: index === 5 ? 'naturalness' : index < 3 ? 'spelling' : 'verb_tense',
+      original: 'I go',
+      corrected: 'I went',
+      explanation: 'Use the past tense.',
+      context: 'A day out',
+      sourceHref: '/writing',
+      createdAt: new Date('2026-10-30T10:00:00Z'),
+      resolvedAt: index === 0 ? new Date('2026-10-30T11:00:00Z') : null,
+    })),
+  );
   const report = await ctx.app
     .get(WeeklyReportService)
     .report(user.id, 0, new Date('2026-10-30T12:00:00Z'));

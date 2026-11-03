@@ -24,7 +24,7 @@ exercises:
     answer: had
     explanation: A past regret normally uses past perfect.
   - type: choice
-    prompt: "For a realistic future outcome: I ___ you enjoy the trip."
+    prompt: 'For a realistic future outcome: I ___ you enjoy the trip.'
     options:
       - would wish to that
       - hope

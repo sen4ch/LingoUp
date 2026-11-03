@@ -304,7 +304,7 @@ export default function MistakesPage() {
                       size="sm"
                       variant={entry.resolvedAt ? 'secondary' : 'primary'}
                       disabled={update.isPending}
-                      loading={update.isPending && update.variables?.id === entry.id}
+                      loading={update.isPending && update.variables.id === entry.id}
                       onClick={() => update.mutate(entry)}
                     >
                       {entry.resolvedAt ? (

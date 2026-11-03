@@ -1,6 +1,6 @@
 ---
 slug: a2-future-forms
-title: "Future meanings: will, going to and arrangements"
+title: 'Future meanings: will, going to and arrangements'
 level: A2
 summary: English uses several forms to talk about the future.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -32,7 +32,7 @@ exercises:
     answer: leaves
     explanation: The present simple commonly describes a timetable.
   - type: choice
-    prompt: "We have arranged dinner with Jo: we ___ her tonight."
+    prompt: 'We have arranged dinner with Jo: we ___ her tonight.'
     options:
       - are meet
       - are meeting

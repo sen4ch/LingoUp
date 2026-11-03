@@ -1,6 +1,6 @@
 ---
 slug: c1-concession-contrast
-title: "Concession: however hard, much as and while"
+title: 'Concession: however hard, much as and while'
 level: C1
 summary: Concessive clauses acknowledge a fact that might suggest a different result.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

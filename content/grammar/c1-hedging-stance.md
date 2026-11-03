@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "Choose the cautious claim: The treatment ___ help some patients."
+    prompt: 'Choose the cautious claim: The treatment ___ help some patients.'
     options:
       - may
       - certainly must always

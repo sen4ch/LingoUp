@@ -22,18 +22,22 @@ type OpenWord = {
   focus: boolean;
   host: Element;
 };
-type CaretDocument = Document & {
+type CaretDocument = Omit<Document, 'caretPositionFromPoint' | 'caretRangeFromPoint'> & {
   caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
   caretRangeFromPoint?: (x: number, y: number) => Range | null;
 };
 
 export function SiteWordTranslation() {
   const pathname = usePathname();
+  return <WordTranslation key={pathname} pathname={pathname} />;
+}
+
+function WordTranslation({ pathname }: { pathname: string }) {
   const [word, setWord] = useState<OpenWord | null>(null);
   const [notice, setNotice] = useState('');
   const [draftSelected, setDraftSelected] = useState(false);
   const draftAction = useRef<() => void>(() => {});
-  const draftHost = useRef<Element | null>(null);
+  const [draftHost, setDraftHost] = useState<Element | null>(null);
   const popupOpen = useRef(false);
   const panel = useRef<HTMLElement>(null);
   const source = useRef<HTMLElement | null>(null);
@@ -45,19 +49,14 @@ export function SiteWordTranslation() {
   }, []);
 
   useEffect(() => {
-    setWord(null);
-    setNotice('');
-    setDraftSelected(false);
-  }, [pathname]);
-  useEffect(() => {
     popupOpen.current = !!word;
     if (!word) return;
-    if (typeof Highlight !== 'undefined' && CSS.highlights)
+    if (typeof Highlight !== 'undefined' && 'highlights' in CSS)
       CSS.highlights.set('site-word-translation', new Highlight(word.range));
     if (word.focus)
       panel.current?.querySelector<HTMLButtonElement>('button[aria-label="Close"]')?.focus();
     return () => {
-      if (typeof CSS !== 'undefined' && CSS.highlights)
+      if (typeof CSS !== 'undefined' && 'highlights' in CSS)
         CSS.highlights.delete('site-word-translation');
     };
   }, [word]);
@@ -135,7 +134,7 @@ export function SiteWordTranslation() {
       const to = field.selectionEnd;
       if (from === null || to === null || from === to) return false;
       draftField = field;
-      draftHost.current = field.closest('dialog[open]') ?? document.body;
+      setDraftHost(field.closest('dialog[open]') ?? document.body);
       if (open) {
         const range = document.createRange();
         range.selectNode(field);
@@ -247,7 +246,7 @@ export function SiteWordTranslation() {
     <>
       {draftSelected &&
         !word &&
-        draftHost.current &&
+        draftHost &&
         createPortal(
           <button
             className="site-translate-selection"
@@ -257,7 +256,7 @@ export function SiteWordTranslation() {
           >
             Translate selected text
           </button>,
-          draftHost.current,
+          draftHost,
         )}
       {notice && (
         <div className="site-translation-notice" role="status" data-translation-ignore>

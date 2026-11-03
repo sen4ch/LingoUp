@@ -1,6 +1,6 @@
 ---
 slug: a1-sentence-basics
-title: "Sentence building: subjects, verbs and objects"
+title: 'Sentence building: subjects, verbs and objects'
 level: A1
 summary: A complete statement normally has a subject and a verb.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -24,7 +24,7 @@ exercises:
     answer: is
     explanation: A description after the subject needs the linking verb be.
   - type: choice
-    prompt: "Choose the ordinary statement order: ___."
+    prompt: 'Choose the ordinary statement order: ___.'
     options:
       - Music the likes dog
       - The dog likes music

@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "To recall a past action: I remember ___ the letter."
+    prompt: 'To recall a past action: I remember ___ the letter.'
     options:
       - posting
       - to post

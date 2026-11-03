@@ -1,6 +1,6 @@
 ---
 slug: b1-modal-deduction
-title: "Must, might and cannot: present deductions"
+title: 'Must, might and cannot: present deductions'
 level: B1
 summary: Modal deductions express the speaker's assessment of evidence.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "Choose a strong positive deduction: She ___ be at home."
+    prompt: 'Choose a strong positive deduction: She ___ be at home.'
     options:
       - must
       - might
@@ -16,7 +16,7 @@ exercises:
     answer: must
     explanation: Must marks a strong evidence-based conclusion.
   - type: choice
-    prompt: "Choose a strong negative deduction: That ___ be the right door."
+    prompt: 'Choose a strong negative deduction: That ___ be the right door.'
     options:
       - must
       - may
@@ -24,7 +24,7 @@ exercises:
     answer: cannot
     explanation: Cannot marks a conclusion that something is impossible.
   - type: choice
-    prompt: "A possible explanation: He might ___ on the train."
+    prompt: 'A possible explanation: He might ___ on the train.'
     options:
       - is sleeping
       - be sleeping

@@ -8,7 +8,7 @@ provenance: ai-generated
 license: CC0-1.0
 exercises:
   - type: choice
-    prompt: "Entry is forbidden: you ___ go in."
+    prompt: 'Entry is forbidden: you ___ go in.'
     options:
       - do not have to
       - need not

@@ -24,7 +24,7 @@ exercises:
     answer: commas
     explanation: Commas mark the supplementary status.
   - type: choice
-    prompt: "Choose the correct plural: three ___."
+    prompt: 'Choose the correct plural: three ___.'
     options:
       - report’s
       - reports’s

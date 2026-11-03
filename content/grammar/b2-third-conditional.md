@@ -1,6 +1,6 @@
 ---
 slug: b2-third-conditional
-title: "Third conditional: alternative pasts"
+title: 'Third conditional: alternative pasts'
 level: B2
 summary: A third conditional imagines a different past condition and a corresponding past result.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -32,7 +32,7 @@ exercises:
     answer: Had
     explanation: Had can introduce an inverted past counterfactual condition.
   - type: choice
-    prompt: "Choose the ordinary if clause: If they ___ the map, they would not have got lost."
+    prompt: 'Choose the ordinary if clause: If they ___ the map, they would not have got lost.'
     options:
       - have check
       - had checked

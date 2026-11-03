@@ -52,7 +52,10 @@ export class MockAIProvider implements AIProvider {
   private output(task: ImplementedAiTaskType, input: unknown): unknown {
     switch (task) {
       case 'exam-assessment': {
-        const review = { band: 0, feedback: 'Demo only. Configure a real AI provider for an assessment.' };
+        const review = {
+          band: 0,
+          feedback: 'Demo only. Configure a real AI provider for an assessment.',
+        };
         return { writingTask1: review, writingTask2: review, speakingLanguage: review };
       }
       case 'writing-assessment': {

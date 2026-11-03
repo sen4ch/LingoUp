@@ -109,7 +109,7 @@ export default async function GrammarTopicPage({ params }: { params: Promise<{ s
             aria-labelledby="exercises"
             className="grammar-exercises-section flex flex-col gap-4"
           >
-            <p className="eyebrow">// YOUR TURN</p>
+            <p className="eyebrow">{'// YOUR TURN'}</p>
             <h2 id="exercises" className="text-2xl font-semibold">
               {t.grammar.practice}
             </h2>

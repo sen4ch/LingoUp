@@ -302,6 +302,7 @@ export class InstallationService {
       let buffer = '';
       let success = false;
       for await (const chunk of response.body) {
+        if (!(chunk instanceof Uint8Array)) throw new Error('Invalid progress');
         buffer += decoder.decode(chunk, { stream: true });
         if (buffer.length > 128_000) throw new Error('Invalid progress');
         let newline: number;

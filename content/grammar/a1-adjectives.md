@@ -1,6 +1,6 @@
 ---
 slug: a1-adjectives
-title: "Adjectives: descriptions and basic order"
+title: 'Adjectives: descriptions and basic order'
 level: A1
 summary: An adjective describes a noun or pronoun.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

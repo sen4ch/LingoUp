@@ -1,6 +1,6 @@
 ---
 slug: a1-articles-basics
-title: "A, an and the: first steps"
+title: 'A, an and the: first steps'
 level: A1
 summary: Articles help the listener identify a noun.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
@@ -32,7 +32,7 @@ exercises:
     answer: The
     explanation: The listener can identify the previously introduced lamp.
   - type: choice
-    prompt: "Choose the general statement: ___ need water."
+    prompt: 'Choose the general statement: ___ need water.'
     options:
       - Plants
       - A plants

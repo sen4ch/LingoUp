@@ -1,6 +1,6 @@
 ---
 slug: a1-prepositions-place
-title: "Prepositions of place: in, on, at and beyond"
+title: 'Prepositions of place: in, on, at and beyond'
 level: A1
 summary: Prepositions connect a noun phrase to a place or spatial relationship.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

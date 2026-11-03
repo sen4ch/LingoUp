@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useEffectEvent, useRef, useState, type SubmitEvent } from 'react';
 import {
   InstallationSettingsSchema,
   InstallationStatusSchema,
@@ -71,6 +71,7 @@ export function InstallationWizard() {
   const [done, setDone] = useState(false);
   const [voiceBusy, setVoiceBusy] = useState(false);
   const mounted = useRef(true);
+  const isMounted = () => mounted.current;
   const heading = useRef<HTMLHeadingElement>(null);
 
   function fail(error: unknown) {
@@ -79,31 +80,32 @@ export function InstallationWizard() {
       setStatus((value) => value && { ...value, authenticated: false });
   }
 
-  async function refresh() {
-    setError('');
-    try {
-      const state = await api('/v1/setup/status', { schema: InstallationStatusSchema });
-      if (!mounted.current) return;
-      if (state.authenticated) {
-        const [safe, progress] = await Promise.all([
-          api('/v1/setup/settings', { schema: InstallationSafeSettingsSchema }),
-          api('/v1/setup/pull', { schema: InstallationPullSchema }),
-        ]);
+  function refresh() {
+    return api('/v1/setup/status', { schema: InstallationStatusSchema })
+      .then(async (state) => {
         if (!mounted.current) return;
-        setSettings({ ...safe, apiKey: '' });
-        setSavedKey(safe.apiKeyConfigured);
-        setStep(1);
-        setPull(progress);
-      }
-      setStatus(state);
-    } catch (error) {
-      if (mounted.current) fail(error);
-    }
+        if (state.authenticated) {
+          const [safe, progress] = await Promise.all([
+            api('/v1/setup/settings', { schema: InstallationSafeSettingsSchema }),
+            api('/v1/setup/pull', { schema: InstallationPullSchema }),
+          ]);
+          if (!isMounted()) return;
+          setSettings({ ...safe, apiKey: '' });
+          setSavedKey(safe.apiKeyConfigured);
+          setStep(1);
+          setPull(progress);
+        }
+        setStatus(state);
+      })
+      .catch((error: unknown) => {
+        if (mounted.current) fail(error);
+      });
   }
 
+  const refreshOnMount = useEffectEvent(refresh);
   useEffect(() => {
     mounted.current = true;
-    void refresh();
+    void refreshOnMount();
     return () => {
       mounted.current = false;
     };
@@ -113,7 +115,7 @@ export function InstallationWizard() {
     const timer = setInterval(() => {
       void api('/v1/setup/pull', { schema: InstallationPullSchema })
         .then(setPull)
-        .catch((error) => {
+        .catch((error: unknown) => {
           fail(error);
           setPull(null);
         });
@@ -148,7 +150,7 @@ export function InstallationWizard() {
     return result.data;
   }
 
-  async function unlock(event: FormEvent) {
+  async function unlock(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
     if (!status?.claimed && password !== confirmation) {
@@ -272,7 +274,16 @@ export function InstallationWizard() {
       {!status ? (
         <div className="installation-panel">
           <p role="status">{error || 'Checking your installation…'}</p>
-          {error && <button onClick={() => void refresh()}>Try again</button>}
+          {error && (
+            <button
+              onClick={() => {
+                setError('');
+                void refresh();
+              }}
+            >
+              Try again
+            </button>
+          )}
         </div>
       ) : !status.enabled ? (
         <div className="installation-panel">
@@ -694,6 +705,7 @@ export function InstallationWizard() {
                     </span>
                   </summary>
                   <InstallationVoices
+                    key={settings.speech}
                     settings={settings}
                     change={change}
                     disabled={disabled}

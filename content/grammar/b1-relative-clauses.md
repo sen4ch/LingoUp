@@ -32,7 +32,7 @@ exercises:
     answer: whose
     explanation: Whose introduces a relationship before a noun.
   - type: choice
-    prompt: "Choose the correct clause: the person ___."
+    prompt: 'Choose the correct clause: the person ___.'
     options:
       - which he called me
       - who called me

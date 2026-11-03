@@ -93,7 +93,10 @@ Use the correct form of to be.
     expect(all.body.items.every((t: { progress: unknown }) => t.progress === null)).toBe(true);
 
     const a1 = await anonymous.request('GET', '/v1/grammar/topics?level=A1');
-    expect(a1.body.items.map((t: { level: string }) => t.level)).toEqual(['A1', 'A1']);
+    expect(a1.status).toBe(200);
+    const expectedA1 = all.body.items.filter((t: { level: string }) => t.level === 'A1');
+    expect(expectedA1.length).toBeGreaterThan(0);
+    expect(a1.body.items).toEqual(expectedA1);
 
     const topic = await anonymous.request('GET', '/v1/grammar/topics/a1-present-simple');
     expect(topic.body.blocks.length).toBeGreaterThan(3);

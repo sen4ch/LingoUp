@@ -1,6 +1,6 @@
 ---
 slug: b1-tense-aspect-reference
-title: "Tense and aspect: twelve common patterns"
+title: 'Tense and aspect: twelve common patterns'
 level: B1
 summary: English has present and past inflected tense forms, and several constructions for future reference.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

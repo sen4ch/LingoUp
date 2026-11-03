@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import {
   InstallationHardwareSchema,
   LOCAL_MODEL_PROFILES,
@@ -23,19 +23,16 @@ export function InstallationHardwarePanel({
   const [hardware, setHardware] = useState<InstallationHardware | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const load = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      setHardware(await api('/v1/setup/hardware', { schema: InstallationHardwareSchema }));
-    } catch {
-      setError('Hardware detection is unavailable. You can enter specifications manually.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const load = () =>
+    api('/v1/setup/hardware', { schema: InstallationHardwareSchema })
+      .then(setHardware)
+      .catch(() => {
+        setError('Hardware detection is unavailable. You can enter specifications manually.');
+      })
+      .finally(() => setLoading(false));
+  const loadOnMount = useEffectEvent(load);
   useEffect(() => {
-    void load();
+    void loadOnMount();
   }, []);
   const automatic = hardware
     ? {
@@ -73,7 +70,15 @@ export function InstallationHardwarePanel({
           <p className="eyebrow">FIND A COMFORTABLE FIT</p>
           <h3>Your computer or server</h3>
         </div>
-        <button type="button" disabled={disabled || loading} onClick={() => void load()}>
+        <button
+          type="button"
+          disabled={disabled || loading}
+          onClick={() => {
+            setLoading(true);
+            setError('');
+            void load();
+          }}
+        >
           {loading ? 'Checking…' : 'Check again'}
         </button>
       </div>

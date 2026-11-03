@@ -20,9 +20,10 @@ class FakeAudio extends EventTarget {
   paused = true;
   currentTime = 0;
   preload = '';
-  play = vi.fn(async () => {
+  play = vi.fn(() => {
     this.paused = false;
     queueMicrotask(() => this.dispatchEvent(new Event('ended')));
+    return Promise.resolve();
   });
   pause() {
     this.paused = true;
@@ -51,7 +52,7 @@ describe('prepared pronunciation', () => {
     policy = { enabled: true, local: false, prefetchAllowed: true, revision: 'voice-1' };
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify(policy))),
+      vi.fn(() => Promise.resolve(new Response(JSON.stringify(policy)))),
     );
     resetPronunciationCache();
     FakeAudio.instances = [];

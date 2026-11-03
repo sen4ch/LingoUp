@@ -1,6 +1,6 @@
 ---
 slug: a1-subject-object-pronouns
-title: "Personal pronouns: I, me, they, them"
+title: 'Personal pronouns: I, me, they, them'
 level: A1
 summary: Personal pronouns replace noun phrases when the listener knows who or what you mean.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

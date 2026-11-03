@@ -1,6 +1,6 @@
 ---
 slug: a2-prepositions-movement
-title: "Movement: to, into, across, through and towards"
+title: 'Movement: to, into, across, through and towards'
 level: A2
 summary: Movement prepositions describe a destination, a route, or a change of position.
 author: AI-generated for LingoUp; original explanations and examples (no human author)

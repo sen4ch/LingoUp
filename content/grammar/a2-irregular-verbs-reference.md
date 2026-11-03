@@ -1,6 +1,6 @@
 ---
 slug: a2-irregular-verbs-reference
-title: "Irregular verbs: an extended reference"
+title: 'Irregular verbs: an extended reference'
 level: A2
 summary: Use this reference to check the base, past-simple, and past-participle forms of common verbs.
 author: AI-generated for LingoUp; original explanations and examples (no human author)
