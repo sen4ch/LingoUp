@@ -15,7 +15,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:integration": "turbo run test:integration --concurrency=1",
-    "test:e2e": "pnpm --filter @lingoup/web test:e2e",
+    "test:e2e": "turbo run test:e2e --filter=@lingoup/web",
     "smoke:api": "node scripts/smoke-api.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
