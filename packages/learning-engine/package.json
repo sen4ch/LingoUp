@@ -19,6 +19,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "ts-fsrs": "5.4.2"
+    "ts-fsrs": "6.0.0"
   }
 }
